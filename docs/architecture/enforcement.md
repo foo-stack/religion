@@ -44,8 +44,14 @@ workflow runs the same suite.
 The rule document and the scanner are exempt: both quote these phrasings in order to
 describe them, and a check that fires on its own documentation is one people learn to skip.
 
-This is a blocklist of known wordings. It raises the cost of the obvious attempt. It does
-not recognise novel phrasing, and it does not decode content hidden inside an encoded blob.
+Long base64 blobs are decoded and asked the same questions, because a regex over literal
+text is defeated by one round of encoding and that is cheap enough to be the first thing
+anyone tries. A decoded blob has to look like text before it is scanned, which is what
+keeps every checksum and integrity string in the tree from being reported.
+
+This is still a blocklist of known wordings. It raises the cost of the obvious attempt and
+of the obvious attempt wearing a disguise. It does not recognise novel phrasing, and it
+does not look inside an archive or an image.
 
 ## What a hook does when it breaks
 

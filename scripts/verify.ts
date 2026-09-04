@@ -226,6 +226,23 @@ const checks: Check[] = [
             }
             const secret = SECRETS.find(({ re }) => re.test(line));
             if (secret) problems.push(`${where}:${index + 1}: looks like ${secret.what}`);
+
+            // A regex over the literal text is defeated by one round of base64, which is
+            // cheap enough that leaving it out would make the whole check advisory. Decode
+            // any long blob and ask the same questions of what comes out.
+            for (const blob of line.match(/[A-Za-z0-9+/]{40,}={0,2}/g) ?? []) {
+              const decoded = decodeBase64(blob);
+              if (!decoded) continue;
+              const inner = INJECTION.filter((re) => re.test(decoded)).length;
+              if (inner > 0) {
+                problems.push(
+                  `${where}:${index + 1}: base64 blob decodes to ${inner} injection ` +
+                  `signature${inner === 1 ? "" : "s"}: ${decoded.trim().slice(0, 60)}`
+                );
+              }
+              const hidden = SECRETS.find(({ re }) => re.test(decoded));
+              if (hidden) problems.push(`${where}:${index + 1}: base64 blob decodes to ${hidden.what}`);
+            }
           });
         }
       }
@@ -276,6 +293,26 @@ async function renderedFiles(): Promise<string[]> {
     else files.push(...(await walkIfPresent(root)));
   }
   return files;
+}
+
+/**
+ * Decode a base64 blob, or return null when it is not text.
+ *
+ * Long base64-shaped runs in this repository are far more often a hash or an integrity
+ * string than an encoded message. Requiring the result to be mostly printable is what keeps
+ * this from reporting every checksum it walks past.
+ */
+function decodeBase64(blob: string): string | null {
+  if (blob.length % 4 !== 0) return null;
+  let decoded: string;
+  try {
+    decoded = Buffer.from(blob, "base64").toString("utf8");
+  } catch {
+    return null;
+  }
+  if (decoded.length < 12) return null;
+  const printable = decoded.replace(/[^\x20-\x7e\s]/g, "").length;
+  return printable / decoded.length > 0.9 ? decoded : null;
 }
 
 async function walkIfPresent(dir: string): Promise<string[]> {

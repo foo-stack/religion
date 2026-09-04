@@ -23,6 +23,7 @@ export const PLANNED_SKILLS: readonly string[] = [
   "audit",
   "auto",
   "browser-tests",
+  "capture",
   "check",
   "ci",
   "complete",
@@ -40,6 +41,7 @@ export const PLANNED_SKILLS: readonly string[] = [
   "release",
   "rollback",
   "setup",
+  "spike",
   "status",
   "tests",
   "try"

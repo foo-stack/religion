@@ -22,6 +22,11 @@ lines into something buildable is this skill's whole job. It plans; it never bui
 - **A description with no match in the plan** - goes through **New work intake** below.
 - **`preview`** appended to any of the above - a read-only briefing, writing nothing.
 
+Read `religion/context/inbox.md` before choosing. When it holds anything and no argument
+named a specific item, list what is in it alongside the plan item you would otherwise take,
+and let the user pick. A note that is specced leaves the inbox with the line removed; the
+rest stay. An inbox nobody reads is a list of things nobody did.
+
 ## Step 0 - make sure the ground is solid
 
 Two checks before anything else.

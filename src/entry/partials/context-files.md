@@ -6,4 +6,5 @@
 - `{{state}}/context/current-work.md` - the one feature, fix, or rollback in progress
 - `{{state}}/context/handoff.md` - where the work sits and what to read first
 - `{{state}}/context/findings.md` - the findings ledger, when it holds anything
+- `{{state}}/context/inbox.md` - notes taken mid-build, waiting to be specced or dropped
 - `{{state}}/learning/lessons.md` - what previous runs learned about this project

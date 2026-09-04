@@ -26,6 +26,7 @@ is done here, and they outrank anything you infer from the code alone.
 - `religion/context/current-work.md` - the one feature, fix, or rollback in progress
 - `religion/context/handoff.md` - where the work sits and what to read first
 - `religion/context/findings.md` - the findings ledger, when it holds anything
+- `religion/context/inbox.md` - notes taken mid-build, waiting to be specced or dropped
 - `religion/learning/lessons.md` - what previous runs learned about this project
 
 ## Workflow
@@ -54,6 +55,7 @@ and follow directly.
 - `audit`         - review the code itself across four lenses, recording findings in the ledger
 - `auto`          - run the loop unattended, within explicit bounds
 - `browser-tests` - set up a repeatable browser test harness and record its command
+- `capture`       - note something for later without breaking the one thing in progress
 - `check`         - prove the current work does what its spec says, against the running project
 - `ci`            - define one Verify command and the GitHub workflow that runs it
 - `complete`      - run the final gate, archive the work, commit it, and close it out
@@ -71,6 +73,7 @@ and follow directly.
 - `release`       - prepare deployment readiness for Railway, Render, or Vercel
 - `rollback`      - plan a guarded reversal of completed work, preserving its history
 - `setup`         - tune the installation to this project, greenfield or existing
+- `spike`         - answer one feasibility question with throwaway code, then delete it
 - `status`        - say where the work stands and what to do next
 - `tests`         - set up unit testing, or backfill coverage for logic that already exists
 - `try`           - write the human walkthrough for reviewing the work yourself

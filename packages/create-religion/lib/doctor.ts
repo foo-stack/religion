@@ -28,10 +28,12 @@ const REQUIRED = [
   "context/ai-interaction.md",
   "context/current-work.md",
   "context/findings.md",
+  "context/inbox.md",
   "history/features",
   "history/fixes",
   "history/rollbacks",
   "history/refactors",
+  "history/spikes",
   "reference"
 ];
 

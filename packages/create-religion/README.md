@@ -31,11 +31,13 @@ generated separately, so they carry that tool's own invocation syntax.
 ## Commands
 
 ```bash
-religion status      # where the work stands, and the one thing to do next
-religion doctor      # is the setup healthy
-religion dashboard   # a local read-only view
-religion update      # update the workflow files, preserving yours
+npx create-religion status      # where the work stands, and the one thing to do next
+npx create-religion doctor      # is the setup healthy
+npx create-religion dashboard   # a local read-only view
+npx create-religion update      # update the workflow files, preserving yours
 ```
+
+Installing the package globally shortens these to `religion status` and the rest.
 
 `update` will not overwrite a file you have edited. It tells you what conflicts and backs
 up the original if you choose to replace it.

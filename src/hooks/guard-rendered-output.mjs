@@ -10,21 +10,50 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
+/**
+ * Degrade to a prompt when this guard cannot do its job.
+ *
+ * A guard that fails open becomes the exact outcome it exists to prevent: the command runs
+ * and nobody was asked. Failing closed is no better, because one malformed payload from a
+ * runtime change would block every edit to a rendered tree until somebody edits a hook. Asking is the
+ * honest middle: the user sees the command and decides, and the cost of a bug here is one
+ * extra prompt rather than a silent pass.
+ */
+function askBecauseGuardFailed(error) {
+  const detail = error instanceof Error ? error.message : String(error);
+  process.stdout.write(JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "ask",
+      permissionDecisionReason:
+        `The rendered-output guard hook could not run, so this command was not checked.\n\n` +
+        `Reason: ${detail}\n\n` +
+        `Approve it only if you would have approved it anyway. The guard is not covering ` +
+        `you right now, and that is worth reporting.`
+    }
+  }));
+  process.exit(0);
+}
+
+// Covers the whole hook, not only the reads below: any throw reaches this and still asks.
+process.on("uncaughtException", askBecauseGuardFailed);
+
+
 if (!existsSync(path.join(process.cwd(), "src", "skills"))) process.exit(0);
 
 let input = "";
 try {
   input = readFileSync(0, "utf8");
-} catch {
-  process.exit(0);
+} catch (error) {
+  askBecauseGuardFailed(error);
 }
 
 let file = "";
 try {
   const payload = JSON.parse(input);
   file = payload?.tool_input?.file_path ?? "";
-} catch {
-  process.exit(0);
+} catch (error) {
+  askBecauseGuardFailed(error);
 }
 
 if (!file) process.exit(0);

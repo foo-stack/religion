@@ -13,6 +13,7 @@ deletion, waived check, or accepted finding.
 | Setting | Values | Default |
 | --- | --- | --- |
 | `workflow.stepReview` | `every`, `item` | `every` |
+| `workflow.parallelSteps` | `true`, `false` | `false` |
 | `git.mode` | `trunk`, `branch-per-item`, `pull-request` | `trunk` |
 | `git.checkpoints` | `none`, `every-step`, `squash` | `every-step` |
 | `git.featureBranchPrefix` | lowercase prefix ending in `/` | `feature/` |
@@ -27,6 +28,7 @@ deletion, waived check, or accepted finding.
 | `auto.maxItems` | positive integer, or `null` for no limit | `null` |
 | `auto.maxRepairAttempts` | integer from 0 through 10 | `2` |
 | `auto.finalAudit` | `true`, `false` | `false` |
+| `security.blockInjection` | `true`, `false` | `false` |
 | `refactor.maxFileLines` | positive integer | `400` |
 | `refactor.maxFunctionLines` | positive integer | `50` |
 
@@ -49,6 +51,18 @@ applies the gate to every work item.
 There is no try-guide gate. The manual walkthrough is generated for every completed work
 item, so there is nothing to configure.
 
+## Parallel steps
+
+`workflow.parallelSteps` ships `false`, and while it is off a spec's parallel markers are
+ignored entirely. That is deliberate: a spec carrying markers has to build identically in a
+project that never opted in, or the markers become a way to change how somebody else's
+project executes.
+
+Turned on, steps marked as running with an earlier step form a wave and are built
+concurrently, each in its own subagent that returns rather than writes. The parent performs
+every write, and the wave is reviewed as one packet. `workflow.stepReview` still decides
+when that review happens.
+
 ## Branch prefixes
 
 One prefix per kind of work item, plus one for the branch an automated run integrates on.
@@ -58,6 +72,16 @@ and kept so that switching modes does not require reconfiguring.
 `git.integrationBranchPrefix` is used only by an automated run under `pull-request`, which
 creates one branch of that name per run, dated, and lands every item into it before opening
 a single aggregate pull request.
+
+## Injection scanning
+
+`security.blockInjection` decides what happens when content read into context carries
+three or more known injection signatures. It ships `false`, which warns and carries on,
+because a false positive that halts real work costs more than a warning nobody needed. Set
+it `true` to block the read instead.
+
+The rule it enforces is in `religion/context/untrusted-input.md` and applies to every tool.
+The hook is a net for the one tool that runs hooks.
 
 ## Refactor thresholds
 

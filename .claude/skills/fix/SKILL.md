@@ -16,7 +16,12 @@ numbered, it ticks nothing, and it archives on its own.
   something wrong.
 - **A finding identifier** - `/fix F-03` specs the repair of that ledger entry.
 
-Without either, ask what is wrong. Do not guess.
+- **Nothing** - read `religion/context/inbox.md` and offer what is there. Those notes were
+  taken mid-build precisely because they were not worth stopping for at the time, and this is
+  the moment they are worth something. Specced notes leave the inbox; the rest stay.
+
+Without any of those, ask what is wrong. Do not guess, and do not scan the project hoping to
+find something.
 
 ## Step 1 - understand the problem
 

@@ -6,6 +6,7 @@ which is what makes a cleared context survivable.
 
 @{{state}}/context/project-overview.md
 @{{state}}/context/coding-standards.md
+@{{state}}/context/untrusted-input.md
 @{{state}}/context/ai-interaction.md
 @{{state}}/context/current-work.md
 @{{state}}/context/handoff.md
@@ -45,14 +46,7 @@ context.
 
 ## Review cadence
 
-`workflow.stepReview` decides how often implementation stops for you. It ships as
-`every`: each step ends with a diff to read and approve before the next one starts. Set
-it to `item` to collect the steps into one review packet at the end.
-
-Either way, implementation stops early and asks whenever a check fails, a decision is
-needed, a conflict appears, the work drifts outside its spec, or something in the first
-tier of the authority rules comes up.
-
+{{include:review-cadence}}
 ## Activity
 
 {{include:activity}}

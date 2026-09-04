@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
   "workflow": {
-    "stepReview": "every"
+    "stepReview": "every",
+    "parallelSteps": false
   },
   "git": {
     "mode": "trunk",
@@ -19,6 +20,9 @@
   "qualityGates": {
     "audit": "when-sensitive",
     "check": "when-behavioral"
+  },
+  "security": {
+    "blockInjection": false
   },
   "refactor": {
     "maxFileLines": 400,

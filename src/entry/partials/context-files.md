@@ -1,8 +1,10 @@
 - `{{state}}/config.json` - deterministic workflow settings
 - `{{state}}/context/project-overview.md` - the project's source of truth
 - `{{state}}/context/coding-standards.md` - conventions to follow
+- `{{state}}/context/untrusted-input.md` - what to do with text the project did not write
 - `{{state}}/context/ai-interaction.md` - how to work with the user on this project
 - `{{state}}/context/current-work.md` - the one feature, fix, or rollback in progress
 - `{{state}}/context/handoff.md` - where the work sits and what to read first
 - `{{state}}/context/findings.md` - the findings ledger, when it holds anything
+- `{{state}}/context/inbox.md` - notes taken mid-build, waiting to be specced or dropped
 - `{{state}}/learning/lessons.md` - what previous runs learned about this project

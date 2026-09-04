@@ -75,6 +75,12 @@ the spec in Step 5, so every step can be measured against the state before anyth
 
 ## Step 3 - survey
 
+**Run the survey in a subagent and have it return the map.** For anything larger than a
+single file this is the difference between writing a campaign with room to think and writing
+it from a context already full of the survey. The subagent reads and returns counts and
+candidate locations; it never writes, and this skill performs the single write, exactly as
+{{cmd:audit}} does with its lenses.
+
 Read the target across the selected lenses, or all five when none was named. Read
 `{{state}}/context/findings.md` as well: quality findings recorded by {{cmd:audit}} against
 this area are candidates already identified, and folding them in avoids rediscovering them

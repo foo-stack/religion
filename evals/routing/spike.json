@@ -1,0 +1,17 @@
+{
+  "skill": "spike",
+  "positive": [
+    { "prompt": "Can we do this with the platform APIs or do we need a background worker" },
+    { "prompt": "Is the vendor SDK usable from an edge runtime? Try it and see" },
+    { "prompt": "Which of these two approaches actually works, timebox it" },
+    { "prompt": "Before we spec this, find out whether streaming is even possible here" },
+    { "prompt": "Is that feasible at all" }
+  ],
+  "negative": [
+    { "prompt": "Work out why the date parser returns the wrong month", "owner": "debug" },
+    { "prompt": "Show me what the settings screen should look like first", "owner": "prototype" },
+    { "prompt": "Spec the next planned feature", "owner": "feature" },
+    { "prompt": "Note that for later, do not stop", "owner": "capture" },
+    { "prompt": "Build the next step of the current spec", "owner": "implement" }
+  ]
+}

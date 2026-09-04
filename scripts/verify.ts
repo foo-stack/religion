@@ -8,6 +8,7 @@
 
 import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
+import fsSync from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -113,6 +114,140 @@ const checks: Check[] = [
       }
       return problems;
     }
+  },
+  {
+    name: "every configuration key is documented",
+    run: async () => {
+      // A setting that ships without a row in the reference is invisible: nobody can set
+      // what they cannot find, and the default becomes the only value anyone ever uses.
+      const config = JSON.parse(
+        await fs.readFile(path.join(repoRoot, "src", "state", "config.json"), "utf8")
+      ) as Record<string, unknown>;
+      const docs = await fs.readFile(path.join(repoRoot, "docs/architecture/config.md"), "utf8");
+
+      const problems: string[] = [];
+      for (const [section, value] of Object.entries(config)) {
+        if (typeof value !== "object" || value === null) continue;
+        for (const key of Object.keys(value as Record<string, unknown>)) {
+          const setting = `${section}.${key}`;
+          if (!docs.includes(`\`${setting}\``)) problems.push(`config.json: ${setting} has no row in config.md`);
+        }
+      }
+      return problems;
+    }
+  },
+  {
+    name: "the command-line tool requires what the template ships",
+    run: async () => {
+      // doctor reports a missing state file as a problem, so its list and the seeded tree
+      // have to agree. When they drift, doctor either misses a real gap or invents one.
+      const doctorSource = await fs.readFile(
+        path.join(repoRoot, "packages/create-religion/lib/doctor.ts"),
+        "utf8"
+      );
+      const block = /const REQUIRED[^=]*=\s*\[([\s\S]*?)\];/.exec(doctorSource);
+      if (!block?.[1]) return ["doctor.ts: could not find the REQUIRED list"];
+
+      const required = [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1] as string);
+      const stateRoot = path.join(repoRoot, "src", "state");
+
+      const problems: string[] = [];
+      for (const relative of required) {
+        if (!fsSync.existsSync(path.join(stateRoot, relative))) {
+          problems.push(`doctor.ts requires ${relative}, which the template does not ship`);
+        }
+      }
+      for (const entry of await fs.readdir(path.join(stateRoot, "history"), { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const relative = `history/${entry.name}`;
+        if (!required.includes(relative)) {
+          problems.push(`template ships ${relative}, which doctor.ts does not require`);
+        }
+      }
+      return problems;
+    }
+  },
+  {
+    name: "shipped content carries no injection signatures or credentials",
+    run: async () => {
+      // Religion ships prompt text, not code that runs. Every skill and state file lands in
+      // someone else's context as trusted, always-loaded instructions, in the one place the
+      // untrusted-input rule explicitly does not apply. A poisoned line here would be read
+      // as an instruction by every install, which is a sharper supply chain than a package
+      // whose worst case is code executing.
+      //
+      // These patterns are deliberately not shared with the runtime hook. That hook scans
+      // arbitrary content a project reads; this scans text this project is about to publish.
+      // Different surfaces, different tuning, and the hook has to stay standalone because it
+      // is copied into projects where this file does not exist.
+      const INJECTION = [
+        /ignore\s+(?:all\s+)?(?:previous|above|prior)\s+instructions/i,
+        /disregard\s+(?:all\s+)?(?:previous|prior|the\s+above)/i,
+        /forget\s+(?:all\s+)?(?:your\s+)?(?:previous\s+)?instructions/i,
+        /override\s+(?:the\s+)?(?:system|previous)\s+(?:prompt|instructions)/i,
+        /from\s+now\s+on,?\s+you\s+(?:are|will|should|must)/i,
+        /(?:reveal|repeat|print)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions)/i,
+        /<<\s*SYS\s*>>/i,
+        /\[(?:SYSTEM|INST)\]/
+      ];
+      const SECRETS = [
+        { re: /\bnpm_[A-Za-z0-9]{36}\b/, what: "an npm token" },
+        { re: /\bgh[pousr]_[A-Za-z0-9]{36,}\b/, what: "a GitHub token" },
+        { re: /-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----/, what: "a private key" },
+        { re: /\bAKIA[0-9A-Z]{16}\b/, what: "an AWS access key id" }
+      ];
+
+      // Two files quote these phrasings in order to describe them. A check that fires on
+      // its own documentation is one people learn to skip.
+      const EXEMPT = ["untrusted-input.md", "scan-untrusted-input.mjs"];
+
+      const roots = [
+        path.join(repoRoot, "src", "skills"),
+        path.join(repoRoot, "src", "entry"),
+        path.join(repoRoot, "src", "state"),
+        path.join(repoRoot, "src", "hooks"),
+        path.join(repoRoot, "template")
+      ];
+
+      const problems: string[] = [];
+      for (const root of roots) {
+        for (const file of await walkIfPresent(root)) {
+          if (EXEMPT.some((name) => file.endsWith(name))) continue;
+          const contents = await fs.readFile(file, "utf8");
+          const where = path.relative(repoRoot, file);
+          contents.split(/\r?\n/).forEach((line, index) => {
+            // One report per line: a line matching two patterns is one problem, not two.
+            const signatures = INJECTION.filter((re) => re.test(line)).length;
+            if (signatures > 0) {
+              problems.push(
+                `${where}:${index + 1}: ${signatures} injection signature${signatures === 1 ? "" : "s"}: ` +
+                line.trim().slice(0, 80)
+              );
+            }
+            const secret = SECRETS.find(({ re }) => re.test(line));
+            if (secret) problems.push(`${where}:${index + 1}: looks like ${secret.what}`);
+
+            // A regex over the literal text is defeated by one round of base64, which is
+            // cheap enough that leaving it out would make the whole check advisory. Decode
+            // any long blob and ask the same questions of what comes out.
+            for (const blob of line.match(/[A-Za-z0-9+/]{40,}={0,2}/g) ?? []) {
+              const decoded = decodeBase64(blob);
+              if (!decoded) continue;
+              const inner = INJECTION.filter((re) => re.test(decoded)).length;
+              if (inner > 0) {
+                problems.push(
+                  `${where}:${index + 1}: base64 blob decodes to ${inner} injection ` +
+                  `signature${inner === 1 ? "" : "s"}: ${decoded.trim().slice(0, 60)}`
+                );
+              }
+              const hidden = SECRETS.find(({ re }) => re.test(decoded));
+              if (hidden) problems.push(`${where}:${index + 1}: base64 blob decodes to ${hidden.what}`);
+            }
+          });
+        }
+      }
+      return problems;
+    }
   }
 ];
 
@@ -158,6 +293,26 @@ async function renderedFiles(): Promise<string[]> {
     else files.push(...(await walkIfPresent(root)));
   }
   return files;
+}
+
+/**
+ * Decode a base64 blob, or return null when it is not text.
+ *
+ * Long base64-shaped runs in this repository are far more often a hash or an integrity
+ * string than an encoded message. Requiring the result to be mostly printable is what keeps
+ * this from reporting every checksum it walks past.
+ */
+function decodeBase64(blob: string): string | null {
+  if (blob.length % 4 !== 0) return null;
+  let decoded: string;
+  try {
+    decoded = Buffer.from(blob, "base64").toString("utf8");
+  } catch {
+    return null;
+  }
+  if (decoded.length < 12) return null;
+  const printable = decoded.replace(/[^\x20-\x7e\s]/g, "").length;
+  return printable / decoded.length > 0.9 ? decoded : null;
 }
 
 async function walkIfPresent(dir: string): Promise<string[]> {

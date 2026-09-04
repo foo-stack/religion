@@ -2,6 +2,7 @@
 name: try
 summary: write the human walkthrough for reviewing the work yourself
 description: "Generate the manual walkthrough for the current or most recently completed work: what to start, where to go, what to click or run, what to expect, and what would count as wrong. Read-only, and written for a person rather than an agent. $complete emits one for every completed item automatically, so this is for asking again later or for work still in progress. Use when the user runs $try, asks how to see or test a change themselves, asks where to click, or wants a manual review path."
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # try - the human review path

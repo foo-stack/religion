@@ -24,10 +24,52 @@ Four, matched to the prose they back up.
 | --- | --- | --- | --- |
 | `PreToolUse` on Bash | a command that pushes, deploys, publishes, force-updates a ref, or merges | blocks it, naming the approval that is missing | Authority, first tier |
 | `Stop` | end of a turn | regenerates `religion/context/handoff.md` from the state files | the handoff contract |
-| `UserPromptSubmit` | any prompt, when the plans have changed since the overview was generated | injects a stale-overview notice so the next action refreshes it | the overview freshness rule |
 | `PreToolUse` on Edit and Write | a write to a rendered adapter tree in a Religion source checkout | blocks it, pointing at the authored source instead | the never-edit-rendered-output rule |
+| `PostToolUse` on Read, WebFetch and WebSearch | content carrying known prompt-injection signatures | warns, naming the file and what it tried to do | the untrusted-input rule |
 
-The fourth applies only when working on Religion itself, not to installed projects.
+The third applies only when working on Religion itself, not to installed projects.
+
+## What ships is scanned before it ships
+
+Religion publishes prompt text, not code that runs. Every skill and state file lands in
+someone else's context as trusted, always-loaded instructions, in the one place the
+untrusted-input rule deliberately does not apply: a project is supposed to trust these
+files. A poisoned line here would be read as an instruction by every install.
+
+So the verification suite scans what the package ships, and the sources it is built from,
+for known injection signatures and for anything shaped like a credential. It runs locally,
+on every pull request, and inside the release workflow before publishing, because that
+workflow runs the same suite.
+
+The rule document and the scanner are exempt: both quote these phrasings in order to
+describe them, and a check that fires on its own documentation is one people learn to skip.
+
+Long base64 blobs are decoded and asked the same questions, because a regex over literal
+text is defeated by one round of encoding and that is cheap enough to be the first thing
+anyone tries. A decoded blob has to look like text before it is scanned, which is what
+keeps every checksum and integrity string in the tree from being reported.
+
+This is still a blocklist of known wordings. It raises the cost of the obvious attempt and
+of the obvious attempt wearing a disguise. It does not recognise novel phrasing, and it
+does not look inside an archive or an image.
+
+## What a hook does when it breaks
+
+Every hook declares what happens if it crashes, and the two guards declare the same thing:
+**they ask.**
+
+A guard that fails open becomes the exact outcome it exists to prevent. The command runs,
+nobody is asked, and nothing says the check was skipped. That is worse than having no guard,
+because the absence is invisible.
+
+Failing closed is not the answer either. One malformed payload from a runtime change would
+block every push, merge and publish until somebody edits a hook, and the rule these hooks
+back up says not to edit them to get past a block.
+
+So a crashed guard degrades to the prompt it would have raised anyway, naming the failure.
+The worst case of a bug in a guard is one extra prompt, rather than a first-tier action
+that silently went unchecked. The handoff hook is advisory and fails open, because a missing
+handoff file costs a re-read and nothing else.
 
 ## What hooks deliberately do not do
 

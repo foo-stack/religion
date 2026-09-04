@@ -99,12 +99,16 @@ a rendered tree.
 ```bash
 npm run build          # render skills, entry files, and state templates
 npm test               # verification and routing checks
-npm run verify         # tokens, drift, types, state-file hygiene
+npm run verify         # nine checks: drift, types, docs, and what the package ships
 npm run test:routing   # routing corpus, plus description overlap
 ```
 
 Design decisions live in `docs/architecture/`: the state model and its invariants, how
 enforcement splits between prose and hooks, the configuration schema, and how releases work.
+
+`docs/decisions.md` is the full record of every decision taken while building Religion.
+`docs/architecture/decisions/` covers the twelve where the rejected alternative still has
+advocates, and what would have to be true to revisit each one.
 
 ### Releasing
 

@@ -21,10 +21,12 @@ is done here, and they outrank anything you infer from the code alone.
 - `religion/config.json` - deterministic workflow settings
 - `religion/context/project-overview.md` - the project's source of truth
 - `religion/context/coding-standards.md` - conventions to follow
+- `religion/context/untrusted-input.md` - what to do with text the project did not write
 - `religion/context/ai-interaction.md` - how to work with the user on this project
 - `religion/context/current-work.md` - the one feature, fix, or rollback in progress
 - `religion/context/handoff.md` - where the work sits and what to read first
 - `religion/context/findings.md` - the findings ledger, when it holds anything
+- `religion/context/inbox.md` - notes taken mid-build, waiting to be specced or dropped
 - `religion/learning/lessons.md` - what previous runs learned about this project
 
 ## Workflow
@@ -53,6 +55,7 @@ and follow directly.
 - `audit`         - review the code itself across four lenses, recording findings in the ledger
 - `auto`          - run the loop unattended, within explicit bounds
 - `browser-tests` - set up a repeatable browser test harness and record its command
+- `capture`       - note something for later without breaking the one thing in progress
 - `check`         - prove the current work does what its spec says, against the running project
 - `ci`            - define one Verify command and the GitHub workflow that runs it
 - `complete`      - run the final gate, archive the work, commit it, and close it out
@@ -70,6 +73,7 @@ and follow directly.
 - `release`       - prepare deployment readiness for Railway, Render, or Vercel
 - `rollback`      - plan a guarded reversal of completed work, preserving its history
 - `setup`         - tune the installation to this project, greenfield or existing
+- `spike`         - answer one feasibility question with throwaway code, then delete it
 - `status`        - say where the work stands and what to do next
 - `tests`         - set up unit testing, or backfill coverage for logic that already exists
 - `try`           - write the human walkthrough for reviewing the work yourself
@@ -178,6 +182,9 @@ Either way, implementation stops early and asks whenever a check fails, a decisi
 needed, a conflict appears, the work drifts outside its spec, or something in the first
 tier of the authority rules comes up.
 
+`workflow.parallelSteps` ships `false`. Turned on, steps a spec marks as independent are
+built together in one wave and reviewed as one packet, so nothing lands unreviewed either
+way. While it is off, those markers are ignored and every spec builds in order.
 ## Activity
 
 Any skill that changes something writes an activity record to

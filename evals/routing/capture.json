@@ -1,0 +1,17 @@
+{
+  "skill": "capture",
+  "positive": [
+    { "prompt": "Note that the rate limiter drops the first request after an idle period" },
+    { "prompt": "Park this for later: the export filename should include the date" },
+    { "prompt": "Remember to look at the retry backoff at some point" },
+    { "prompt": "Jot that down, I do not want to stop what we are doing" },
+    { "prompt": "Worth doing some other time: consolidate the two date helpers" }
+  ],
+  "negative": [
+    { "prompt": "The export button does nothing, fix it", "owner": "fix" },
+    { "prompt": "Spec the next planned feature", "owner": "feature" },
+    { "prompt": "Review this for quality problems and record what you find", "owner": "audit" },
+    { "prompt": "Where do things stand right now", "owner": "status" },
+    { "prompt": "Simplify packages/api, it is bloated", "owner": "refactor" }
+  ]
+}

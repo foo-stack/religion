@@ -30,8 +30,10 @@ The spec for the work in progress lives in `{{state}}/context/current-work.md`.
 1. **Spec.** Run {{cmd:feature}} with no argument to spec the first unchecked item in the
    build plan, or name one. Add ` preview` to see what it involves without writing
    anything. For a bug or small change that is not in the plan, run {{cmd:fix}}. To simplify
-   code that already exists without changing what it does, run {{cmd:refactor}}. Review
-   the spec before any code exists.
+   code that already exists without changing what it does, run {{cmd:refactor}}. When the
+   item rests on an assumption nobody has tested, run {{cmd:spike}} first: it answers one
+   question with throwaway code and deletes it, which is cheaper than a spec built on a
+   guess. Review the spec before any code exists.
 2. **Implement.** Run {{cmd:implement}}. It builds one step at a time, never the whole
    item at once.
 3. **Review.** Each step shows a diff, not whole files, with a short summary: what the
@@ -64,6 +66,17 @@ separate save or load.
 
 If you are unsure where things stand, run {{cmd:status}}. If you are unsure whether the
 setup is healthy, run {{cmd:doctor}}. Both are read-only.
+
+**Noticing something else is not a reason to stop.** One work item at a time is what keeps a
+cleared context cheap, and it is also why a good thought mid-build has nowhere to go. Run
+{{cmd:capture}} to put it in the inbox in one line and carry on. {{cmd:fix}} and
+{{cmd:feature}} read that inbox when you next choose what to build.
+
+**Stopping is a thing you do, not a thing that happens.** Before a long pause, a context
+that is filling, or anything that might end the session, put the state on disk: tick what
+passed, record what is half-done and where, and leave the working tree in a state you would
+be content to find. Resumption is only as good as the last write, and the cost of stopping
+untidily is paid by whoever picks it up, which is usually you.
 
 ## When stuck
 

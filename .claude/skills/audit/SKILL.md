@@ -2,6 +2,7 @@
 name: audit
 summary: review the code itself across four lenses, recording findings in the ledger
 description: "Read-only code review across four lenses (quality, security, performance, tests) and four scopes (current work, changed files, a path, or the whole project), fanning the lenses out to subagents that read and return findings while this skill performs the single write. Records each finding in religion/context/findings.md with a durable identifier, a severity from P0 to P3, and a status, where an open or fixed P0 or P1 blocks completion. Use when the user runs /audit, asks for a code, quality, security, performance, or test review, wants dead code or duplication found, or wants a repair re-reviewed before it closes."
+allowed-tools: Read, Grep, Glob, Bash, Agent, Write, Edit
 ---
 
 # audit - review the code, and record what you find

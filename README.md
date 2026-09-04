@@ -104,7 +104,22 @@ npm run test:routing   # routing corpus, plus description overlap
 ```
 
 Design decisions live in `docs/architecture/`: the state model and its invariants, how
-enforcement splits between prose and hooks, and the configuration schema.
+enforcement splits between prose and hooks, the configuration schema, and how releases work.
+
+### Releasing
+
+Every pull request that changes published behaviour carries a changeset:
+
+```bash
+npm run changeset      # describe the change and pick the bump
+```
+
+Merging to `main` opens a `chore: version packages` pull request that applies the pending
+changesets. Merging that pull request publishes to npm. Publishing happens only in
+`.github/workflows/release.yml`, authenticated by the identity of the workflow itself, so
+there is no npm token anywhere and `npm publish` from a laptop will not work.
+
+See `docs/architecture/releasing.md` for the full flow and the one-time setup it depends on.
 
 ## License
 

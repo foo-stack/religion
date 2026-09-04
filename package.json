@@ -5,6 +5,9 @@
   "license": "MIT",
   "description": "Maintainer workspace for Religion, a file-backed spec-driven AI development workflow.",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "node": ">=22"
   },
@@ -17,9 +20,12 @@
     "test:routing": "tsx scripts/evals/routing.ts",
     "build:package": "tsx scripts/build-package.ts",
     "build": "npm run build:skills && npm run build:package",
-    "test": "npm run verify && npm run test:routing"
+    "test": "npm run verify && npm run test:routing",
+    "changeset": "changeset",
+    "release": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.2",
     "@types/node": "^22.0.0",
     "tsx": "^4.20.0",
     "typescript": "^5.6.0"

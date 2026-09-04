@@ -1,7 +1,7 @@
 ---
 name: complete
 summary: run the final gate, archive the work, commit it, and close it out
-description: "Close out a finished feature, fix, rollback, or refactor campaign. Runs the full Verify command and the final safety pass, applies the configured quality gates, archives the spec under religion/history/, ticks the build plan, prunes resolved findings into the archive, resets the active spec, and makes the work commit. Under branch-per-item it squash-merges only with explicit approval, then asks separately before pushing. Ends with a manual walkthrough of what landed. Use when the user runs /complete, or asks to finish, wrap up, close out, or merge the current work item once it is built and reviewed."
+description: "Close out a finished feature, fix, rollback, or refactor campaign. Runs the full Verify command and the final safety pass, applies the configured quality gates, archives the spec under religion/history/, ticks the build plan, prunes resolved findings into the archive, resets the active spec, and makes the work commit. Under branch-per-item it squash-merges only with explicit approval, then asks separately before pushing. Under pull-request it pushes the branch and opens a pull request into the default branch, merging nothing. Ends with a manual walkthrough of what landed. Use when the user runs /complete, or asks to finish, wrap up, close out, or merge the current work item once it is built and reviewed."
 ---
 
 # complete - close out the finished work
@@ -152,9 +152,32 @@ Under **`branch-per-item`**:
 2. Delete the branch after a clean merge.
 3. Stop.
 
-Then, in either mode, ask separately whether to push. **Approval to merge is not approval
-to push.** Push only after an explicit yes to pushing, in this conversation. If there is no
+In those two modes, ask separately whether to push. **Approval to merge is not approval to
+push.** Push only after an explicit yes to pushing, in this conversation. If there is no
 remote, say so rather than guessing.
+
+Under **`pull-request`** nothing is merged here and the default branch is never written to.
+The branch goes up, the pull request describes it, and the merge is the user's, on the host:
+
+1. Confirm the repository can host one: a remote exists and the host command works. If it
+   cannot, stop and say so plainly. The work is committed on its branch and the user can
+   open the pull request themselves. Never invent a remote, and never quietly fall back to
+   a local merge, which would swap the history model without saying so.
+2. Push the branch and set its upstream, only with an explicit yes in this conversation.
+   **That yes covers pushing this branch and nothing else.** Neither running this skill nor
+   "looks good" is that yes.
+3. Open the pull request from the branch into the default branch. Title it from the work
+   commit. The body carries what changed and why, the checks that ran with the exact command
+   or output proving each, the manual walkthrough from Step 5, and anything left open:
+   unresolved findings, deliberate omissions, follow-ups.
+4. Report the pull request URL and stop. Do not merge it, do not wait or poll for it, and do
+   not touch the default branch.
+
+Deleting the branch is a separate, later action, because the merge happens outside this
+session. When the user says it merged: check out the default branch, fast-forward it,
+confirm the work commit is actually in it, and only then delete the branch locally and on
+the remote. A squash-merge leaves no merge parent, so `git branch -d` will refuse; verify
+the content landed before reaching for `-D`.
 
 ## Step 5 - say how to try it
 

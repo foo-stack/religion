@@ -46,7 +46,10 @@ for (const { re, what } of PATTERNS) {
   const reason =
     `Blocked: ${what}${forced ? " (forced)" : ""} is a first-tier action.\n\n` +
     `The Authority section of this project's entry file requires an explicit yes for it, ` +
-    `in this conversation, every time. No mode or setting grants it.\n\n` +
+    `in this conversation. The one narrow exception is an automated run under ` +
+    `git.mode pull-request, which may push branches it created after enumerating exactly ` +
+    `that at invocation. This prompt is a net, not a second opinion: if that grant was ` +
+    `given, confirm and continue.\n\n` +
     `If the user has already approved this exact action, say so and ask them to confirm ` +
     `once more, then proceed. Do not edit or disable this hook to get past it.`;
 

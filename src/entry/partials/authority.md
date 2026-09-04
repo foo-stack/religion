@@ -6,10 +6,13 @@ one is never approval for another, and an approval given earlier in a session do
 carry to a later instance.
 
 - merging into the default branch
-- pushing to any remote
+- pushing to the default branch, and force-pushing anything anywhere
 - deploying, publishing, or sending anything outward
 - deleting files or data, and any rewrite of existing history
 - changing a remote service, its configuration, or its secrets
+
+Pushing a branch that a run created itself is the single action that may be granted ahead
+of time, and only in the narrow way set out below. Every other push is first tier.
 
 **Ask unless an automated run is underway.** In normal work these need an explicit yes at
 the time. Invoking an automated mode grants them for that run only, because that
@@ -18,6 +21,12 @@ invocation is the approval:
 - committing, including step checkpoints
 - installing or upgrading dependencies
 - network calls that reach a remote service
+
+Under `git.mode: pull-request` an automated run may also push the branches it created and
+open pull requests into a branch it created, but only when its invocation stated exactly
+that, in full, and the user agreed at that moment. A general yes to running is not that
+agreement, and the enumeration is not boilerplate to skip. The run still never writes to
+the default branch, and never merges the pull request it exists to produce.
 
 An automated run's grant never reaches the first tier. It commits freely and still stops
 to ask before it merges.

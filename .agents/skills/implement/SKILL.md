@@ -50,9 +50,11 @@ Read `git.mode`.
 If the current branch looks wrong for this work, say so and ask; do not switch or create
 one unprompted.
 
-**`branch-per-item`** creates and checks out a branch named from the spec using the
-configured prefix. On a resume the branch exists already, so check it out rather than
-creating a second one.
+**`branch-per-item`** and **`pull-request`** both create and check out a branch named from
+the spec, using the prefix configured for its kind: feature, fix, rollback, or refactor.
+They differ only in how the work leaves the branch at completion, which is not this skill's
+concern. On a resume the branch exists already, so check it out rather than creating a
+second one.
 
 Either way, if the project is not a git repository, say so and ask the user to initialize
 one. The loop needs history to be reviewable.

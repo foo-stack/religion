@@ -1,7 +1,7 @@
 ---
 name: complete
 summary: run the final gate, archive the work, commit it, and close it out
-description: "Close out a finished feature, fix, or rollback. Runs the full Verify command and the final safety pass, applies the configured quality gates, archives the spec under {{state}}/history/, ticks the build plan, prunes resolved findings into the archive, resets the active spec, and makes the work commit. Under branch-per-item it squash-merges only with explicit approval, then asks separately before pushing. Ends with a manual walkthrough of what landed. Use when the user runs {{cmd}}, or asks to finish, wrap up, close out, or merge the current work item once it is built and reviewed."
+description: "Close out a finished feature, fix, rollback, or refactor campaign. Runs the full Verify command and the final safety pass, applies the configured quality gates, archives the spec under {{state}}/history/, ticks the build plan, prunes resolved findings into the archive, resets the active spec, and makes the work commit. Under branch-per-item it squash-merges only with explicit approval, then asks separately before pushing. Ends with a manual walkthrough of what landed. Use when the user runs {{cmd}}, or asks to finish, wrap up, close out, or merge the current work item once it is built and reviewed."
 ---
 
 # complete - close out the finished work
@@ -80,6 +80,9 @@ Read the spec's type.
 - **Rollback** - archive to `{{state}}/history/rollbacks/YYYY-MM-DD-NN-name.md`, leaving
   the original feature archive intact. Untick the target item, and append a short note to
   that line with the date and the rollback's archive path. Keep the number stable.
+- **Refactor** - archive to `{{state}}/history/refactors/area-lens.md`. A campaign is not a
+  plan item, so there is nothing to tick. Carry the deferred candidates across into the
+  archive, since they are what the next campaign over that area starts from.
 
 The number lives in the path. It never appears in the commit message.
 

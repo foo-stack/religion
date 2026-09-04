@@ -18,6 +18,10 @@
     "audit": "when-sensitive",
     "check": "when-behavioral"
   },
+  "refactor": {
+    "maxFileLines": 400,
+    "maxFunctionLines": 50
+  },
   "auto": {
     "maxItems": null,
     "maxRepairAttempts": 2,

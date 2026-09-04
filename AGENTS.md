@@ -66,6 +66,7 @@ and follow directly.
 - `implement`     - build the current spec one reviewed step at a time
 - `overview`      - distill the two planning documents into the project's source of truth
 - `prototype`     - explore the look before building, as throwaway mockups or real components
+- `refactor`      - simplify existing code in one behaviour-preserving campaign at a time
 - `release`       - prepare deployment readiness for Railway, Render, or Vercel
 - `rollback`      - plan a guarded reversal of completed work, preserving its history
 - `setup`         - tune the installation to this project, greenfield or existing

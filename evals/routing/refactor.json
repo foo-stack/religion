@@ -1,0 +1,21 @@
+{
+  "skill": "refactor",
+  "positive": [
+    { "prompt": "Simplify packages/api, it is bloated" },
+    { "prompt": "We define slugify in four different places, consolidate it" },
+    { "prompt": "src/legacy/date.ts hand-rolls date parsing, replace it with what the language already has" },
+    { "prompt": "This module is over-engineered, strip it back to what is actually used" },
+    { "prompt": "Clean up the inherited code in packages/web" },
+    { "prompt": "Shrink this file, it is 900 lines of mostly comments" }
+  ],
+  "negative": [
+    { "prompt": "Review src/auth for security problems", "owner": "audit" },
+    { "prompt": "Do a quality review of the current work and record what you find", "owner": "audit" },
+    { "prompt": "Find dead code and duplication across the project", "owner": "audit" },
+    { "prompt": "The export button does nothing, fix it", "owner": "fix" },
+    { "prompt": "Add tests covering src/lib/date.ts", "owner": "tests" },
+    { "prompt": "Build the next step of the current spec", "owner": "implement" },
+    { "prompt": "Spec the next planned feature", "owner": "feature" },
+    { "prompt": "Work out why the date parser returns the wrong month", "owner": "debug" }
+  ]
+}

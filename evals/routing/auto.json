@@ -19,6 +19,14 @@
     {
       "prompt": "Spec the next item",
       "owner": "feature"
+    },
+    {
+      "prompt": "Open a pull request for the work that is finished",
+      "owner": "complete"
+    },
+    {
+      "prompt": "Push this branch and raise a PR into main",
+      "owner": "complete"
     }
   ]
 }

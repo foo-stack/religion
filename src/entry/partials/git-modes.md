@@ -9,7 +9,18 @@ that belongs to you, not to a workflow.
 squash-merges it once the work is done and you have said yes. The merge and any push are
 asked for separately: agreeing to a merge is never agreement to push.
 
-`git.checkpoints` decides what happens to intermediate work, in either mode:
+**`pull-request`** branches exactly as `branch-per-item` does, then pushes the branch and
+opens a pull request into the default branch instead of merging anything locally. Nothing
+merges that pull request and nothing writes to the default branch: the merge is yours, on
+the host. How the work lands there, squash or merge commit or rebase, is the pull request's
+setting rather than this workflow's business.
+
+A repository that cannot host a pull request, having no remote or no usable host command,
+is a stop rather than a reason to fall back to a local merge. Falling back would swap one
+history model for another without saying so, and skip the review gate the mode exists to
+create.
+
+`git.checkpoints` decides what happens to intermediate work, in any mode:
 
 | Value | Behavior |
 | --- | --- |

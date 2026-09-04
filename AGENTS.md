@@ -94,10 +94,13 @@ one is never approval for another, and an approval given earlier in a session do
 carry to a later instance.
 
 - merging into the default branch
-- pushing to any remote
+- pushing to the default branch, and force-pushing anything anywhere
 - deploying, publishing, or sending anything outward
 - deleting files or data, and any rewrite of existing history
 - changing a remote service, its configuration, or its secrets
+
+Pushing a branch that a run created itself is the single action that may be granted ahead
+of time, and only in the narrow way set out below. Every other push is first tier.
 
 **Ask unless an automated run is underway.** In normal work these need an explicit yes at
 the time. Invoking an automated mode grants them for that run only, because that
@@ -106,6 +109,12 @@ invocation is the approval:
 - committing, including step checkpoints
 - installing or upgrading dependencies
 - network calls that reach a remote service
+
+Under `git.mode: pull-request` an automated run may also push the branches it created and
+open pull requests into a branch it created, but only when its invocation stated exactly
+that, in full, and the user agreed at that moment. A general yes to running is not that
+agreement, and the enumeration is not boilerplate to skip. The run still never writes to
+the default branch, and never merges the pull request it exists to produce.
 
 An automated run's grant never reaches the first tier. It commits freely and still stops
 to ask before it merges.
@@ -136,7 +145,18 @@ that belongs to you, not to a workflow.
 squash-merges it once the work is done and you have said yes. The merge and any push are
 asked for separately: agreeing to a merge is never agreement to push.
 
-`git.checkpoints` decides what happens to intermediate work, in either mode:
+**`pull-request`** branches exactly as `branch-per-item` does, then pushes the branch and
+opens a pull request into the default branch instead of merging anything locally. Nothing
+merges that pull request and nothing writes to the default branch: the merge is yours, on
+the host. How the work lands there, squash or merge commit or rebase, is the pull request's
+setting rather than this workflow's business.
+
+A repository that cannot host a pull request, having no remote or no usable host command,
+is a stop rather than a reason to fall back to a local merge. Falling back would swap one
+history model for another without saying so, and skip the review gate the mode exists to
+create.
+
+`git.checkpoints` decides what happens to intermediate work, in any mode:
 
 | Value | Behavior |
 | --- | --- |

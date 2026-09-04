@@ -8,7 +8,9 @@
     "checkpoints": "every-step",
     "featureBranchPrefix": "feature/",
     "fixBranchPrefix": "fix/",
-    "rollbackBranchPrefix": "rollback/"
+    "rollbackBranchPrefix": "rollback/",
+    "refactorBranchPrefix": "refactor/",
+    "integrationBranchPrefix": "auto/"
   },
   "verification": {
     "logicTests": "when-configured",

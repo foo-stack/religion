@@ -116,7 +116,9 @@ async function runInstall(options: Options): Promise<void> {
     create: plan.filter((p) => p.action === "create").length,
     update: plan.filter((p) => p.action === "update").length,
     conflict: plan.filter((p) => p.action === "conflict").length,
-    kept: plan.filter((p) => p.action === "seed-skip").length
+    kept: plan.filter((p) => p.action === "seed-skip").length,
+    merge: plan.filter((p) => p.action === "merge").length,
+    remerge: plan.filter((p) => p.action === "remerge").length
   };
 
   console.log(`\nAdapters: ${adapters.map((a) => ADAPTERS[a].label).join(", ")}`);
@@ -124,9 +126,24 @@ async function runInstall(options: Options): Promise<void> {
   console.log(`  update   ${counts.update}`);
   console.log(`  keep     ${counts.kept}  (your files, never overwritten)`);
   console.log(`  conflict ${counts.conflict}`);
+  if (counts.merge > 0) console.log(`  merge    ${counts.merge}  (your file, awaiting a decision)`);
+  if (counts.remerge > 0) console.log(`  merged   ${counts.remerge}  (your sections kept)`);
 
   for (const entry of plan.filter((p) => p.action === "conflict")) {
     console.log(`    ${entry.relative}`);
+  }
+
+  const mergeable = plan.filter((p) => p.action === "merge").map((p) => p.relative);
+  let merge = false;
+  if (mergeable.length > 0) {
+    console.log(`\nThese already exist and were written by you:`);
+    for (const relative of mergeable) console.log(`    ${relative}`);
+    console.log(
+      "\nReligion can append its own sections to them inside markers, keeping everything" +
+        "\nyou wrote exactly where it is. Later updates then replace only what is between" +
+        "\nthose markers. The originals are backed up either way."
+    );
+    merge = await confirmMerge(options.yes);
   }
 
   if (options.dryRun) {
@@ -140,10 +157,13 @@ async function runInstall(options: Options): Promise<void> {
     );
   }
 
-  const result = await applyInstall(templateRoot, target, plan, { force: options.force });
+  const result = await applyInstall(templateRoot, target, plan, { force: options.force, merge });
   await writeManifest(target, await version(), adapters, templateRoot, previous, result.conflicts);
 
   console.log(`\nWrote ${result.written.length} file(s).`);
+  if (result.merged.length > 0) {
+    console.log(`Merged ${result.merged.length} entry file(s), keeping what you wrote.`);
+  }
   if (result.backups.length > 0) console.log(`Backed up ${result.backups.length} conflicting file(s).`);
   if (result.conflicts.length > 0) {
     console.log(
@@ -167,6 +187,21 @@ async function runInstall(options: Options): Promise<void> {
   if (!updating) {
     console.log("\nNext: run the setup skill in your AI tool, then fill in the two plans.");
   }
+}
+
+/**
+ * Ask before rewriting a file the user wrote.
+ *
+ * Defaults to yes because the merge is additive and reversible: nothing of theirs moves and
+ * the original is backed up first. Declining leaves the file untouched and reported as a
+ * conflict, which is the old behaviour.
+ */
+async function confirmMerge(assumeYes: boolean): Promise<boolean> {
+  if (assumeYes || !process.stdin.isTTY) return assumeYes;
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const answer = (await rl.question("\nMerge them? [Y/n] ")).trim().toLowerCase();
+  rl.close();
+  return answer === "" || answer === "y" || answer === "yes";
 }
 
 async function chooseAdapters(assumeYes: boolean): Promise<Adapter[]> {

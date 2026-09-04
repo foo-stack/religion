@@ -232,11 +232,14 @@ function parse(argv: readonly string[]): Options {
 function printHelp(): void {
   console.log(`religion - a file-backed, spec-driven AI development workflow
 
-  religion install [dir]     add the workflow to a project
-  religion update  [dir]     update the workflow files, preserving your own
-  religion status            where the work stands, and what to do next
-  religion doctor            check the setup is healthy
-  religion dashboard         a local read-only view
+Run as \`npx create-religion <command>\`, or as \`religion <command>\` when the package
+is installed globally.
+
+  install [dir]     add the workflow to a project
+  update  [dir]     update the workflow files, preserving your own
+  status            where the work stands, and what to do next
+  doctor            check the setup is healthy
+  dashboard         a local read-only view
 
 Options
   --claude --codex --copilot --opencode   pick adapters (default: all)

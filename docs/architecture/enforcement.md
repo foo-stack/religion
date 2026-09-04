@@ -18,16 +18,33 @@ the same Religion with a safety net.
 
 ## The hooks
 
-Four, matched to the prose they back up.
+Three, matched to the prose they back up.
 
 | Hook | Fires on | Enforces | Prose it backs |
 | --- | --- | --- | --- |
 | `PreToolUse` on Bash | a command that pushes, deploys, publishes, force-updates a ref, or merges | blocks it, naming the approval that is missing | Authority, first tier |
 | `Stop` | end of a turn | regenerates `religion/context/handoff.md` from the state files | the handoff contract |
-| `UserPromptSubmit` | any prompt, when the plans have changed since the overview was generated | injects a stale-overview notice so the next action refreshes it | the overview freshness rule |
 | `PreToolUse` on Edit and Write | a write to a rendered adapter tree in a Religion source checkout | blocks it, pointing at the authored source instead | the never-edit-rendered-output rule |
 
-The fourth applies only when working on Religion itself, not to installed projects.
+The third applies only when working on Religion itself, not to installed projects.
+
+## What a hook does when it breaks
+
+Every hook declares what happens if it crashes, and the two guards declare the same thing:
+**they ask.**
+
+A guard that fails open becomes the exact outcome it exists to prevent. The command runs,
+nobody is asked, and nothing says the check was skipped. That is worse than having no guard,
+because the absence is invisible.
+
+Failing closed is not the answer either. One malformed payload from a runtime change would
+block every push, merge and publish until somebody edits a hook, and the rule these hooks
+back up says not to edit them to get past a block.
+
+So a crashed guard degrades to the prompt it would have raised anyway, naming the failure.
+The worst case of a bug in a guard is one extra prompt, rather than a first-tier action
+that silently went unchecked. The handoff hook is advisory and fails open, because a missing
+handoff file costs a re-read and nothing else.
 
 ## What hooks deliberately do not do
 

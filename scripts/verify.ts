@@ -8,6 +8,7 @@
 
 import { spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
+import fsSync from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -110,6 +111,58 @@ const checks: Check[] = [
             problems.push(`${path.relative(repoRoot, file)}:${index + 1}: ${line.trim()}`);
           }
         });
+      }
+      return problems;
+    }
+  },
+  {
+    name: "every configuration key is documented",
+    run: async () => {
+      // A setting that ships without a row in the reference is invisible: nobody can set
+      // what they cannot find, and the default becomes the only value anyone ever uses.
+      const config = JSON.parse(
+        await fs.readFile(path.join(repoRoot, "src", "state", "config.json"), "utf8")
+      ) as Record<string, unknown>;
+      const docs = await fs.readFile(path.join(repoRoot, "docs/architecture/config.md"), "utf8");
+
+      const problems: string[] = [];
+      for (const [section, value] of Object.entries(config)) {
+        if (typeof value !== "object" || value === null) continue;
+        for (const key of Object.keys(value as Record<string, unknown>)) {
+          const setting = `${section}.${key}`;
+          if (!docs.includes(`\`${setting}\``)) problems.push(`config.json: ${setting} has no row in config.md`);
+        }
+      }
+      return problems;
+    }
+  },
+  {
+    name: "the command-line tool requires what the template ships",
+    run: async () => {
+      // doctor reports a missing state file as a problem, so its list and the seeded tree
+      // have to agree. When they drift, doctor either misses a real gap or invents one.
+      const doctorSource = await fs.readFile(
+        path.join(repoRoot, "packages/create-religion/lib/doctor.ts"),
+        "utf8"
+      );
+      const block = /const REQUIRED[^=]*=\s*\[([\s\S]*?)\];/.exec(doctorSource);
+      if (!block?.[1]) return ["doctor.ts: could not find the REQUIRED list"];
+
+      const required = [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1] as string);
+      const stateRoot = path.join(repoRoot, "src", "state");
+
+      const problems: string[] = [];
+      for (const relative of required) {
+        if (!fsSync.existsSync(path.join(stateRoot, relative))) {
+          problems.push(`doctor.ts requires ${relative}, which the template does not ship`);
+        }
+      }
+      for (const entry of await fs.readdir(path.join(stateRoot, "history"), { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const relative = `history/${entry.name}`;
+        if (!required.includes(relative)) {
+          problems.push(`template ships ${relative}, which doctor.ts does not require`);
+        }
       }
       return problems;
     }

@@ -2,6 +2,7 @@
 name: status
 summary: say where the work stands and what to do next
 description: "Report where the project stands: build-plan progress, the active spec and which of its steps are done, open findings, git state, and the one action that makes sense next. Uses the religion command-line tool when it is installed, since the parsing is deterministic, and reads the state files directly when it is not. Read-only. Use when the user runs $status, asks where things stand, what is next, what is in progress, or is picking work back up after a break or a cleared context."
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # status - where things stand

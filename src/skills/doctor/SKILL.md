@@ -2,6 +2,7 @@
 name: doctor
 summary: check the setup is healthy and explain anything that is not
 description: "Read-only health check of the installation: required files present, adapter trees in sync, the entry file's commands accurate, configuration valid, plans usable, overview fresh, ignore rules sane, and git state workable. Runs the religion command-line tool for the deterministic checks when it is installed, then explains what any failure means and offers the fix. Use when the user runs {{cmd}}, asks whether the setup is correct, wants a health check, or says something feels wrong before starting or resuming work."
+allowed-tools: Read, Grep, Glob, Bash
 ---
 
 # doctor - is this set up correctly

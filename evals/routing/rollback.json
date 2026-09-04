@@ -9,6 +9,12 @@
     },
     {
       "prompt": "Revert that completed work safely"
+    },
+    {
+      "prompt": "Back out the last two steps, they were wrong"
+    },
+    {
+      "prompt": "Undo the step I just did and untick it"
     }
   ],
   "negative": [
@@ -19,6 +25,10 @@
     {
       "prompt": "Undo my last uncommitted edit",
       "owner": "fix"
+    },
+    {
+      "prompt": "Note that for later, do not stop what we are doing",
+      "owner": "capture"
     }
   ]
 }

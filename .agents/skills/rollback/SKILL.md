@@ -1,7 +1,7 @@
 ---
 name: rollback
 summary: plan a guarded reversal of completed work, preserving its history
-description: "Plan the safe reversal of a completed item using its archive and the commits it recorded when it landed. Verifies the recorded commits still resolve and are ancestors of HEAD, reviews later commits for work that depends on them, then writes a Type: Rollback spec to religion/context/current-work.md and stops before any code changes. The reversal applies only the product diff in reverse, never a whole-commit revert, so the archive and plan bookkeeping that landed in the same commits survive. Use when the user runs $rollback, asks to remove or undo completed work, or wants the project returned to its behavior before an item without erasing the record that it existed."
+description: "Plan the safe reversal of a completed item using its archive and the commits it recorded when it landed. Verifies the recorded commits still resolve and are ancestors of HEAD, reviews later commits for work that depends on them, then writes a Type: Rollback spec to religion/context/current-work.md and stops before any code changes. The reversal applies only the product diff in reverse, never a whole-commit revert, so the archive and plan bookkeeping that landed in the same commits survive. Given `--steps N` instead, backs out the last N steps of the item in progress: stashes anything uncommitted first, reverts what those steps changed, and unticks them, after showing what it will do and being told yes. Use when the user runs $rollback, asks to remove or undo completed work, wants the project returned to its behavior before an item without erasing the record that it existed, or asks to back out or undo the last step or two of work still in progress."
 ---
 
 # rollback - plan a guarded reversal
@@ -16,6 +16,35 @@ archive, its build-plan tick, and its ledger pruning. Reverting them whole would
 record that the work ever existed, and would fight with whatever the plan says now.
 
 This skill plans. It writes a spec and stops. No product file changes here.
+
+**Except in one mode.** `$rollback --steps N` backs out the last N steps of the item currently
+in progress, and does it rather than speccing it. The two jobs share a verb and nothing else:
+reversing completed work is large, has consequences for anything built on top, and earns a
+reviewed spec. Backing out two steps you just wrote is small, local, and speccing it would
+mean writing into the very file whose steps are being undone.
+
+## Backing out steps in progress
+
+Only for `--steps N`. For a completed item, skip to Step 1.
+
+1. **Read the active spec.** Take the last N ticked steps. If fewer than N are ticked, say so
+   and take what there is. If none are, there is nothing to undo and this stops.
+2. **Make it recoverable before making it gone.** Stash anything uncommitted with a named
+   entry, whatever `git.checkpoints` says, and keep the name. Undoing work git cannot recover
+   is a deletion, and the stash is what turns it back into a mistake that costs one command.
+3. **Show what will happen**, then ask once: the steps by number and title, the files that
+   change, and whether they came from commits or the working tree. Wait for a yes. This is
+   the only approval, and it does not extend to anything else.
+4. **Reverse it.** Where the steps are commits, revert their product diff. Where they are
+   uncommitted, restore the files to their state before those steps. Never rewrite pushed
+   history, and never reach past the current work item.
+5. **Untick the steps** in the active spec, so the next $implement resumes at the first
+   of them rather than believing they are done.
+6. **Report** what was reversed, what was left alone, and the exact command that recovers the
+   stash. Say the stash name; a recovery path nobody can find is not one.
+
+The spec, the archive and the build plan are untouched: the item is still in progress, and
+nothing about it has been completed or recorded.
 
 ## Step 1 - identify the target
 
@@ -101,6 +130,11 @@ auto-resolve, discard, stash, reset, or check out broadly. A cascade into other 
 work needs its own plan.
 
 ## Rules
+
+- `--steps` acts; everything else plans. Never blur the two.
+- `--steps` never touches the build plan, an archive, or a completed item.
+- Stash before reverting, every time, even when the steps are committed. The cost is one
+  stash entry and the alternative is an unrecoverable mistake.
 
 - The archive is never deleted or rewritten. Completion adds a rollback record beside it.
 - Reverse only the recorded product diff. Never a whole-commit revert.

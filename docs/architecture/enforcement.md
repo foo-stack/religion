@@ -29,6 +29,24 @@ Four, matched to the prose they back up.
 
 The third applies only when working on Religion itself, not to installed projects.
 
+## What ships is scanned before it ships
+
+Religion publishes prompt text, not code that runs. Every skill and state file lands in
+someone else's context as trusted, always-loaded instructions, in the one place the
+untrusted-input rule deliberately does not apply: a project is supposed to trust these
+files. A poisoned line here would be read as an instruction by every install.
+
+So the verification suite scans what the package ships, and the sources it is built from,
+for known injection signatures and for anything shaped like a credential. It runs locally,
+on every pull request, and inside the release workflow before publishing, because that
+workflow runs the same suite.
+
+The rule document and the scanner are exempt: both quote these phrasings in order to
+describe them, and a check that fires on its own documentation is one people learn to skip.
+
+This is a blocklist of known wordings. It raises the cost of the obvious attempt. It does
+not recognise novel phrasing, and it does not decode content hidden inside an encoded blob.
+
 ## What a hook does when it breaks
 
 Every hook declares what happens if it crashes, and the two guards declare the same thing:

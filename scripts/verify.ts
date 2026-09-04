@@ -166,6 +166,71 @@ const checks: Check[] = [
       }
       return problems;
     }
+  },
+  {
+    name: "shipped content carries no injection signatures or credentials",
+    run: async () => {
+      // Religion ships prompt text, not code that runs. Every skill and state file lands in
+      // someone else's context as trusted, always-loaded instructions, in the one place the
+      // untrusted-input rule explicitly does not apply. A poisoned line here would be read
+      // as an instruction by every install, which is a sharper supply chain than a package
+      // whose worst case is code executing.
+      //
+      // These patterns are deliberately not shared with the runtime hook. That hook scans
+      // arbitrary content a project reads; this scans text this project is about to publish.
+      // Different surfaces, different tuning, and the hook has to stay standalone because it
+      // is copied into projects where this file does not exist.
+      const INJECTION = [
+        /ignore\s+(?:all\s+)?(?:previous|above|prior)\s+instructions/i,
+        /disregard\s+(?:all\s+)?(?:previous|prior|the\s+above)/i,
+        /forget\s+(?:all\s+)?(?:your\s+)?(?:previous\s+)?instructions/i,
+        /override\s+(?:the\s+)?(?:system|previous)\s+(?:prompt|instructions)/i,
+        /from\s+now\s+on,?\s+you\s+(?:are|will|should|must)/i,
+        /(?:reveal|repeat|print)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions)/i,
+        /<<\s*SYS\s*>>/i,
+        /\[(?:SYSTEM|INST)\]/
+      ];
+      const SECRETS = [
+        { re: /\bnpm_[A-Za-z0-9]{36}\b/, what: "an npm token" },
+        { re: /\bgh[pousr]_[A-Za-z0-9]{36,}\b/, what: "a GitHub token" },
+        { re: /-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----/, what: "a private key" },
+        { re: /\bAKIA[0-9A-Z]{16}\b/, what: "an AWS access key id" }
+      ];
+
+      // Two files quote these phrasings in order to describe them. A check that fires on
+      // its own documentation is one people learn to skip.
+      const EXEMPT = ["untrusted-input.md", "scan-untrusted-input.mjs"];
+
+      const roots = [
+        path.join(repoRoot, "src", "skills"),
+        path.join(repoRoot, "src", "entry"),
+        path.join(repoRoot, "src", "state"),
+        path.join(repoRoot, "src", "hooks"),
+        path.join(repoRoot, "template")
+      ];
+
+      const problems: string[] = [];
+      for (const root of roots) {
+        for (const file of await walkIfPresent(root)) {
+          if (EXEMPT.some((name) => file.endsWith(name))) continue;
+          const contents = await fs.readFile(file, "utf8");
+          const where = path.relative(repoRoot, file);
+          contents.split(/\r?\n/).forEach((line, index) => {
+            // One report per line: a line matching two patterns is one problem, not two.
+            const signatures = INJECTION.filter((re) => re.test(line)).length;
+            if (signatures > 0) {
+              problems.push(
+                `${where}:${index + 1}: ${signatures} injection signature${signatures === 1 ? "" : "s"}: ` +
+                line.trim().slice(0, 80)
+              );
+            }
+            const secret = SECRETS.find(({ re }) => re.test(line));
+            if (secret) problems.push(`${where}:${index + 1}: looks like ${secret.what}`);
+          });
+        }
+      }
+      return problems;
+    }
   }
 ];
 

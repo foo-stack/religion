@@ -99,7 +99,7 @@ a rendered tree.
 ```bash
 npm run build          # render skills, entry files, and state templates
 npm test               # verification and routing checks
-npm run verify         # tokens, drift, types, state-file hygiene
+npm run verify         # nine checks: drift, types, docs, and what the package ships
 npm run test:routing   # routing corpus, plus description overlap
 ```
 

@@ -132,8 +132,19 @@ visual spec from words alone when an image could exist.
 
 **Build steps** are the core of the file. Each is a small diff, ends with something that
 works, depends only on earlier steps, and carries an outcome that can actually be observed.
+
+Where two steps genuinely do not depend on each other, mark the later one `(with N)`. It is
+an assertion, not a hint: that these steps touch different files and neither needs the
+other's result. Mark nothing you are unsure of. An unmarked spec is sequential, which is
+always correct and never wrong, and a project with `workflow.parallelSteps` off ignores the
+markers entirely.
 Read the Commands section of the entry file while writing the Testing section, so predicted
 coverage matches the gate that is actually on.
+
+When writing the spec needed a broad read of the codebase first, run that read in a subagent
+and have it return what it found. A survey large enough to be worth doing is large enough to
+crowd out the context that has to write the spec from it. The subagent reads and returns; this
+skill writes, as it always does.
 
 This is a draft. Do not present it yet.
 

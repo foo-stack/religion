@@ -13,6 +13,7 @@ deletion, waived check, or accepted finding.
 | Setting | Values | Default |
 | --- | --- | --- |
 | `workflow.stepReview` | `every`, `item` | `every` |
+| `workflow.parallelSteps` | `true`, `false` | `false` |
 | `git.mode` | `trunk`, `branch-per-item`, `pull-request` | `trunk` |
 | `git.checkpoints` | `none`, `every-step`, `squash` | `every-step` |
 | `git.featureBranchPrefix` | lowercase prefix ending in `/` | `feature/` |
@@ -49,6 +50,18 @@ applies the gate to every work item.
 
 There is no try-guide gate. The manual walkthrough is generated for every completed work
 item, so there is nothing to configure.
+
+## Parallel steps
+
+`workflow.parallelSteps` ships `false`, and while it is off a spec's parallel markers are
+ignored entirely. That is deliberate: a spec carrying markers has to build identically in a
+project that never opted in, or the markers become a way to change how somebody else's
+project executes.
+
+Turned on, steps marked as running with an earlier step form a wave and are built
+concurrently, each in its own subagent that returns rather than writes. The parent performs
+every write, and the wave is reviewed as one packet. `workflow.stepReview` still decides
+when that review happens.
 
 ## Branch prefixes
 

@@ -65,7 +65,7 @@ Set the spec's status to `in progress` before the first code change of this run,
 whenever work resumes after a passing check and touches product code. That invalidates
 stale verification state.
 
-Work through the build steps **in order, one at a time**. For each:
+Work through the build steps **in order, one at a time**, unless a wave applies. For each:
 
 1. **Implement just that step.** The smallest change that satisfies its stated outcome.
    Nothing from a later step, nothing nobody asked for.
@@ -92,7 +92,7 @@ Work through the build steps **in order, one at a time**. For each:
    is failing, and offer to hand it to /debug, which reproduces the failure and
    tests competing hypotheses in parallel. Do not keep trying variations.
 6. **Tick the step** (`- [x]`) once its gate is satisfied, so progress survives a cleared
-   context. If the step repaired a finding, mark that finding `fixed` and note the repair
+   context. In a wave, tick each step that passed, and only those. If the step repaired a finding, mark that finding `fixed` and note the repair
    in its resolution line. Never mark it `closed`; see Step 3.
 
    **Tick it then, not later.** Never save several ticks to write in one go. The spec on
@@ -121,6 +121,44 @@ Work through the build steps **in order, one at a time**. For each:
 
 Never batch the whole item into one diff. A diff too large to read means the step was too
 large; split it.
+
+## Waves, when the spec asks for them
+
+Off unless `workflow.parallelSteps` is `true`. When it is off, ignore every marker and build
+in order: a spec carrying markers must behave identically in a project that never opted in.
+
+A step marked `(with N)` may run alongside step `N`. Those steps and everything transitively
+joined to them form one **wave**. A step with no marker waits for every step before it, which
+is why an unmarked spec is exactly as sequential as it has always been.
+
+    - [ ] 1. Add the schema migration
+    - [ ] 2. Build the endpoint
+    - [ ] 3. Build the client  (with 2)
+    - [ ] 4. Update the docs
+
+Two waves of one, then a wave of two, then a wave of one.
+
+**Refuse a wave rather than guess at one.** Run the wave sequentially, and say why, when:
+
+- a marker names a later step, itself, or a step that does not exist
+- two steps in the wave would change the same file, which is a conflict the spec did not
+  intend and the author is better placed to resolve than a merge
+- the wave is larger than three steps, which usually means the spec is describing one step
+  badly rather than three independent ones
+
+**Building a wave.** Each step runs in its own subagent with the step, the spec, the
+standards, and nothing else. They build and **return**; they do not tick, do not write the
+spec, and do not touch the ledger. The parent applies what comes back, runs the gate for each
+step, and performs every write. This is the same rule audit's lenses follow, for the same
+reason: concurrent writers to one file is the one thing waves must never introduce.
+
+**A failure stops the wave.** Report which steps passed and which did not, tick only what
+passed, and stop. Do not retry the wave; the next run resumes at the first unticked step,
+sequentially, because a wave that failed once has already shown its independence was wrong.
+
+**One packet per wave.** Steps that ran together are reviewed together: one diff with a
+section per step and its evidence, prompted once. `workflow.stepReview` still decides whether
+that prompt happens per wave or is collected to the end; a wave never lands unreviewed.
 
 ## Step 3 - clear the ledger before handing off
 

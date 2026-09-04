@@ -29,7 +29,8 @@ The spec for the work in progress lives in `{{state}}/context/current-work.md`.
 
 1. **Spec.** Run {{cmd:feature}} with no argument to spec the first unchecked item in the
    build plan, or name one. Add ` preview` to see what it involves without writing
-   anything. For a bug or small change that is not in the plan, run {{cmd:fix}}. Review
+   anything. For a bug or small change that is not in the plan, run {{cmd:fix}}. To simplify
+   code that already exists without changing what it does, run {{cmd:refactor}}. Review
    the spec before any code exists.
 2. **Implement.** Run {{cmd:implement}}. It builds one step at a time, never the whole
    item at once.

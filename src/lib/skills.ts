@@ -36,6 +36,7 @@ export const PLANNED_SKILLS: readonly string[] = [
   "implement",
   "overview",
   "prototype",
+  "refactor",
   "release",
   "rollback",
   "setup",

@@ -1,11 +1,40 @@
 {
   "name": "create-religion",
   "version": "0.1.0",
-  "description": "Install a file-backed, spec-driven AI development workflow into a project.",
+  "description": "A file-backed, spec-driven AI development workflow. Spec before code, small reviewed diffs, and project state in markdown so a cleared context costs nothing.",
   "license": "MIT",
+  "author": "Nate",
   "type": "module",
-  "bin": { "create-religion": "dist/bin/religion.js", "religion": "dist/bin/religion.js" },
-  "files": ["dist/", "template/", "README.md"],
+  "homepage": "https://github.com/foo-stack/religion#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/foo-stack/religion.git",
+    "directory": "packages/create-religion"
+  },
+  "bugs": { "url": "https://github.com/foo-stack/religion/issues" },
+  "keywords": [
+    "ai",
+    "ai-coding",
+    "agent",
+    "claude",
+    "claude-code",
+    "codex",
+    "copilot",
+    "opencode",
+    "spec-driven-development",
+    "context-engineering",
+    "workflow",
+    "scaffold"
+  ],
+  "bin": {
+    "create-religion": "dist/bin/religion.js",
+    "religion": "dist/bin/religion.js"
+  },
+  "files": ["dist/", "template/", "README.md", "LICENSE"],
   "engines": { "node": ">=20" },
-  "scripts": { "build": "tsc -p tsconfig.json" }
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm --prefix ../.. run build && npm run build"
+  },
+  "publishConfig": { "access": "public" }
 }

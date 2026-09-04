@@ -8,6 +8,7 @@
  */
 
 import fs from "node:fs/promises";
+import fsSync from "node:fs";
 import path from "node:path";
 import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
@@ -28,7 +29,31 @@ import { readProjectState } from "../lib/state.js";
 import { computeStatus, renderStatus } from "../lib/status.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const packageRoot = path.resolve(here, "..");
+
+/**
+ * Finds the installed package root by walking up for the template.
+ *
+ * The depth differs between running from source and running from the build: in the
+ * repository this file sits at `bin/`, one level below the package, while a published
+ * install puts it at `dist/bin/`, two levels below. A fixed `..` is correct in exactly one
+ * of those, and gets the other silently wrong: the template resolves to a directory that
+ * does not exist, the walk returns nothing, and the install reports success having written
+ * no files.
+ */
+function findPackageRoot(from: string): string {
+  let current = from;
+  for (let depth = 0; depth < 5; depth += 1) {
+    if (fsSync.existsSync(path.join(current, "template"))) return current;
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  throw new Error(
+    "Could not find the template directory. This install of create-religion is incomplete; reinstall it."
+  );
+}
+
+const packageRoot = findPackageRoot(here);
 const templateRoot = path.join(packageRoot, "template");
 
 interface Options {
@@ -107,6 +132,12 @@ async function runInstall(options: Options): Promise<void> {
   if (options.dryRun) {
     console.log("\nDry run. Nothing written.");
     return;
+  }
+
+  if (plan.length === 0) {
+    throw new Error(
+      `No template files found under ${templateRoot}. Nothing would be installed, which is never correct.`
+    );
   }
 
   const result = await applyInstall(templateRoot, target, plan, { force: options.force });

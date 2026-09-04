@@ -11,7 +11,7 @@ NOTES_FOR_CLAUDE.md
 # drift from source is caught by `npm run verify`.
 /template/
 packages/create-religion/template/
-dist/
+packages/create-religion/dist/
 *.tsbuildinfo
 
 # Dependencies
@@ -19,3 +19,6 @@ node_modules/
 
 # OS
 .DS_Store
+
+# npm pack output
+*.tgz

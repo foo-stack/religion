@@ -1,0 +1,24 @@
+{
+  "skill": "status",
+  "positive": [
+    {
+      "prompt": "Where are we"
+    },
+    {
+      "prompt": "What should I do next"
+    },
+    {
+      "prompt": "How much of the plan is done"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Is the setup correct",
+      "owner": "doctor"
+    },
+    {
+      "prompt": "What does the next feature involve",
+      "owner": "feature"
+    }
+  ]
+}

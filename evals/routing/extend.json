@@ -1,0 +1,24 @@
+{
+  "skill": "extend",
+  "positive": [
+    {
+      "prompt": "Add a new skill to this workflow"
+    },
+    {
+      "prompt": "I want a command for migration reviews"
+    },
+    {
+      "prompt": "Extend the workflow itself"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Add a feature to my app",
+      "owner": "feature"
+    },
+    {
+      "prompt": "Set up the workflow here",
+      "owner": "setup"
+    }
+  ]
+}

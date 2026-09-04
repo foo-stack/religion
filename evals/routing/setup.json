@@ -1,0 +1,24 @@
+{
+  "skill": "setup",
+  "positive": [
+    {
+      "prompt": "I just installed this, what now"
+    },
+    {
+      "prompt": "Tune the workflow to this project"
+    },
+    {
+      "prompt": "Bootstrap this into my existing codebase"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Interview me about the product",
+      "owner": "discovery"
+    },
+    {
+      "prompt": "Add continuous integration",
+      "owner": "ci"
+    }
+  ]
+}

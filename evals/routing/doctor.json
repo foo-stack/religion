@@ -1,0 +1,24 @@
+{
+  "skill": "doctor",
+  "positive": [
+    {
+      "prompt": "Is this set up correctly"
+    },
+    {
+      "prompt": "Something feels off with the workflow files"
+    },
+    {
+      "prompt": "Health check the installation"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Where does the work stand",
+      "owner": "status"
+    },
+    {
+      "prompt": "Review the code quality",
+      "owner": "audit"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "skill": "implement",
+  "positive": [
+    {
+      "prompt": "Build the current spec"
+    },
+    {
+      "prompt": "Continue from where we left off"
+    },
+    {
+      "prompt": "Implement step 2"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Spec it first",
+      "owner": "feature"
+    },
+    {
+      "prompt": "Run the whole plan unattended",
+      "owner": "auto"
+    }
+  ]
+}

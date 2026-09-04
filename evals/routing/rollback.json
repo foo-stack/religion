@@ -1,0 +1,24 @@
+{
+  "skill": "rollback",
+  "positive": [
+    {
+      "prompt": "Undo feature 4"
+    },
+    {
+      "prompt": "Remove the export feature but keep the record"
+    },
+    {
+      "prompt": "Revert that completed work safely"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Fix the export bug",
+      "owner": "fix"
+    },
+    {
+      "prompt": "Undo my last uncommitted edit",
+      "owner": "fix"
+    }
+  ]
+}

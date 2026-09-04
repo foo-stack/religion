@@ -1,0 +1,24 @@
+{
+  "skill": "tests",
+  "positive": [
+    {
+      "prompt": "Add unit testing"
+    },
+    {
+      "prompt": "Set up a test runner"
+    },
+    {
+      "prompt": "Backfill tests for the parser"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Add browser tests",
+      "owner": "browser-tests"
+    },
+    {
+      "prompt": "Add CI",
+      "owner": "ci"
+    }
+  ]
+}

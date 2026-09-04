@@ -1,0 +1,24 @@
+{
+  "skill": "distill",
+  "positive": [
+    {
+      "prompt": "Consolidate what we have learned"
+    },
+    {
+      "prompt": "Promote the journal into lessons"
+    },
+    {
+      "prompt": "Clean up the lessons file"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Review the code",
+      "owner": "audit"
+    },
+    {
+      "prompt": "What is the status",
+      "owner": "status"
+    }
+  ]
+}

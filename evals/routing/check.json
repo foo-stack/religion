@@ -1,0 +1,24 @@
+{
+  "skill": "check",
+  "positive": [
+    {
+      "prompt": "Prove the feature works"
+    },
+    {
+      "prompt": "Verify the done-whens against the running app"
+    },
+    {
+      "prompt": "Does this actually work in the browser"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Tell me how to test it myself",
+      "owner": "try"
+    },
+    {
+      "prompt": "Review the code quality",
+      "owner": "audit"
+    }
+  ]
+}

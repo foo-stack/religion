@@ -1,0 +1,24 @@
+{
+  "skill": "complete",
+  "positive": [
+    {
+      "prompt": "Wrap up the current work"
+    },
+    {
+      "prompt": "Archive and commit this"
+    },
+    {
+      "prompt": "Close this out and merge"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Build the next step",
+      "owner": "implement"
+    },
+    {
+      "prompt": "Prepare a deploy",
+      "owner": "release"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "skill": "audit",
+  "positive": [
+    {
+      "prompt": "Review the code for security problems"
+    },
+    {
+      "prompt": "Look for duplication and dead code"
+    },
+    {
+      "prompt": "Re-review the repair so it can close"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Prove the feature behaves correctly",
+      "owner": "check"
+    },
+    {
+      "prompt": "Is the setup healthy",
+      "owner": "doctor"
+    }
+  ]
+}

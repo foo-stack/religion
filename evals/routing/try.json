@@ -1,0 +1,24 @@
+{
+  "skill": "try",
+  "positive": [
+    {
+      "prompt": "How do I test this myself"
+    },
+    {
+      "prompt": "Where do I click to see the change"
+    },
+    {
+      "prompt": "Give me a manual walkthrough"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Prove it works",
+      "owner": "check"
+    },
+    {
+      "prompt": "Run the app and confirm",
+      "owner": "check"
+    }
+  ]
+}

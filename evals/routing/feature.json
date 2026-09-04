@@ -1,0 +1,28 @@
+{
+  "skill": "feature",
+  "positive": [
+    {
+      "prompt": "Spec the next feature"
+    },
+    {
+      "prompt": "Break down feature 4 into build steps"
+    },
+    {
+      "prompt": "Start the login feature"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Password reset never sends, fix it",
+      "owner": "fix"
+    },
+    {
+      "prompt": "What is the next feature about, do not write anything",
+      "owner": "feature"
+    },
+    {
+      "prompt": "Why is this test failing",
+      "owner": "debug"
+    }
+  ]
+}

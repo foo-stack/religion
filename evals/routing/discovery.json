@@ -1,0 +1,24 @@
+{
+  "skill": "discovery",
+  "positive": [
+    {
+      "prompt": "Interview me about the product before I write the plans"
+    },
+    {
+      "prompt": "Help me think this through in a guided session"
+    },
+    {
+      "prompt": "Ask me questions until the plan is right"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Generate the overview from the plans",
+      "owner": "overview"
+    },
+    {
+      "prompt": "Set up the workflow for this repo",
+      "owner": "setup"
+    }
+  ]
+}

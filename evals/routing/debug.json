@@ -1,0 +1,24 @@
+{
+  "skill": "debug",
+  "positive": [
+    {
+      "prompt": "Why is this test failing"
+    },
+    {
+      "prompt": "Find the root cause of the crash"
+    },
+    {
+      "prompt": "Investigate before we change anything"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Fix the bug",
+      "owner": "fix"
+    },
+    {
+      "prompt": "Review the code for problems",
+      "owner": "audit"
+    }
+  ]
+}

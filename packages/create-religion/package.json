@@ -1,0 +1,11 @@
+{
+  "name": "create-religion",
+  "version": "0.1.0",
+  "description": "Install a file-backed, spec-driven AI development workflow into a project.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "create-religion": "dist/bin/religion.js", "religion": "dist/bin/religion.js" },
+  "files": ["dist/", "template/", "README.md"],
+  "engines": { "node": ">=20" },
+  "scripts": { "build": "tsc -p tsconfig.json" }
+}

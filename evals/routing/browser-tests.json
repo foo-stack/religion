@@ -1,0 +1,24 @@
+{
+  "skill": "browser-tests",
+  "positive": [
+    {
+      "prompt": "Set up Playwright"
+    },
+    {
+      "prompt": "Add end to end browser tests"
+    },
+    {
+      "prompt": "Make browser behaviour repeatable in CI"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Add unit tests",
+      "owner": "tests"
+    },
+    {
+      "prompt": "Check this works in the browser right now",
+      "owner": "check"
+    }
+  ]
+}

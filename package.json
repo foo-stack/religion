@@ -1,0 +1,27 @@
+{
+  "name": "religion-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Maintainer workspace for Religion, a file-backed spec-driven AI development workflow.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:skills": "tsx scripts/build-skills.ts",
+    "build:skills:link": "tsx scripts/build-skills.ts --link",
+    "check:skills": "tsx scripts/build-skills.ts --check",
+    "typecheck": "tsc --noEmit",
+    "verify": "tsx scripts/verify.ts",
+    "test:routing": "tsx scripts/evals/routing.ts",
+    "build:package": "tsx scripts/build-package.ts",
+    "build": "npm run build:skills && npm run build:package",
+    "test": "npm run verify && npm run test:routing"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.6.0"
+  }
+}

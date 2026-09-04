@@ -1,0 +1,24 @@
+{
+  "skill": "fix",
+  "positive": [
+    {
+      "prompt": "The export button does nothing, fix it"
+    },
+    {
+      "prompt": "Pick up finding F-03"
+    },
+    {
+      "prompt": "Small change: rename the header label"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Spec the next planned feature",
+      "owner": "feature"
+    },
+    {
+      "prompt": "Find out why the build is broken first",
+      "owner": "debug"
+    }
+  ]
+}

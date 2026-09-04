@@ -1,0 +1,24 @@
+{
+  "skill": "prototype",
+  "positive": [
+    {
+      "prompt": "Mock up the dashboard screen"
+    },
+    {
+      "prompt": "Explore the look and feel first"
+    },
+    {
+      "prompt": "Draft some static screens before we build"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Spec the dashboard feature",
+      "owner": "feature"
+    },
+    {
+      "prompt": "Build the dashboard",
+      "owner": "implement"
+    }
+  ]
+}

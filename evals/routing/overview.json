@@ -1,0 +1,24 @@
+{
+  "skill": "overview",
+  "positive": [
+    {
+      "prompt": "Regenerate the project overview"
+    },
+    {
+      "prompt": "Turn my plans into the source of truth"
+    },
+    {
+      "prompt": "The plans changed, refresh the generated context"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Write the plans for me from scratch",
+      "owner": "discovery"
+    },
+    {
+      "prompt": "What is next to build",
+      "owner": "status"
+    }
+  ]
+}

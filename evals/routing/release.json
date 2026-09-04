@@ -1,0 +1,24 @@
+{
+  "skill": "release",
+  "positive": [
+    {
+      "prompt": "Get this ready for Railway"
+    },
+    {
+      "prompt": "Prepare a Vercel deploy"
+    },
+    {
+      "prompt": "What env vars does deployment need"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Merge and push",
+      "owner": "complete"
+    },
+    {
+      "prompt": "Set up CI",
+      "owner": "ci"
+    }
+  ]
+}

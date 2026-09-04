@@ -1,0 +1,24 @@
+{
+  "skill": "auto",
+  "positive": [
+    {
+      "prompt": "Run the whole plan unattended"
+    },
+    {
+      "prompt": "Build the next three items without stopping"
+    },
+    {
+      "prompt": "Autopilot through the build plan"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Build the current spec step by step",
+      "owner": "implement"
+    },
+    {
+      "prompt": "Spec the next item",
+      "owner": "feature"
+    }
+  ]
+}

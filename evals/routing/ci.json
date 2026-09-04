@@ -1,0 +1,24 @@
+{
+  "skill": "ci",
+  "positive": [
+    {
+      "prompt": "Add GitHub Actions"
+    },
+    {
+      "prompt": "Set up pull request checks"
+    },
+    {
+      "prompt": "Define one verify command and automate it"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "Add a test runner",
+      "owner": "tests"
+    },
+    {
+      "prompt": "Add browser tests",
+      "owner": "browser-tests"
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+#!/usr/bin/env node
+/**
+ * The Religion command-line tool.
+ *
+ * Install and update the workflow files, and read project state. It never runs a workflow
+ * command: deciding what to build is the agent's job, and reporting what is true is this
+ * one's.
+ */
+
+import fs from "node:fs/promises";
+import path from "node:path";
+import readline from "node:readline/promises";
+import { fileURLToPath } from "node:url";
+
+import { startDashboard } from "../lib/dashboard.js";
+import { renderDoctor, runDoctor } from "../lib/doctor.js";
+import {
+  ADAPTERS,
+  applyInstall,
+  planInstall,
+  readManifest,
+  wireHooks,
+  writeManifest
+} from "../lib/install.js";
+import type { Adapter } from "../lib/install.js";
+import { findProjectRoot, STATE_DIR } from "../lib/paths.js";
+import { readProjectState } from "../lib/state.js";
+import { computeStatus, renderStatus } from "../lib/status.js";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const packageRoot = path.resolve(here, "..");
+const templateRoot = path.join(packageRoot, "template");
+
+interface Options {
+  command: "install" | "update" | "status" | "doctor" | "dashboard" | "help";
+  adapters: Adapter[] | null;
+  json: boolean;
+  dryRun: boolean;
+  force: boolean;
+  yes: boolean;
+  target: string;
+}
+
+async function main(argv: readonly string[]): Promise<void> {
+  const options = parse(argv);
+
+  if (options.command === "help") return printHelp();
+  if (options.command === "install" || options.command === "update") return runInstall(options);
+
+  const root = await findProjectRoot(options.target);
+  if (!root) {
+    console.error("No Religion project found here or in any parent directory.");
+    console.error("Run `religion install` from the project root to add one.");
+    process.exit(1);
+  }
+
+  if (options.command === "status") {
+    const status = computeStatus(await readProjectState(root));
+    console.log(options.json ? JSON.stringify(status, null, 2) : renderStatus(status));
+    return;
+  }
+
+  if (options.command === "doctor") {
+    const results = await runDoctor(root);
+    console.log(options.json ? JSON.stringify(results, null, 2) : renderDoctor(results));
+    if (results.some((r) => !r.ok)) process.exitCode = 1;
+    return;
+  }
+
+  const dashboard = await startDashboard(root);
+  console.log(`Religion dashboard: ${dashboard.url}`);
+  console.log("Read-only. Press Ctrl+C to stop.");
+  process.on("SIGINT", () => {
+    void dashboard.close().then(() => process.exit(0));
+  });
+}
+
+async function runInstall(options: Options): Promise<void> {
+  const target = path.resolve(options.target);
+  const updating = options.command === "update";
+  const previous = await readManifest(target);
+
+  if (updating && !previous) {
+    console.log("No manifest found. Files matching the template will be adopted; others are conflicts.");
+  }
+
+  const adapters = options.adapters ?? previous?.adapters ?? (await chooseAdapters(options.yes));
+  const plan = await planInstall(templateRoot, target, adapters, previous);
+
+  const counts = {
+    create: plan.filter((p) => p.action === "create").length,
+    update: plan.filter((p) => p.action === "update").length,
+    conflict: plan.filter((p) => p.action === "conflict").length,
+    kept: plan.filter((p) => p.action === "seed-skip").length
+  };
+
+  console.log(`\nAdapters: ${adapters.map((a) => ADAPTERS[a].label).join(", ")}`);
+  console.log(`  create   ${counts.create}`);
+  console.log(`  update   ${counts.update}`);
+  console.log(`  keep     ${counts.kept}  (your files, never overwritten)`);
+  console.log(`  conflict ${counts.conflict}`);
+
+  for (const entry of plan.filter((p) => p.action === "conflict")) {
+    console.log(`    ${entry.relative}`);
+  }
+
+  if (options.dryRun) {
+    console.log("\nDry run. Nothing written.");
+    return;
+  }
+
+  const result = await applyInstall(templateRoot, target, plan, { force: options.force });
+  await writeManifest(target, await version(), adapters, templateRoot, previous, result.conflicts);
+
+  console.log(`\nWrote ${result.written.length} file(s).`);
+  if (result.backups.length > 0) console.log(`Backed up ${result.backups.length} conflicting file(s).`);
+  if (result.conflicts.length > 0) {
+    console.log(
+      `\n${result.conflicts.length} file(s) were changed locally and left alone.` +
+        `\nReview them, then re-run with --force to replace them (originals are backed up).`
+    );
+  }
+
+  if (adapters.includes("claude")) {
+    const wired = await wireHooks(target);
+    if (wired === "written") {
+      console.log("Wired the enforcement hooks into .claude/settings.json.");
+    } else if (wired === "exists") {
+      console.log(
+        "\n.claude/settings.json already exists and was left alone." +
+          `\nTo enable the hooks, merge ${path.join(STATE_DIR, ".state", "settings-template.json")} into it.`
+      );
+    }
+  }
+
+  if (!updating) {
+    console.log("\nNext: run the setup skill in your AI tool, then fill in the two plans.");
+  }
+}
+
+async function chooseAdapters(assumeYes: boolean): Promise<Adapter[]> {
+  const all = Object.keys(ADAPTERS) as Adapter[];
+  if (assumeYes || !process.stdin.isTTY) return all;
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  console.log("\nWhich AI tools should this install for?");
+  all.forEach((a, i) => console.log(`  ${i + 1}. ${ADAPTERS[a].label}`));
+
+  const answer = (await rl.question("\nNumbers separated by commas, or blank for all: ")).trim();
+  rl.close();
+  if (!answer) return all;
+
+  const chosen = answer
+    .split(",")
+    .map((part) => all[Number(part.trim()) - 1])
+    .filter((a): a is Adapter => a !== undefined);
+
+  return chosen.length > 0 ? chosen : all;
+}
+
+async function version(): Promise<string> {
+  try {
+    const manifest = JSON.parse(await fs.readFile(path.join(packageRoot, "package.json"), "utf8")) as {
+      version?: string;
+    };
+    return manifest.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
+
+function parse(argv: readonly string[]): Options {
+  const options: Options = {
+    command: "install",
+    adapters: null,
+    json: false,
+    dryRun: false,
+    force: false,
+    yes: false,
+    target: process.cwd()
+  };
+
+  const commands = new Set(["install", "update", "status", "doctor", "dashboard", "help"]);
+  const adapters: Adapter[] = [];
+
+  for (const arg of argv) {
+    if (commands.has(arg)) options.command = arg as Options["command"];
+    else if (arg === "--json") options.json = true;
+    else if (arg === "--dry-run") options.dryRun = true;
+    else if (arg === "--force") options.force = true;
+    else if (arg === "--yes" || arg === "-y") options.yes = true;
+    else if (arg === "--help" || arg === "-h") options.command = "help";
+    else if (arg.startsWith("--") && arg.slice(2) in ADAPTERS) adapters.push(arg.slice(2) as Adapter);
+    else if (!arg.startsWith("-")) options.target = arg;
+  }
+
+  if (adapters.length > 0) options.adapters = adapters;
+  return options;
+}
+
+function printHelp(): void {
+  console.log(`religion - a file-backed, spec-driven AI development workflow
+
+  religion install [dir]     add the workflow to a project
+  religion update  [dir]     update the workflow files, preserving your own
+  religion status            where the work stands, and what to do next
+  religion doctor            check the setup is healthy
+  religion dashboard         a local read-only view
+
+Options
+  --claude --codex --copilot --opencode   pick adapters (default: all)
+  --dry-run     show what would change, write nothing
+  --force       replace locally-changed managed files, backing them up first
+  --json        machine-readable output for status and doctor
+  --yes         no prompts
+`);
+}
+
+main(process.argv.slice(2)).catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+});

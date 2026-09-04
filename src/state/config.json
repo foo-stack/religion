@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "workflow": {
+    "stepReview": "every"
+  },
+  "git": {
+    "mode": "trunk",
+    "checkpoints": "every-step",
+    "featureBranchPrefix": "feature/",
+    "fixBranchPrefix": "fix/",
+    "rollbackBranchPrefix": "rollback/"
+  },
+  "verification": {
+    "logicTests": "when-configured",
+    "uiEvidence": "when-available"
+  },
+  "qualityGates": {
+    "audit": "when-sensitive",
+    "check": "when-behavioral"
+  },
+  "auto": {
+    "maxItems": null,
+    "maxRepairAttempts": 2,
+    "finalAudit": false
+  }
+}

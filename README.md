@@ -106,6 +106,10 @@ npm run test:routing   # routing corpus, plus description overlap
 Design decisions live in `docs/architecture/`: the state model and its invariants, how
 enforcement splits between prose and hooks, the configuration schema, and how releases work.
 
+`docs/decisions.md` is the full record of every decision taken while building Religion.
+`docs/architecture/decisions/` covers the twelve where the rejected alternative still has
+advocates, and what would have to be true to revisit each one.
+
 ### Releasing
 
 Every pull request that changes published behaviour carries a changeset:

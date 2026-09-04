@@ -6,6 +6,7 @@ which is what makes a cleared context survivable.
 
 @{{state}}/context/project-overview.md
 @{{state}}/context/coding-standards.md
+@{{state}}/context/untrusted-input.md
 @{{state}}/context/ai-interaction.md
 @{{state}}/context/current-work.md
 @{{state}}/context/handoff.md

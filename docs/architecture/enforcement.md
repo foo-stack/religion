@@ -18,13 +18,14 @@ the same Religion with a safety net.
 
 ## The hooks
 
-Three, matched to the prose they back up.
+Four, matched to the prose they back up.
 
 | Hook | Fires on | Enforces | Prose it backs |
 | --- | --- | --- | --- |
 | `PreToolUse` on Bash | a command that pushes, deploys, publishes, force-updates a ref, or merges | blocks it, naming the approval that is missing | Authority, first tier |
 | `Stop` | end of a turn | regenerates `religion/context/handoff.md` from the state files | the handoff contract |
 | `PreToolUse` on Edit and Write | a write to a rendered adapter tree in a Religion source checkout | blocks it, pointing at the authored source instead | the never-edit-rendered-output rule |
+| `PostToolUse` on Read, WebFetch and WebSearch | content carrying known prompt-injection signatures | warns, naming the file and what it tried to do | the untrusted-input rule |
 
 The third applies only when working on Religion itself, not to installed projects.
 

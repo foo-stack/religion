@@ -27,6 +27,7 @@ deletion, waived check, or accepted finding.
 | `auto.maxItems` | positive integer, or `null` for no limit | `null` |
 | `auto.maxRepairAttempts` | integer from 0 through 10 | `2` |
 | `auto.finalAudit` | `true`, `false` | `false` |
+| `security.blockInjection` | `true`, `false` | `false` |
 | `refactor.maxFileLines` | positive integer | `400` |
 | `refactor.maxFunctionLines` | positive integer | `50` |
 
@@ -58,6 +59,16 @@ and kept so that switching modes does not require reconfiguring.
 `git.integrationBranchPrefix` is used only by an automated run under `pull-request`, which
 creates one branch of that name per run, dated, and lands every item into it before opening
 a single aggregate pull request.
+
+## Injection scanning
+
+`security.blockInjection` decides what happens when content read into context carries
+three or more known injection signatures. It ships `false`, which warns and carries on,
+because a false positive that halts real work costs more than a warning nobody needed. Set
+it `true` to block the read instead.
+
+The rule it enforces is in `religion/context/untrusted-input.md` and applies to every tool.
+The hook is a net for the one tool that runs hooks.
 
 ## Refactor thresholds
 

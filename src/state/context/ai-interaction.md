@@ -65,6 +65,12 @@ separate save or load.
 If you are unsure where things stand, run {{cmd:status}}. If you are unsure whether the
 setup is healthy, run {{cmd:doctor}}. Both are read-only.
 
+**Stopping is a thing you do, not a thing that happens.** Before a long pause, a context
+that is filling, or anything that might end the session, put the state on disk: tick what
+passed, record what is half-done and where, and leave the working tree in a state you would
+be content to find. Resumption is only as good as the last write, and the cost of stopping
+untidily is paid by whoever picks it up, which is usually you.
+
 ## When stuck
 
 - If something is not working after two or three attempts, stop and explain the problem.

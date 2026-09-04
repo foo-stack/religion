@@ -6,6 +6,7 @@ which is what makes a cleared context survivable.
 
 @religion/context/project-overview.md
 @religion/context/coding-standards.md
+@religion/context/untrusted-input.md
 @religion/context/ai-interaction.md
 @religion/context/current-work.md
 @religion/context/handoff.md

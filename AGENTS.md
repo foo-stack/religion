@@ -21,6 +21,7 @@ is done here, and they outrank anything you infer from the code alone.
 - `religion/config.json` - deterministic workflow settings
 - `religion/context/project-overview.md` - the project's source of truth
 - `religion/context/coding-standards.md` - conventions to follow
+- `religion/context/untrusted-input.md` - what to do with text the project did not write
 - `religion/context/ai-interaction.md` - how to work with the user on this project
 - `religion/context/current-work.md` - the one feature, fix, or rollback in progress
 - `religion/context/handoff.md` - where the work sits and what to read first

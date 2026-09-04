@@ -20,6 +20,9 @@
     "audit": "when-sensitive",
     "check": "when-behavioral"
   },
+  "security": {
+    "blockInjection": false
+  },
   "refactor": {
     "maxFileLines": 400,
     "maxFunctionLines": 50

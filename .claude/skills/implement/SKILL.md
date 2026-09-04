@@ -94,6 +94,11 @@ Work through the build steps **in order, one at a time**. For each:
 6. **Tick the step** (`- [x]`) once its gate is satisfied, so progress survives a cleared
    context. If the step repaired a finding, mark that finding `fixed` and note the repair
    in its resolution line. Never mark it `closed`; see Step 3.
+
+   **Tick it then, not later.** Never save several ticks to write in one go. The spec on
+   disk is the only record of what is done, and a session that ends between the work and
+   the bookkeeping loses exactly the step it just finished: the next one rebuilds it,
+   because an unticked step is indistinguishable from one never started.
 7. **Then prompt, according to config.**
 
    With `workflow.stepReview: "item"`, do not prompt. Continue to the next step and

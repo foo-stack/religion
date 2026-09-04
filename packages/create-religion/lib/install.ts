@@ -12,6 +12,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { exists, STATE_DIR } from "./paths.js";
+import { hasDamagedMarkers, hasMarkers, replaceManagedBlock, spliceEntry } from "./merge.js";
 
 export type Adapter = "claude" | "codex" | "copilot" | "opencode";
 
@@ -31,7 +32,7 @@ export interface Manifest {
 
 export interface PlanEntry {
   relative: string;
-  action: "create" | "update" | "seed-skip" | "conflict" | "unchanged";
+  action: "create" | "update" | "seed-skip" | "conflict" | "unchanged" | "merge" | "remerge";
 }
 
 const MANIFEST = path.join(STATE_DIR, ".state", "manifest.json");
@@ -45,6 +46,11 @@ export function isManaged(relative: string): boolean {
   return !relative.startsWith(`${STATE_DIR}/`);
 }
 
+/** The entry files for the chosen adapters, which are the only files merging applies to. */
+function entryFiles(adapters: readonly Adapter[]): Set<string> {
+  return new Set(adapters.flatMap((a) => ADAPTERS[a].entry));
+}
+
 export async function planInstall(
   templateRoot: string,
   target: string,
@@ -52,6 +58,7 @@ export async function planInstall(
   previous: Manifest | null
 ): Promise<PlanEntry[]> {
   const wanted = wantedPaths(adapters);
+  const entries = entryFiles(adapters);
   const plan: PlanEntry[] = [];
 
   for (const relative of await walk(templateRoot)) {
@@ -81,7 +88,24 @@ export async function planInstall(
     // installed. Anything else is a local edit, and overwriting it silently is the failure
     // this manifest exists to prevent.
     const recorded = previous?.managed[relative];
-    plan.push({ relative, action: recorded && recorded === hash(current) ? "update" : "conflict" });
+    if (recorded && recorded === hash(current)) {
+      plan.push({ relative, action: "update" });
+      continue;
+    }
+
+    // An entry file is the one place where "differs from the template" is the normal case
+    // rather than a problem: a repository that already tells agents how to work has one, and
+    // it is usually the most carefully written file in the project.
+    if (entries.has(relative)) {
+      const text = current.toString("utf8");
+      // A damaged marker pair is a conflict, never a fresh merge: splicing a second block
+      // into a file that already has one is worse than the damage.
+      const action = hasMarkers(text) ? "remerge" : hasDamagedMarkers(text) ? "conflict" : "merge";
+      plan.push({ relative, action });
+      continue;
+    }
+
+    plan.push({ relative, action: "conflict" });
   }
 
   return plan;
@@ -91,16 +115,49 @@ export async function applyInstall(
   templateRoot: string,
   target: string,
   plan: readonly PlanEntry[],
-  options: { force: boolean }
-): Promise<{ written: string[]; conflicts: string[]; backups: string[] }> {
+  options: { force: boolean; merge?: boolean }
+): Promise<{ written: string[]; conflicts: string[]; backups: string[]; merged: string[] }> {
   const written: string[] = [];
   const conflicts: string[] = [];
   const backups: string[] = [];
+  const merged: string[] = [];
 
   for (const entry of plan) {
     if (entry.action === "unchanged" || entry.action === "seed-skip") continue;
 
     if (entry.action === "conflict" && !options.force) {
+      conflicts.push(entry.relative);
+      continue;
+    }
+
+    // Replacing only what is between the markers is the whole point of having merged: the
+    // user's own prose sits outside them and is never read, let alone rewritten.
+    if (entry.action === "remerge" || (entry.action === "merge" && options.merge)) {
+      const destination = path.join(target, entry.relative);
+      const template = await fs.readFile(path.join(templateRoot, entry.relative), "utf8");
+      const current = await fs.readFile(destination, "utf8");
+
+      if (entry.action === "merge") {
+        const backup = path.join(target, STATE_DIR, ".state", "backups", entry.relative);
+        await fs.mkdir(path.dirname(backup), { recursive: true });
+        await fs.copyFile(destination, backup);
+        backups.push(entry.relative);
+      }
+
+      const next = entry.action === "merge" ? spliceEntry(current, template) : replaceManagedBlock(current, template);
+      if (next === null) {
+        // Markers went missing between planning and writing, or were edited into an order
+        // this cannot reason about. Leaving it alone is the only safe answer.
+        conflicts.push(entry.relative);
+        continue;
+      }
+
+      await fs.writeFile(destination, next, "utf8");
+      merged.push(entry.relative);
+      continue;
+    }
+
+    if (entry.action === "merge") {
       conflicts.push(entry.relative);
       continue;
     }
@@ -118,7 +175,7 @@ export async function applyInstall(
     written.push(entry.relative);
   }
 
-  return { written, conflicts, backups };
+  return { written, conflicts, backups, merged };
 }
 
 /**

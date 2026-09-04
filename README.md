@@ -45,6 +45,12 @@ Scaffold your application first, then install on top of it.
 npx create-religion@latest    # add the workflow
 ```
 
+**If you already have a `CLAUDE.md` or `AGENTS.md`**, the installer offers to merge rather
+than replace. Everything you wrote stays exactly where it is and Religion's sections are
+appended inside markers, so a later `update` replaces only what is between them and never
+reads what is outside. Your `Commands` section is left alone too. Decline and the file is
+untouched; either way the original is backed up under `religion/.state/backups/`.
+
 Then, in your AI tool:
 
 1. **`setup`** tunes the installation to your project. On an existing codebase it surveys

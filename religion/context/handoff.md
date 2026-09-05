@@ -5,8 +5,7 @@
 
 ## Where the work sits
 
-**Tests for the command-line tool** is in progress: 0 step(s) done, 5 to go.
-Next step: Step 1.
+**Tests for the command-line tool** is in progress: 5 step(s) done, 0 to go.
 
 Plan: 0 of 4 item(s) complete. Next up: 1. **Tests for the command-line tool** - a runner, and coverage for manifest hashing, conflict detection, and the marker surgery that merges entry files
 

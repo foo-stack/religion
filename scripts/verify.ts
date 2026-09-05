@@ -248,6 +248,19 @@ const checks: Check[] = [
       }
       return problems;
     }
+  },
+  {
+    name: "the command-line tool has unit tests",
+    run: async () => {
+      // `tsx --test` exits 0 when its pattern matches no files, so a suite that was renamed,
+      // moved or deleted reports success having run nothing. That is the failure this whole
+      // check exists to make impossible: a green run has to mean tests ran.
+      const lib = path.join(repoRoot, "packages", "create-religion", "lib");
+      const found = (await walkIfPresent(lib)).filter((file) => file.endsWith(".test.ts"));
+      return found.length > 0
+        ? []
+        : ["packages/create-religion has no *.test.ts files, so the unit suite would pass by running nothing"];
+    }
   }
 ];
 

@@ -175,3 +175,14 @@ mutations, each reintroducing a defect that actually happened in this codebase:
 - `writeManifest` after a merge is uncovered. It is the only path where the target and the
   template genuinely differ. Not a live defect, since planning routes entry files by markers
   before consulting hashes.
+
+## Landed
+
+**Base:** c388f8959c359a7e48c7f5a086e90661ab11e7d6
+**Commits:** ab2e7451fc8a4d3a91ccb31206413d0b56d60d0c
+**Product paths:** package.json, packages/create-religion/tsconfig.json,
+packages/create-religion/lib/merge.test.ts, packages/create-religion/lib/install.test.ts,
+packages/create-religion/lib/state.test.ts, scripts/verify.ts
+
+The guard-hook change that followed on the same branch is separate work and is deliberately
+not listed here: a reversal of this item must not take it with them.

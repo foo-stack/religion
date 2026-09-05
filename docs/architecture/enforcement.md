@@ -22,7 +22,7 @@ Four, matched to the prose they back up.
 
 | Hook | Fires on | Enforces | Prose it backs |
 | --- | --- | --- | --- |
-| `PreToolUse` on Bash | a command that pushes, deploys, publishes, force-updates a ref, or merges | blocks it, naming the approval that is missing | Authority, first tier |
+| `PreToolUse` on Bash | a command that pushes, deploys, publishes, force-updates a ref, or merges | asks, naming the approval that is missing | Authority, first tier |
 | `Stop` | end of a turn | regenerates `religion/context/handoff.md` from the state files | the handoff contract |
 | `PreToolUse` on Edit and Write | a write to a rendered adapter tree in a Religion source checkout | blocks it, pointing at the authored source instead | the never-edit-rendered-output rule |
 | `PostToolUse` on Read, WebFetch and WebSearch | content carrying known prompt-injection signatures | warns, naming the file and what it tried to do | the untrusted-input rule |
@@ -52,6 +52,28 @@ keeps every checksum and integrity string in the tree from being reported.
 This is still a blocklist of known wordings. It raises the cost of the obvious attempt and
 of the obvious attempt wearing a disguise. It does not recognise novel phrasing, and it
 does not look inside an archive or an image.
+
+## What the patterns actually match
+
+They match how a command is usually written, not what it does. `bash deploy.sh` pushes and
+passes silently. So does a one-line script that deletes a tree, or `find -delete`, or the
+same effect spelled with a different tool. Every pattern here has that property.
+
+This is not a gap to close by adding more patterns. The next spelling is always one
+substitution away, and a longer list mostly produces false positives: a pattern broad
+enough to catch every script would ask about every script.
+
+Deletion is the case where that arithmetic failed outright, so it is not covered here at
+all. `rm -rf` has more everyday spellings than the other actions put together, most of them
+harmless, and a pattern for it asked constantly about throwaway directories while missing
+the equivalent one-liner entirely. A guard that catches the common spelling of a dangerous
+action and silently misses the rest is worse than no guard, because the gap is invisible to
+the person relying on it. Deleting data is still first tier; it is carried by the prose,
+which applies to all four tools rather than to one way of typing it.
+
+That is the general rule these hooks live under. The prose is the enforcement. This is a
+reminder for the one tool that can run reminders, and it is worth exactly what a reminder
+is worth.
 
 ## What a hook does when it breaks
 

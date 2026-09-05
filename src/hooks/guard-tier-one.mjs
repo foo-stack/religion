@@ -6,6 +6,13 @@
  * merging, pushing, deploying, publishing, deleting data, and rewriting history each need
  * a fresh yes. The hook exists because that rule is prose, and prose can be forgotten
  * mid-task. It is a safety net for one tool, never a rule of its own.
+ *
+ * These patterns match how a command is usually written, not what it does. A script, or the
+ * same effect spelled another way, passes silently. Deletion is deliberately not here: it
+ * has more everyday spellings than the others put together, so a pattern for it caught the
+ * common one while `find -delete` and a one-line script went straight past, which is worse
+ * than not guarding it, because the gap is invisible. Deleting data remains first tier in
+ * the prose, where it applies to every tool rather than to one spelling.
  */
 
 import { readFileSync } from "node:fs";
@@ -16,8 +23,7 @@ const PATTERNS = [
   { re: /\bgit\s+(?:rebase|reset\s+--hard|filter-branch)\b/, what: "rewriting history" },
   { re: /\bgit\s+commit\b.*--amend\b/, what: "rewriting a commit" },
   { re: /\bnpm\s+publish\b|\bpnpm\s+publish\b|\byarn\s+publish\b/, what: "publishing" },
-  { re: /\b(?:vercel|railway|render)\s+(?:deploy|up)\b/, what: "deploying" },
-  { re: /\brm\s+-[a-z]*r[a-z]*f?\b/, what: "recursive deletion" }
+  { re: /\b(?:vercel|railway|render)\s+(?:deploy|up)\b/, what: "deploying" }
 ];
 
 /**

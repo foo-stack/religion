@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 import { SHARED, TREES, render } from "../src/lib/adapters.js";
 import type { RenderContext, Tree } from "../src/lib/adapters.js";
 import { readSkills } from "../src/lib/skills.js";
+import { hasMarkers, replaceManagedBlock } from "../packages/create-religion/lib/merge.js";
 import type { Skill } from "../src/lib/skills.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -104,7 +105,15 @@ async function main(): Promise<void> {
 
   for (const file of files) {
     await fs.mkdir(path.dirname(file.target), { recursive: true });
-    await fs.writeFile(file.target, file.contents, "utf8");
+    // A merged entry file keeps everything outside its markers. Writing the rendered file
+    // whole would delete the commands this project actually uses, every build.
+    let current: string | null = null;
+    try {
+      current = await fs.readFile(file.target, "utf8");
+    } catch {
+      current = null;
+    }
+    await fs.writeFile(file.target, expected(current, file.contents), "utf8");
   }
 
   const scope = options.link ? "template + repo" : "template";
@@ -244,6 +253,19 @@ async function renderSkill(skill: string, tree: Tree, root: string): Promise<Ren
   return out;
 }
 
+/**
+ * What the target should contain, given what is already there.
+ *
+ * An entry file carrying merge markers is a real installation rather than a pristine copy of
+ * the template: this repository runs Religion on itself, and its own commands live outside
+ * the markers. Rendering over the whole file would delete them, and comparing the whole file
+ * would report drift forever. Inside the markers is the part this build owns.
+ */
+function expected(current: string | null, rendered: string): string {
+  if (current === null || !hasMarkers(current)) return rendered;
+  return replaceManagedBlock(current, rendered) ?? rendered;
+}
+
 async function findDrift(files: readonly RenderedFile[]): Promise<string[]> {
   const drifted: string[] = [];
   for (const file of files) {
@@ -253,7 +275,7 @@ async function findDrift(files: readonly RenderedFile[]): Promise<string[]> {
     } catch {
       current = null;
     }
-    if (current !== file.contents) drifted.push(file.target);
+    if (current !== expected(current, file.contents)) drifted.push(file.target);
   }
   return drifted;
 }

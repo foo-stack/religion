@@ -1,6 +1,6 @@
 {
   "name": "create-religion",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A file-backed, spec-driven AI development workflow. Spec before code, small reviewed diffs, and project state in markdown so a cleared context costs nothing.",
   "license": "MIT",
   "author": "Nate",

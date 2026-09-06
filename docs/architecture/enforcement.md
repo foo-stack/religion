@@ -18,11 +18,10 @@ the same Religion with a safety net.
 
 ## The hooks
 
-Four, matched to the prose they back up.
+Three, matched to the prose they back up.
 
 | Hook | Fires on | Enforces | Prose it backs |
 | --- | --- | --- | --- |
-| `PreToolUse` on Bash | a command that pushes, deploys, publishes, force-updates a ref, or merges | asks, naming the approval that is missing | Authority, first tier |
 | `Stop` | end of a turn | regenerates `religion/context/handoff.md` from the state files | the handoff contract |
 | `PreToolUse` on Edit and Write | a write to a rendered adapter tree in a Religion source checkout | blocks it, pointing at the authored source instead | the never-edit-rendered-output rule |
 | `PostToolUse` on Read, WebFetch and WebSearch | content carrying known prompt-injection signatures | warns, naming the file and what it tried to do | the untrusted-input rule |
@@ -53,45 +52,41 @@ This is still a blocklist of known wordings. It raises the cost of the obvious a
 of the obvious attempt wearing a disguise. It does not recognise novel phrasing, and it
 does not look inside an archive or an image.
 
-## What the patterns actually match
+## Why there is no guard on shell commands
 
-They match how a command is usually written, not what it does. `bash deploy.sh` pushes and
-passes silently. So does a one-line script that deletes a tree, or `find -delete`, or the
-same effect spelled with a different tool. Every pattern here has that property.
+There was one. It asked before a push, a merge, a publish, a deploy or a recursive delete,
+and it was removed.
 
-This is not a gap to close by adding more patterns. The next spelling is always one
-substitution away, and a longer list mostly produces false positives: a pattern broad
-enough to catch every script would ask about every script.
+It matched how a command is usually written, not what it does. `bash deploy.sh` pushed and
+passed silently; so did a one-line script that deleted a tree. Meanwhile it asked about
+throwaway directories several times an hour. Adding patterns does not fix that: the next
+spelling is one substitution away, and a pattern broad enough to catch every script would
+ask about every script.
 
-Deletion is the case where that arithmetic failed outright, so it is not covered here at
-all. `rm -rf` has more everyday spellings than the other actions put together, most of them
-harmless, and a pattern for it asked constantly about throwaway directories while missing
-the equivalent one-liner entirely. A guard that catches the common spelling of a dangerous
-action and silently misses the rest is worse than no guard, because the gap is invisible to
-the person relying on it. Deleting data is still first tier; it is carried by the prose,
-which applies to all four tools rather than to one way of typing it.
+A guard that catches the common spelling of a dangerous action and silently misses the rest
+is worse than no guard, because the gap is invisible to the person relying on the prompt.
 
-That is the general rule these hooks live under. The prose is the enforcement. This is a
-reminder for the one tool that can run reminders, and it is worth exactly what a reminder
-is worth.
+**Nothing about the Authority rules changed.** Merging, pushing, deploying, publishing,
+deleting data and rewriting history are still first tier and still need an explicit yes
+every time. That rule is carried by the prose every session loads, which applies to all four
+supported tools rather than to one way of typing a command. It was always doing the work.
+
+The hooks that remain are the ones where a pattern can actually describe the thing it is
+protecting: a path inside a rendered tree, a file being read, the end of a turn.
 
 ## What a hook does when it breaks
 
-Every hook declares what happens if it crashes, and the two guards declare the same thing:
-**they ask.**
+Every hook declares what happens if it crashes, and the choice is made per hook rather than
+inherited by omission.
 
-A guard that fails open becomes the exact outcome it exists to prevent. The command runs,
-nobody is asked, and nothing says the check was skipped. That is worse than having no guard,
-because the absence is invisible.
+The rendered-output guard **asks**. Failing open would let an edit land in generated output
+that the next build silently discards, which is the outcome it exists to prevent, and the
+absence of the check would be invisible. Failing closed is no better: one malformed payload
+would block every edit until somebody changed a hook.
 
-Failing closed is not the answer either. One malformed payload from a runtime change would
-block every push, merge and publish until somebody edits a hook, and the rule these hooks
-back up says not to edit them to get past a block.
-
-So a crashed guard degrades to the prompt it would have raised anyway, naming the failure.
-The worst case of a bug in a guard is one extra prompt, rather than a first-tier action
-that silently went unchecked. The handoff hook is advisory and fails open, because a missing
-handoff file costs a re-read and nothing else.
+The handoff writer and the injection scanner **fail open**. Both are advisory. A missing
+handoff file costs a re-read, and a lost injection warning is cheaper than blocking a read
+that already happened.
 
 ## What hooks deliberately do not do
 

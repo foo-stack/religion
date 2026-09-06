@@ -5,9 +5,10 @@
 
 ## Where the work sits
 
-Nothing in progress.
+**Tests for the command-line tool** is in progress: 0 step(s) done, 5 to go.
+Next step: Step 1.
 
-Plan: 0 of 5 item(s) complete. Next up: 1. **Skill submission** - upload a package and save its metadata
+Plan: 0 of 4 item(s) complete. Next up: 1. **Tests for the command-line tool** - a runner, and coverage for manifest hashing, conflict detection, and the marker surgery that merges entry files
 
 ## Read first
 

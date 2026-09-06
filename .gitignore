@@ -1,4 +1,5 @@
-# AI collaboration scratch - never committed
+# No longer used: this project plans in religion/ instead. Kept so that a stray one,
+# created out of habit, still cannot be committed.
 PLAN.md
 PROGRESS.md
 LAST_MEMORY.md
@@ -22,3 +23,10 @@ node_modules/
 
 # npm pack output
 *.tgz
+
+# Installer output, reproducible with `religion install`. The hooks here are copies of
+# src/hooks/ that nothing keeps in sync, and religion/.state/ is machine-written state its
+# own README says is never committed.
+/.claude/hooks/
+/.claude/settings.json
+religion/.state/

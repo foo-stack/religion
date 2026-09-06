@@ -5,10 +5,9 @@
 
 ## Where the work sits
 
-**Tests for the command-line tool** is in progress: 0 step(s) done, 5 to go.
-Next step: Step 1.
+Nothing in progress.
 
-Plan: 0 of 4 item(s) complete. Next up: 1. **Tests for the command-line tool** - a runner, and coverage for manifest hashing, conflict detection, and the marker surgery that merges entry files
+Plan: 1 of 4 item(s) complete. Next up: 2. **Setup drafts usable plans from an existing codebase** - survey an unfamiliar repository with real history and produce two plans a person would keep
 
 ## Read first
 

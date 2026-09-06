@@ -18,9 +18,10 @@
     "typecheck": "tsc --noEmit",
     "verify": "tsx scripts/verify.ts",
     "test:routing": "tsx scripts/evals/routing.ts",
+    "test:unit": "tsx --test \"packages/create-religion/**/*.test.ts\"",
     "build:package": "tsx scripts/build-package.ts",
     "build": "npm run build:skills && npm run build:package",
-    "test": "npm run verify && npm run test:routing",
+    "test": "npm run verify && npm run test:unit && npm run test:routing",
     "changeset": "changeset",
     "release": "changeset publish"
   },

@@ -1,5 +1,46 @@
 # create-religion
 
+## 0.5.0
+
+### Minor Changes
+
+- 2fe62e1: The shell-command guard hook is removed.
+  
+  It asked before a push, merge, publish, deploy or recursive delete, and it matched how those
+  commands are usually written rather than what they do. `bash deploy.sh` pushed and passed
+  silently; so did a one-line script that deleted a tree. Meanwhile it asked about throwaway
+  directories several times an hour.
+  
+  Adding patterns does not fix that. The next spelling is one substitution away, and a pattern
+  broad enough to catch every script would ask about every script. A guard that catches the
+  common spelling of a dangerous action and silently misses the rest is worse than no guard,
+  because the gap is invisible to whoever is relying on the prompt.
+  
+  **Nothing about the Authority rules changed.** Merging, pushing, deploying, publishing,
+  deleting data and rewriting history are still first tier and still need an explicit yes every
+  time. That rule is carried by the prose loaded every session, which applies to all four
+  supported tools rather than to one way of typing a command.
+  
+  Three hooks remain, all cases where a pattern can describe the thing being protected: a write
+  into a rendered tree, content being read, and the end of a turn.
+
+### Patch Changes
+
+- 8148887: The first-tier guard hook no longer asks about `rm -rf`.
+  
+  The pattern caught the common spelling of a dangerous action and missed every other one:
+  `find -delete`, a one-line script, or the same effect through any other tool all passed
+  silently. Meanwhile it asked constantly about throwaway directories, which is most of what
+  `rm -rf` is used for.
+  
+  A guard that catches one spelling and invisibly misses the rest is worse than no guard,
+  because the person relying on it cannot see the gap. Deleting data is still first tier and
+  still requires an explicit yes; that rule lives in the Authority prose, which applies to all
+  four supported tools rather than to one way of typing a command.
+  
+  The enforcement reference now states plainly what these patterns match, and what they do
+  not, so the hooks are not mistaken for a guarantee.
+
 ## 0.4.0
 
 ### Minor Changes

@@ -9,6 +9,18 @@
     },
     {
       "prompt": "Bootstrap this into my existing codebase"
+    },
+    {
+      "prompt": "Draft the plans from what is already in this repo"
+    },
+    {
+      "prompt": "Survey this codebase and write the project plan"
+    },
+    {
+      "prompt": "Generate a build plan from what has already shipped"
+    },
+    {
+      "prompt": "Read the code and fill in the plans for me"
     }
   ],
   "negative": [
@@ -19,6 +31,10 @@
     {
       "prompt": "Add continuous integration",
       "owner": "ci"
+    },
+    {
+      "prompt": "Regenerate the overview now that I edited the plans",
+      "owner": "overview"
     }
   ]
 }

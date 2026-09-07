@@ -252,3 +252,13 @@ build ran. Known behaviour, but it silently onboarded a project with the old ski
 - **The stale check count.** `verify.ts` has ten checks while the entry files and the
   project overview's code map disagreed. The code map was corrected when the overview was
   regenerated; the entry files still say nine, and that remains a separate fix.
+
+## Landed
+
+**Base:** 1df050c97526121d9023e9d3099e8e4513134e2d
+**Commits:** f2cde22cef8acc22206b46529a67e3b798baa617
+**Product paths:** src/skills/setup/SKILL.md, src/skills/setup/reference/drafted-plans.md,
+evals/routing/setup.json, evals/routing/discovery.json, docs/architecture/state-model.md
+
+The rendered trees under `.claude/skills/setup/` and `.agents/skills/setup/` are generated
+from the source above and are not listed separately: they carry no change of their own.

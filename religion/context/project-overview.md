@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 6f467f39ddf33549 -->
+<!-- religion:source-hash 7e75e0da5aad5221 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,10 +49,6 @@ nothing to sign into.
 
 ## Roadmap
 
-1. **Tests for the command-line tool** - a runner, and coverage for manifest hashing,
-   conflict detection, and the marker surgery that merges entry files
-2. **Setup drafts usable plans from an existing codebase** - survey an unfamiliar repository
-   with real history and produce two plans a person would keep
 3. **Documentation for people who did not build it** - a getting-started walkthrough, what
    the loop feels like in practice, and what to do when `doctor` complains
 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a
@@ -111,13 +107,16 @@ The single thing in progress, in `context/current-work.md`.
   rendered tree
 - `src/entry/` - the entry-file sources and the partials shared between them
 - `src/state/` - the state files a project is seeded with, written once and never re-rendered
-- `src/hooks/` - four Claude Code hooks, copied rather than rendered
+- `src/hooks/` - three Claude Code hooks, copied rather than rendered
 - `src/lib/` - the token vocabulary and adapter definitions, and the skill frontmatter reader
-- `scripts/` - the renderer, the package staging step, and the nine-check verification suite
+- `scripts/` - the renderer, the package staging step, and the ten-check verification suite
 - `evals/routing/` - the routing corpus, one file per skill, positive and negative cases
 - `packages/create-religion/` - the published package: `bin/` for the command-line entry
-  point, `lib/` for install, update, merge, status, doctor, and the dashboard
+  point, `lib/` for install, update, merge, status, doctor, and the dashboard, with each
+  module's tests beside it as `*.test.ts`
 - `docs/` - architecture notes, the twelve decision records, and the full decision log
+- `template/` - the install tree the build stages, copied into the published package. Generated
+  output; never edited by hand
 - `.claude/skills/`, `.agents/skills/`, `CLAUDE.md`, `AGENTS.md` - rendered output, committed
   so the skills are readable here, and byte-compared by the drift check
 - `religion/` - this project's own installation, used to build itself

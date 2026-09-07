@@ -49,8 +49,8 @@ to happen, and a file with no writer is documentation nobody updates.
 
 | File | Owner | Written by | Read by |
 | --- | --- | --- | --- |
-| `project-plan.md` | You | You, or `discovery` with your approval | `overview` |
-| `build-plan.md` | You | You; `complete` ticks boxes | `overview`, `feature`, `auto`, `status` |
+| `project-plan.md` | You | You; `setup` or `discovery` draft with your approval | `overview` |
+| `build-plan.md` | You | You; `setup` drafts with your approval; `complete` ticks boxes | `overview`, `feature`, `auto`, `status` |
 | `config.json` | You | You; `setup` proposes edits | every workflow skill |
 | `context/coding-standards.md` | You | You; `setup` tunes it | `feature`, `implement`, `audit` |
 | `context/ai-interaction.md` | You | You; `setup` tunes it | every skill, for output shape |

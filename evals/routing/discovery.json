@@ -19,6 +19,18 @@
     {
       "prompt": "Set up the workflow for this repo",
       "owner": "setup"
+    },
+    {
+      "prompt": "Draft the plans from what is already in this repo",
+      "owner": "setup"
+    },
+    {
+      "prompt": "Survey this codebase and write the project plan",
+      "owner": "setup"
+    },
+    {
+      "prompt": "Generate a build plan from what has already shipped",
+      "owner": "setup"
     }
   ]
 }

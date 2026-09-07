@@ -5,7 +5,8 @@
 
 ## Where the work sits
 
-Nothing in progress.
+**Setup drafts usable plans from an existing codebase** is in progress: 5 step(s) done, 1 to go.
+Next step: Step 6.
 
 Plan: 1 of 4 item(s) complete. Next up: 2. **Setup drafts usable plans from an existing codebase** - survey an unfamiliar repository with real history and produce two plans a person would keep
 

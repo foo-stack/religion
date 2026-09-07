@@ -230,3 +230,13 @@ verification was redone rather than trusted.
 - **One count corrected outside the item's scope.** The published package readme claimed
   twenty-two skills where there are twenty-five. Fixed while editing that file. The entry
   files still understate the verification checks, which remains a separate fix.
+
+## Landed
+
+**Base:** 3afaaaee5171c7903f46affd0abe204bbc403397
+**Commits:** 73226c12514a5e13ab544bf142cc24a6be8d2c3f
+**Product paths:** docs/getting-started.md, docs/the-loop.md, docs/doctor.md,
+docs/README.md, README.md, packages/create-religion/README.md
+
+The changeset at `.changeset/docs-for-newcomers.md` travels with this item and is consumed
+by the next release rather than being part of what it delivers.

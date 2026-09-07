@@ -5,10 +5,9 @@
 
 ## Where the work sits
 
-**Setup drafts usable plans from an existing codebase** is in progress: 5 step(s) done, 1 to go.
-Next step: Step 6.
+**Documentation for people who did not build it** is in progress: 4 step(s) done, 0 to go.
 
-Plan: 1 of 4 item(s) complete. Next up: 2. **Setup drafts usable plans from an existing codebase** - survey an unfamiliar repository with real history and produce two plans a person would keep
+Plan: 2 of 4 item(s) complete. Next up: 3. **Documentation for people who did not build it** - a getting-started walkthrough, what the loop feels like in practice, and what to do when `doctor` complains
 
 ## Read first
 

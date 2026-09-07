@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 7e75e0da5aad5221 -->
+<!-- religion:source-hash 65012932dc7057f5 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,8 +49,6 @@ nothing to sign into.
 
 ## Roadmap
 
-3. **Documentation for people who did not build it** - a getting-started walkthrough, what
-   the loop feels like in practice, and what to do when `doctor` complains
 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a
    breaking change
 

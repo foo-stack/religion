@@ -12,7 +12,7 @@ every diff before it lands.
 
 ## What it installs
 
-- **22 skills** your AI tool can run: `feature`, `implement`, `check`, `audit`, `complete`,
+- **25 skills** your AI tool can run: `feature`, `implement`, `check`, `audit`, `complete`,
   and the rest of the loop around them.
 - **A state directory** holding your plans, the active spec, the findings ledger, and the
   archive of everything finished.
@@ -43,6 +43,10 @@ Installing the package globally shortens these to `religion status` and the rest
 up the original if you choose to replace it.
 
 ## Documentation
+
+- [Getting started](https://github.com/foo-stack/religion/blob/main/docs/getting-started.md)
+- [What the loop actually feels like](https://github.com/foo-stack/religion/blob/main/docs/the-loop.md)
+- [What to do when doctor complains](https://github.com/foo-stack/religion/blob/main/docs/doctor.md)
 
 [github.com/foo-stack/religion](https://github.com/foo-stack/religion)
 

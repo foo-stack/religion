@@ -94,7 +94,7 @@ large, so split it.
   byte-identical. *Done when:* the check
   passes, and it fails when the rebuild is temporarily disabled, reproducing the
   duplication this guards against.
-- [ ] **Step 6 - changing the surface on purpose** - `scripts/capture-release.ts`, run as
+- [x] **Step 6 - changing the surface on purpose** - `scripts/capture-release.ts`, run as
   `npm run capture:release -- <version>`, replaces the fixture with that published tarball
   and updates `lastRelease`. A section in `docs/architecture/releasing.md` says what each check failure means, how to record an
   addition, that a removal belongs in a major release, and that the fixture is refreshed

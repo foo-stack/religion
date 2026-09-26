@@ -41,6 +41,41 @@ When no changesets are pending, which is the state immediately after that pull r
 the same workflow publishes instead. One workflow, two behaviours, decided by what is in
 `.changeset/`.
 
+## The public surface is recorded
+
+`packages/create-religion/surface.json` records what a release promises: every command and
+the options it accepts, the skill names, each adapter with the trees and entry file it
+installs, every setting with its allowed values or the type of its default, and the shapes of
+`status --json` and `doctor --json`. The check "the public surface matches its record"
+derives the same from the code and fails on any difference:
+
+| Failure | Meaning | What to do |
+| --- | --- | --- |
+| `breaking: ...` | something recorded was removed, renamed, or narrowed | restore it, or, when it is meant, ship it in a major release and edit the record in the same pull request |
+| `unrecorded: ...` | something new is not in the record yet | add it to the record in the same pull request; an addition is a minor release |
+
+Editing the record is the deliberate act. Its diff is what a reviewer reads to see what a
+change does to the promise, so an entry is never edited to make the check pass without that
+being the point of the pull request.
+
+## An upgrade from the last release is checked
+
+`packages/create-religion/fixtures/` holds the tarball of the last published release, byte for
+byte, named by `lastRelease` in the record. The check "a project the last release installed
+updates cleanly" runs that release's own installer into a scratch project, edits it the way
+`setup` would, updates it with the current code, and fails if an entry file repeats a section
+or loses an edit, the plans change, the manifest keeps the old version, or a second update
+changes anything. It needs the built template, so run `npm run build` before `npm test`.
+
+After every publish, point it at the release that just went out:
+
+```bash
+npm run capture:release -- <version just published>
+```
+
+That replaces the tarball, updates `lastRelease`, and belongs in a pull request of its own. It
+is the only step here that needs the registry.
+
 ## Publishing has no token
 
 npm trusted publishing exchanges a GitHub OIDC token for short-lived publish rights. The

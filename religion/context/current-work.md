@@ -83,7 +83,7 @@ large, so split it.
   schema, a missing manifest, and an unparseable version string; and in a scratch project
   whose manifest claims `99.0.0`, both `update` and `update --dry-run` exit 1 with the
   message and leave every file byte-identical.
-- [ ] **Step 2 - rebuild an entry file around what the user owns** - a pure
+- [x] **Step 2 - rebuild an entry file around what the user owns** - a pure
   `rebuildEntry(existing, template)` in `lib/merge.ts`: the existing file's leading lines
   without import lines, then every section it has that is not one of the template's managed
   sections and not Commands, then the template's managed block, then the existing Commands

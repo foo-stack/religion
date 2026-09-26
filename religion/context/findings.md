@@ -302,13 +302,13 @@
 **Suggested fix:** Require every managed file to match the current template afterwards, each template heading once in the entry files, and doctor's install checks to pass.
 **Resolution:** Repaired 2026-09-26: after the update the check requires every managed file to match the current template, each template heading exactly once in both entry files with the edits kept, and doctor's required-files, configuration, adapters and entry-file checks to pass. A no-op update now fails with the stale managed files named. Awaiting re-review.
 
-### F-52 [P1] open - A shipped skill can be removed without failing the surface check
+### F-52 [P1] fixed - A shipped skill can be removed without failing the surface check
 
 **File:** scripts/surface-current.ts:33
 **Found:** 2026-09-26 by audit (scope: current; lens: quality)
 **Why it matters:** Skills are read from `PLANNED_SKILLS`, a hand-kept roster, and the only related check requires authored skills to be a subset of it. Removing `src/skills/try` and its routing cases passed the whole suite; so does a rename that leaves the old name listed.
 **Suggested fix:** Derive skill names from the authored sources.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: skill names are read from the authored sources with `readSkills`, so moving `src/skills/try` aside failed the check as `breaking: skills no longer includes try`. Awaiting re-review.
 
 ### F-53 [P2] fixed - The executed fixture has no integrity pin
 

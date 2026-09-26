@@ -112,7 +112,7 @@ large, so split it.
   rather than thrown (F-60). *Done when:* the check passes, fails when the update is made a
   no-op, and fails on a fixture whose bytes differ from the recorded integrity, each shown
   by a temporary break.
-- [ ] **Repair F-52 - skills derived from what is authored** - the surface's skill names
+- [x] **Repair F-52 - skills derived from what is authored** - the surface's skill names
   come from the skill sources, not the planned roster. *Done when:* moving a skill's source
   aside fails the check as breaking, shown by a temporary move.
 

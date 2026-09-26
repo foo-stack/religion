@@ -15,7 +15,7 @@ import { ALLOWED, doctorReport, runDoctor } from "../packages/create-religion/li
 import { ADAPTERS } from "../packages/create-religion/lib/install.js";
 import { readProjectState } from "../packages/create-religion/lib/state.js";
 import { computeStatus } from "../packages/create-religion/lib/status.js";
-import { PLANNED_SKILLS } from "../src/lib/skills.js";
+import { readSkills } from "../src/lib/skills.js";
 import type { Surface } from "./surface.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -30,7 +30,9 @@ export async function currentSurface(): Promise<Record<string, Surface>> {
 
   return {
     commands: Object.fromEntries(Object.entries(GRAMMAR).map(([command, flags]) => [command, [...flags]])),
-    skills: [...PLANNED_SKILLS],
+    // The authored sources, not the planned roster: the roster is kept by hand, and a skill
+    // removed from both would otherwise leave nothing to notice.
+    skills: (await readSkills(path.join(repoRoot, "src", "skills"))).map((skill) => skill.name),
     adapters,
     config: await currentConfig()
   };

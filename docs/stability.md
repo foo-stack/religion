@@ -182,8 +182,12 @@ promise.
   load and the globals and members that reach the network or the module loader; allows
   `process` only the members the tool uses; lets the dashboard use `node:http` only to serve,
   its page make only its one request for its own data, and its responses carry only one
-  exact content security policy; lets the hook settings run only the shipped hooks; and
-  lets nothing run when the package is installed
+  exact content security policy; lets the hook settings run only the shipped hooks; lets
+  nothing run when the package is installed, which includes having no dependencies; and holds
+  the build and the published files to what it reads
+- the probe test in `scripts/network-probes.test.ts`, which replays every evasion and every
+  legitimate pattern reviewers have tried against that check, 180 so far, and fails if any
+  verdict changes
 - the install tests that a path reached through a symbolic link, dangling or not, is never
   written, and that a recorded path outside Religion's own trees is never removed
 - the hook test in `scripts/hooks.test.ts` that the handoff is never written through a link
@@ -251,4 +255,6 @@ release of any kind.
   reaches new installs only.
 - **The dashboard** is readable by any process on the same machine while it runs: the
   loopback address is not per-user.
+- **The dashboard escapes the text it shows.** A new field rendered without escaping would
+  let text in the repository add a link to the page, which no check can see.
 - **Windows** is not tested.

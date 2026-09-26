@@ -61,11 +61,17 @@ being the point of the pull request.
 ## An upgrade from the last release is checked
 
 `packages/create-religion/fixtures/` holds the tarball of the last published release, byte for
-byte, named by `lastRelease` in the record. The check "a project the last release installed
-updates cleanly" runs that release's own installer into a scratch project, edits it the way
-`setup` would, updates it with the current code, and fails if an entry file repeats a section
-or loses an edit, the plans change, the manifest keeps the old version, or a second update
-changes anything. It needs the built template, so run `npm run build` before `npm test`.
+byte, named by `lastRelease` in the record and pinned by `lastReleaseIntegrity`, the registry's
+own integrity for it. The check refuses to run a tarball that does not match. Otherwise it
+runs that release's own installer into a scratch project, edits it the way `setup` would,
+updates it with the current code, and fails unless every managed file is now the current
+template, each entry file holds every heading once with the edits kept, the plans, standards
+and configuration are untouched, doctor's install checks pass, the manifest carries the new
+version, and a second update changes nothing. It needs the built template, so run
+`npm run build` before `npm test`.
+
+A failure here is a regression in `update`. Fix the code; never re-record or edit the fixture
+to make it pass.
 
 After every publish, point it at the release that just went out:
 
@@ -73,8 +79,10 @@ After every publish, point it at the release that just went out:
 npm run capture:release -- <version just published>
 ```
 
-That replaces the tarball, updates `lastRelease`, and belongs in a pull request of its own. It
-is the only step here that needs the registry.
+That replaces the tarball, records its version and integrity, and belongs in a pull request
+of its own. The tarball shows only as a binary change, so the reviewer confirms the recorded
+integrity with `npm view create-religion@<version> dist.integrity`. It is the only step here
+that needs the registry.
 
 ## Publishing has no token
 

@@ -101,6 +101,20 @@ large, so split it.
   after every publish with that command. *Done when:* running the capture for `0.5.0`
   reproduces the committed fixture byte for byte, the section exists, every command it names
   exists in `package.json`, and `npm test` passes.
+- [x] **Repair F-51 - the upgrade check proves the update did something** - after the
+  update, every managed file matches the current template, each entry file has every
+  template heading exactly once with the edits kept, doctor's required-files, adapters and
+  entry-file checks pass, and setup's edits to the coding standards and configuration
+  survive. Folded in on the same lines: the fixture is pinned to the registry integrity
+  recorded as `lastReleaseIntegrity` and refused on a mismatch (F-53), setup's full edits
+  (F-55), a minimal environment and a timeout (F-57), a validated version (F-58), a capture
+  script that records the integrity from `npm pack --json` (F-59), and problems returned
+  rather than thrown (F-60). *Done when:* the check passes, fails when the update is made a
+  no-op, and fails on a fixture whose bytes differ from the recorded integrity, each shown
+  by a temporary break.
+- [ ] **Repair F-52 - skills derived from what is authored** - the surface's skill names
+  come from the skill sources, not the planned roster. *Done when:* moving a skill's source
+  aside fails the check as breaking, shown by a temporary move.
 
 ## Files and areas
 
@@ -119,7 +133,7 @@ large, so split it.
 
 - **`surface.json` is load-bearing**: item 4d writes the stability statement from it, and
   every later change to the public surface is an edit to it. Shape:
-  `{ lastRelease, commands: { [command]: flags[] }, skills: [], adapters: { [id]: { trees,
+  `{ lastRelease, lastReleaseIntegrity, commands: { [command]: flags[] }, skills: [], adapters: { [id]: { trees,
   entry } }, config: { [key]: values[] | "boolean" | "number" | "string" | "null" }, json:
   { status: shape, doctor: shape } }`.
 - **The comparison rule**: the current surface must equal the record, with lists compared

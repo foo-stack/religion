@@ -293,3 +293,147 @@
 **Why it matters:** It is never deleted, which is safe, but it drops out of the manifest without being reported.
 **Suggested fix:** Report it as linked.
 **Resolution:**
+
+### F-51 [P1] fixed - The upgrade check passes when the update does nothing
+
+**File:** scripts/upgrade.ts:48
+**Found:** 2026-09-26 by audit (scope: current; lens: tests, quality)
+**Why it matters:** Everything it asserts is already true before the update: the entry files hold their edits once, the plans are intact, and a second run matches the first. A stub that only rewrote the manifest's version passed, so a planner marking everything unchanged, skipped skill writes, or a dropped managed section would all go unnoticed.
+**Suggested fix:** Require every managed file to match the current template afterwards, each template heading once in the entry files, and doctor's install checks to pass.
+**Resolution:** Repaired 2026-09-26: after the update the check requires every managed file to match the current template, each template heading exactly once in both entry files with the edits kept, and doctor's required-files, configuration, adapters and entry-file checks to pass. A no-op update now fails with the stale managed files named. Awaiting re-review.
+
+### F-52 [P1] open - A shipped skill can be removed without failing the surface check
+
+**File:** scripts/surface-current.ts:33
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** Skills are read from `PLANNED_SKILLS`, a hand-kept roster, and the only related check requires authored skills to be a subset of it. Removing `src/skills/try` and its routing cases passed the whole suite; so does a rename that leaves the old name listed.
+**Suggested fix:** Derive skill names from the authored sources.
+**Resolution:**
+
+### F-53 [P2] fixed - The executed fixture has no integrity pin
+
+**File:** scripts/upgrade.ts:24
+**Found:** 2026-09-26 by audit (scope: current; lens: security)
+**Why it matters:** The upgrade check runs the tarball's code in every `npm test`, including the release job, which holds OIDC and write permissions. A replaced tarball shows only as a binary diff, and nothing records or checks what npm published.
+**Suggested fix:** Record the registry integrity with the version and refuse to extract a fixture that does not match it.
+**Resolution:** Repaired 2026-09-26: `lastReleaseIntegrity` records the registry integrity and the check refuses to extract a fixture whose sha512 differs; a tampered fixture was refused. The release notes tell the reviewer how to confirm the recorded value.
+
+### F-54 [P2] open - The surface comparison compares array items as strings
+
+**File:** scripts/surface.ts:18
+**Found:** 2026-09-26 by audit (scope: current; lens: tests)
+**Why it matters:** Items go through `String()`, so arrays of objects always compare equal and `[1]` matches `["1"]`. Latent while every recorded array holds strings.
+**Suggested fix:** Compare items by their JSON.
+**Resolution:**
+
+### F-55 [P2] fixed - The upgrade check makes only some of setup's edits
+
+**File:** scripts/upgrade.ts:83
+**Found:** 2026-09-26 by audit (scope: current; lens: tests)
+**Why it matters:** It never edits `religion/context/coding-standards.md` or `religion/config.json`, which setup does, so an update that overwrote either would pass. Current behaviour keeps both.
+**Suggested fix:** Edit and assert both.
+**Resolution:** Repaired 2026-09-26: the check also edits the coding standards and the configuration and requires both unchanged after the update.
+
+### F-56 [P2] open - A setting is recorded by its default's type
+
+**File:** packages/create-religion/surface.json:152
+**Found:** 2026-09-26 by audit (scope: current; lens: quality, tests)
+**Why it matters:** `auto.maxItems` is recorded as `"null"` though the configuration reference documents a positive integer or null, so the statement would promise less than the tool accepts and a numeric default would read as breaking.
+**Suggested fix:** Let the config record use unions, and record the documented type.
+**Resolution:**
+
+### F-57 [P3] fixed - The old installer inherits the environment and has no timeout
+
+**File:** scripts/upgrade.ts:95
+**Found:** 2026-09-26 by audit (scope: current; lens: security)
+**Why it matters:** The fixture runs with the full environment, including the release job's token request variables, and a hang stalls the suite.
+**Suggested fix:** Pass a minimal environment and a timeout.
+**Resolution:** Repaired 2026-09-26: every spawned command gets only `PATH`, a scratch `HOME` and `TMPDIR`, and a sixty-second limit.
+
+### F-58 [P3] fixed - The last release's version is used in a path unchecked
+
+**File:** scripts/upgrade.ts:24
+**Found:** 2026-09-26 by audit (scope: current; lens: security)
+**Why it matters:** A value like `../../x` would name another tarball, which would then be run.
+**Suggested fix:** Validate it as a version first.
+**Resolution:** Repaired 2026-09-26: `lastRelease` must match a strict version pattern before it names a file.
+
+### F-59 [P3] fixed - The capture script accepts tag-shaped versions and can delete the tarball it fetched
+
+**File:** scripts/capture-release.ts:16
+**Found:** 2026-09-26 by audit (scope: current; lens: security)
+**Why it matters:** `\w` admits `_`, which npm reads as a tag, so the packed file can be named differently from the one kept and is then deleted.
+**Suggested fix:** Take the file name and integrity from `npm pack --json` and use a strict version pattern.
+**Resolution:** Repaired 2026-09-26: the capture script takes the file name, version and integrity from `npm pack --json`, refuses a mismatched version, and uses the strict pattern, which rejects tag-shaped input.
+
+### F-60 [P3] fixed - The upgrade check throws instead of failing
+
+**File:** scripts/upgrade.ts:40
+**Found:** 2026-09-26 by audit (scope: current; lens: tests, quality)
+**Why it matters:** Missing `tar`, an installer that writes no entry file, or a missing `tsx` throw, stopping the suite with a message that names no check.
+**Suggested fix:** Return a problem line.
+**Resolution:** Repaired 2026-09-26: spawn failures and any thrown error become a problem line naming the check.
+
+### F-61 [P3] open - The shape language cannot pin literal values
+
+**File:** scripts/surface.ts:49
+**Found:** 2026-09-26 by audit (scope: current; lens: tests, quality)
+**Why it matters:** `schemaVersion`, `checks[].blocks` and `next.command` are recorded as plain strings or numbers, so a change of value passes; `"object"` and `"array"` match anything of that kind unchecked.
+**Suggested fix:** Add literals, and reject unknown kind names.
+**Resolution:**
+
+### F-62 [P3] open - Help bypasses the option table
+
+**File:** packages/create-religion/lib/args.ts:85
+**Found:** 2026-09-26 by audit (scope: current; lens: tests, quality)
+**Why it matters:** `parseArgs` returns early on help, so the table's help entries never run and help accepts any other option, which the recorded grammar does not say.
+**Suggested fix:** Record help's precedence, or route it through the table.
+**Resolution:**
+
+### F-63 [P3] open - The scripts test pattern is unguarded
+
+**File:** scripts/verify.ts:289
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** The check that unit tests exist looks only under the package, and an unmatched glob is silently ignored, so moving the surface tests would drop them.
+**Suggested fix:** Extend the check to `scripts/`.
+**Resolution:**
+
+### F-64 [P3] open - The surface check ignores record keys it does not derive
+
+**File:** scripts/verify.ts:264
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** A misspelt or extra top-level key or JSON kind passes, and a missing section reads as a change from null.
+**Suggested fix:** Compare the record's keys too.
+**Resolution:**
+
+### F-65 [P3] open - The release notes do not say what an upgrade failure means
+
+**File:** docs/architecture/releasing.md:51
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** The table covers only the surface check, and it sets a versioning rule the stability statement should own.
+**Suggested fix:** Say an upgrade failure is a regression to fix, never re-record.
+**Resolution:**
+
+### F-66 [P3] open - Shape tests never fail a primitive on its own
+
+**File:** scripts/surface.test.ts:52
+**Found:** 2026-09-26 by audit (scope: current; lens: tests)
+**Why it matters:** String, number, boolean and null fail only through the union case.
+**Suggested fix:** Add one failing case each.
+**Resolution:**
+
+### F-67 [P3] unverified - A local run can test a stale staged template
+
+**File:** scripts/upgrade.ts:27
+**Found:** 2026-09-26 by audit (scope: current; lens: tests)
+**Why it matters:** The check only confirms the template exists; `build:skills` alone does not restage it. CI builds first.
+**Suggested fix:** Compare the staged template with its sources, or say so in the failure.
+**Resolution:**
+
+### F-68 [P3] unverified - Some installed paths are not recorded
+
+**File:** packages/create-religion/surface.json:1
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** `.claude/settings.json` and the shared `religion/` tree are installed but absent from the adapter record. The spec scoped trees and entry files narrowly.
+**Suggested fix:** Decide in the stability statement whether they are promised.
+**Resolution:**

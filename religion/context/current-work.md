@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 4d
-**Status:** not started
+**Status:** in progress
 
 ## Goal
 
@@ -60,7 +60,7 @@ large, so split it.
 
 ## Build steps
 
-- [ ] **Step 1 - Node 22 or later, checked** - raise the package's `engines` to `>=22`, add a
+- [x] **Step 1 - Node 22 or later, checked** - raise the package's `engines` to `>=22`, add a
   matrix of 22 and 24 to the CI workflow, say Node 22 in the getting-started guide, and add
   the range to the surface record, derived from the package's `engines` by the surface
   check. *Done when:* `npm test` passes when run on Node 22.18 and on Node 24, and changing

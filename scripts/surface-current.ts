@@ -22,8 +22,12 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 
 export const SURFACE_RECORD = path.join(repoRoot, "packages", "create-religion", "surface.json");
 
-/** Commands and their options, skills, adapters and what they install, and settings. */
+/** Commands and their options, skills, adapters and what they install, settings, and the Node range. */
 export async function currentSurface(): Promise<Record<string, Surface>> {
+  const { engines } = JSON.parse(
+    await fs.readFile(path.join(repoRoot, "packages", "create-religion", "package.json"), "utf8")
+  ) as { engines?: { node?: string } };
+
   const adapters = Object.fromEntries(
     Object.entries(ADAPTERS).map(([id, adapter]) => [id, { trees: [...adapter.trees], entry: [...adapter.entry] }])
   );
@@ -34,7 +38,8 @@ export async function currentSurface(): Promise<Record<string, Surface>> {
     // removed from both would otherwise leave nothing to notice.
     skills: (await readSkills(path.join(repoRoot, "src", "skills"))).map((skill) => skill.name),
     adapters,
-    config: await currentConfig()
+    config: await currentConfig(),
+    node: engines?.node ?? null
   };
 }
 

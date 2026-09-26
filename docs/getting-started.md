@@ -7,7 +7,7 @@ is no service, no account, and nothing running in the background.
 This walks from an empty install to the point where your first piece of work is ready to be
 specced. It takes about ten minutes, most of it spent reading two files you own.
 
-You need a git repository and Node 20 or later. Scaffold your application first and install
+You need a git repository and Node 22 or later. Scaffold your application first and install
 on top of it; Religion describes work on a codebase rather than creating one.
 
 ## Install

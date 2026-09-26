@@ -246,9 +246,10 @@ field covered only the dropped-file planning; the re-review showed the entry-fil
 crashed. It stays open (F-31).
 
 **The previous completion wrote an unrendered stub.** Resetting the active spec after the
-command-line work copied the source template, leaving `{{cmd:...}}` tokens in place. Caught
-while writing this spec and fixed on that branch. Nothing checks the project's own state
-files for unrendered tokens.
+command-line work copied the source template, leaving its command tokens unrendered. Caught
+while writing this spec and fixed on that branch. The verification suite does check the
+state files for unrendered tokens and would have failed; it was not run after the
+completion's own bookkeeping commit, which is the step that was missing.
 
 ### Deferred
 

@@ -109,7 +109,7 @@ large, so split it.
   file, a path outside the project, and a dry run; and in a scratch project with a
   fabricated manifest entry for an extra skill, `update` removes it and its empty directory,
   keeps an edited one, and the manifest no longer lists either.
-- [ ] **Step 5 - say what actually happened** - a declined merge is reported as its own
+- [x] **Step 5 - say what actually happened** - a declined merge is reported as its own
   line, not counted with local edits and not followed by `--force` advice, and still exits
   1. The merge prompt says the originals are backed up before merging; the backup line says
   where. `docs/getting-started.md` is corrected, with any quoted output re-captured from a

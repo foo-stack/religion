@@ -153,7 +153,7 @@ async function runInstall(options: Options): Promise<void> {
     console.log(
       "\nReligion can append its own sections to them inside markers, keeping everything" +
         "\nyou wrote exactly where it is. Later updates then replace only what is between" +
-        "\nthose markers. The originals are backed up either way."
+        "\nthose markers. The originals are backed up first."
     );
     merge = await confirmMerge(options.yes);
   }
@@ -170,7 +170,10 @@ async function runInstall(options: Options): Promise<void> {
   }
 
   const result = await applyInstall(templateRoot, target, plan, { force: options.force, merge });
-  await writeManifest(target, packageVersion, adapters, templateRoot, previous, result.conflicts);
+  await writeManifest(target, packageVersion, adapters, templateRoot, previous, [
+    ...result.conflicts,
+    ...result.declined
+  ]);
 
   console.log(`\nWrote ${result.written.length} file(s).`);
   if (result.merged.length > 0) {
@@ -186,7 +189,16 @@ async function runInstall(options: Options): Promise<void> {
   if (result.released.length > 0) {
     console.log(`Left ${result.released.length} file(s) this version no longer ships, because you edited them. They are yours now.`);
   }
-  if (result.backups.length > 0) console.log(`Backed up ${result.backups.length} conflicting file(s).`);
+  if (result.backups.length > 0) {
+    console.log(`Backed up ${result.backups.length} file(s) to ${path.join(STATE_DIR, ".state", "backups")} before changing them.`);
+  }
+  if (result.declined.length > 0) {
+    process.exitCode = 1;
+    console.log(
+      `\n${result.declined.length} file(s) of yours were not merged, so Religion's instructions are not in them.` +
+        `\nRun update again and accept the merge, or pass --yes, to add them.`
+    );
+  }
   if (result.conflicts.length > 0) {
     process.exitCode = 1;
     console.log(

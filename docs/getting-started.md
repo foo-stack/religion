@@ -36,13 +36,19 @@ to append its own sections inside markers, so everything you wrote stays exactly
 is and a later `update` replaces only what is between those markers:
 
 ```text
-Wrote 33 file(s).
+Wrote 52 file(s).
 Merged 1 entry file(s), keeping what you wrote.
-Backed up 1 conflicting file(s).
+Backed up 1 file(s) to religion/.state/backups before changing them.
 ```
 
-Decline and the file is left untouched and reported as a conflict. Either way the original
-is backed up under `religion/.state/backups/`.
+Accept and the original is copied to `religion/.state/backups/` before anything changes.
+Decline and the file is left exactly as it was, with nothing to back up, and the run says
+so and exits 1:
+
+```text
+1 file(s) of yours were not merged, so Religion's instructions are not in them.
+Run update again and accept the merge, or pass --yes, to add them.
+```
 
 ## How to run a skill
 

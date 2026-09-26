@@ -374,3 +374,17 @@ test("planInstall: a recorded path outside the project or in its state is never 
   assert.equal(await fs.readFile(path.join(target, "religion/context/findings.md"), "utf8"), "bait\n");
 });
 
+test("applyInstall: a declined merge is reported as declined, untouched and not backed up", async (t) => {
+  const { template, target } = await fixture(t);
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(target, "CLAUDE.md", "# Acme\n\nmy own instructions\n");
+
+  const plan = await planInstall(template, target, ["claude"], null);
+  const result = await applyInstall(template, target, plan, { force: true, merge: false });
+
+  assert.deepEqual(result.declined, ["CLAUDE.md"]);
+  assert.deepEqual(result.conflicts, []);
+  assert.deepEqual(result.backups, [], "nothing changed, so nothing was backed up");
+  assert.equal(await fs.readFile(path.join(target, "CLAUDE.md"), "utf8"), "# Acme\n\nmy own instructions\n");
+});
+

@@ -173,6 +173,7 @@ export async function applyInstall(
   rebuilt: string[];
   removed: string[];
   released: string[];
+  declined: string[];
 }> {
   const written: string[] = [];
   const conflicts: string[] = [];
@@ -181,6 +182,7 @@ export async function applyInstall(
   const rebuilt: string[] = [];
   const removed: string[] = [];
   const released: string[] = [];
+  const declined: string[] = [];
 
   for (const entry of plan) {
     if (entry.action === "unchanged" || entry.action === "seed-skip") continue;
@@ -230,7 +232,7 @@ export async function applyInstall(
     }
 
     if (entry.action === "merge") {
-      conflicts.push(entry.relative);
+      declined.push(entry.relative);
       continue;
     }
 
@@ -260,7 +262,7 @@ export async function applyInstall(
     written.push(entry.relative);
   }
 
-  return { written, conflicts, backups, merged, rebuilt, removed, released };
+  return { written, conflicts, backups, merged, rebuilt, removed, released, declined };
 }
 
 /** Remove directories a removal left empty, walking up and stopping at the project root. */

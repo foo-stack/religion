@@ -94,7 +94,7 @@ large, so split it.
   wrong port, and both allowed forms; and against a running dashboard `curl` with its own
   address gets 200 on `/state.json` while `curl -H 'Host: evil.example'` gets 403 with no
   state in the body.
-- [ ] **Step 5 - a changeset** - add `.changeset/cli-surface.md` as a minor bump, naming the
+- [x] **Step 5 - a changeset** - add `.changeset/cli-surface.md` as a minor bump, naming the
   refused input, the new exit code for conflicts, the `doctor --json` shape change, and the
   dashboard check, so anyone scripting against 0.5 knows what moved. *Done when:* the
   changeset exists, names all four, and `npm test` passes.

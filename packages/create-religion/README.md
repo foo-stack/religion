@@ -57,6 +57,8 @@ The same for every command, so a script can rely on them:
 - [Getting started](https://github.com/foo-stack/religion/blob/main/docs/getting-started.md)
 - [What the loop actually feels like](https://github.com/foo-stack/religion/blob/main/docs/the-loop.md)
 - [What to do when doctor complains](https://github.com/foo-stack/religion/blob/main/docs/doctor.md)
+- [Updating a project](https://github.com/foo-stack/religion/blob/main/docs/upgrading.md)
+- [Stability](https://github.com/foo-stack/religion/blob/main/docs/stability.md)
 
 [github.com/foo-stack/religion](https://github.com/foo-stack/religion)
 

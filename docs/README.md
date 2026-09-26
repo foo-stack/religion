@@ -11,6 +11,8 @@ Start here if you have installed it, or are deciding whether to.
 | [Getting started](getting-started.md) | Install onto a repository you already have, through `setup` and the two plans, to the point where your first item is ready to spec |
 | [What the loop actually feels like](the-loop.md) | One real work item walked from `feature` to `complete`: what you see, what you approve, and what it costs you |
 | [What to do when doctor complains](doctor.md) | Every check `doctor` runs, what each failure means, and the fix that clears it |
+| [Updating a project](upgrading.md) | What `update` reports, what to do about each outcome, getting a file back, and what it never touches |
+| [Stability](stability.md) | What 1.x keeps stable and what is internal, what an update guarantees, what counts as a breaking change, and the Node versions supported |
 
 ## Understanding how it is built
 

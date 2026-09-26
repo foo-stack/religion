@@ -95,7 +95,7 @@ large, so split it.
   which now points at the statement. Rebuild the rendered trees. *Done when:* each corrected
   claim is checked against the code or a count taken from it, and `npm test` passes with
   the rendered trees in sync.
-- [ ] **Step 6 - where to find it** - add both documents to `docs/README.md` and link them
+- [x] **Step 6 - where to find it** - add both documents to `docs/README.md` and link them
   from `README.md` and the package readme; add decision entries for the settled promises,
   the Node policy, and the retired shell-command hook, which never got one. *Done when:*
   every file under `docs/` is in the index and every new relative link resolves.

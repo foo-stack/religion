@@ -51,6 +51,9 @@ Then run the `setup` skill in your AI tool, fill in the two plans, and run `over
 when you already have a `CLAUDE.md` or `AGENTS.md`, what `setup` does on a codebase whose
 README explains nothing, and how to tell it worked.
 
+**[Updating a project](docs/upgrading.md)** covers what `update` reports and what to do about
+each outcome, and **[Stability](docs/stability.md)** says what a 1.x release will not break.
+
 ## The two files you own
 
 | File | What it holds |

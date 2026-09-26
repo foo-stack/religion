@@ -48,6 +48,8 @@ const ALLOWED_IMPORTS = new Set([
   "node:path",
   "node:url",
   "node:crypto",
+  "node:os",
+  "node:util",
   "node:readline/promises"
 ]);
 const DASHBOARD = "packages/create-religion/lib/dashboard.ts";
@@ -69,14 +71,41 @@ const FORBIDDEN_GLOBALS = new Set([
   "global"
 ]);
 /** Members that load modules or reach the global object, whatever they are called on. */
-const FORBIDDEN_MEMBERS = new Set(["constructor", "getBuiltinModule", "mainModule", "sendBeacon"]);
+const FORBIDDEN_MEMBERS = new Set(["constructor", "getBuiltinModule", "mainModule", "sendBeacon", "require", "setEngine"]);
 /** The members of `process` the tool uses; `process` reaches every built-in module through the rest. */
-const PROCESS_MEMBERS = new Set(["argv", "cwd", "env", "exit", "exitCode", "on", "platform", "stdin", "stdout", "stderr"]);
+const PROCESS_MEMBERS = new Set([
+  "argv",
+  "cwd",
+  "env",
+  "exit",
+  "exitCode",
+  "nextTick",
+  "on",
+  "platform",
+  "stdin",
+  "stdout",
+  "stderr",
+  "version",
+  "versions"
+]);
 /** Names the dashboard page's own script may not use, beyond the globals above. */
 const PAGE_FORBIDDEN = new Set(["Image", "location", "navigator", "open"]);
 /** Objects in a browser through which any global can be reached by name. */
 const GLOBAL_OBJECTS = new Set(["window", "self", "globalThis", "frames", "parent", "top", "document"]);
 const HOOK = /^node \.claude\/hooks\/([a-z-]+\.mjs)$/;
+/** Every way a response can be written; all of them belong inside `send`. */
+const RESPONSE_MEMBERS = new Set([
+  "writeHead",
+  "setHeader",
+  "appendHeader",
+  "removeHeader",
+  "end",
+  "write",
+  "statusCode",
+  "statusMessage",
+  "flushHeaders",
+  "writeContinue"
+]);
 
 /**
  * No shipped module can open a network connection.
@@ -90,30 +119,41 @@ const HOOK = /^node \.claude\/hooks\/([a-z-]+\.mjs)$/;
  * files this check reads, and the settings template may run nothing else.
  */
 export async function networkProblems(): Promise<string[]> {
-  const shipped = [
-    path.join(repoRoot, "packages", "create-religion", "bin"),
-    path.join(repoRoot, "packages", "create-religion", "lib"),
-    path.join(repoRoot, "src", "hooks")
-  ];
   const problems: string[] = [];
-  for (const file of (await Promise.all(shipped.map(sources))).flat()) {
+  for (const file of (await Promise.all(SHIPPED.map(sources))).flat()) {
     const relative = path.relative(repoRoot, file);
     const code = ts.createSourceFile(relative, await fs.readFile(file, "utf8"), ts.ScriptTarget.Latest, true, kind(file));
     problems.push(...codeProblems(code, relative === DASHBOARD));
     if (relative === DASHBOARD) problems.push(...dashboardProblems(code));
   }
-  problems.push(...(await hookProblems()));
+  problems.push(...(await hookProblems()), ...(await packageProblems()));
   return [...new Set(problems)];
+}
+
+const SHIPPED = [
+  path.join(repoRoot, "packages", "create-religion", "bin"),
+  path.join(repoRoot, "packages", "create-religion", "lib"),
+  path.join(repoRoot, "src", "hooks")
+];
+
+/** A relative import ships whatever it reaches, so it must reach a file this check reads. */
+function reachesScanned(from: string, specifier: string): boolean {
+  const target = path.resolve(repoRoot, path.dirname(from), specifier);
+  const inside = SHIPPED.some((root) => target.startsWith(root + path.sep));
+  return inside && !/\.test(\.[cm]?[jt]s)?$/.test(target);
 }
 
 function codeProblems(code: ts.SourceFile, dashboard: boolean): string[] {
   const problems: string[] = [];
   const at = (node: ts.Node) => `${code.fileName}:${code.getLineAndCharacterOfPosition(node.getStart()).line + 1}`;
-  const allowed = (name: string) => name.startsWith(".") || ALLOWED_IMPORTS.has(name) || (dashboard && name === "node:http");
+  const allowed = (name: string) =>
+    name.startsWith(".") ? reachesScanned(code.fileName, name) : ALLOWED_IMPORTS.has(name) || (dashboard && name === "node:http");
 
   const visit = (node: ts.Node): void => {
+    const typeOnly =
+      (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly) || (ts.isExportDeclaration(node) && node.isTypeOnly);
     const specifier =
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && !typeOnly
         ? node.moduleSpecifier
         : ts.isExternalModuleReference(node)
           ? node.expression
@@ -121,6 +161,14 @@ function codeProblems(code: ts.SourceFile, dashboard: boolean): string[] {
     if (specifier) {
       if (!ts.isStringLiteral(specifier) || !allowed(specifier.text)) {
         problems.push(`${at(node)} imports ${specifier.getText(code)}, which shipped code may not use`);
+      }
+      // The server needs the module's default export and nothing else; a named or namespace
+      // import would reach its request functions under a name this check does not follow.
+      if (dashboard && ts.isImportDeclaration(node) && ts.isStringLiteral(specifier) && specifier.text === "node:http") {
+        const clause = node.importClause;
+        if (!clause?.name || clause.name.text !== "http" || clause.namedBindings) {
+          problems.push(`${at(node)} imports node:http other than as its default, http`);
+        }
       }
     }
 
@@ -131,7 +179,8 @@ function codeProblems(code: ts.SourceFile, dashboard: boolean): string[] {
       }
     }
 
-    if (ts.isStringLiteralLike(node) && node.text.startsWith("node:") && !allowed(node.text)) {
+    const erased = node.parent && ts.isImportDeclaration(node.parent) && node.parent.importClause?.isTypeOnly;
+    if (ts.isStringLiteralLike(node) && node.text.startsWith("node:") && !allowed(node.text) && !erased) {
       problems.push(`${at(node)} names ${node.text}`);
     }
 
@@ -140,7 +189,9 @@ function codeProblems(code: ts.SourceFile, dashboard: boolean): string[] {
       : ts.isElementAccessExpression(node) && ts.isStringLiteralLike(node.argumentExpression)
         ? node.argumentExpression.text
         : null;
-    if (member !== null && FORBIDDEN_MEMBERS.has(member)) problems.push(`${at(node)} uses .${member}`);
+    const namesOnly =
+      member === "constructor" && ts.isPropertyAccessExpression(node.parent) && node.parent.name.text === "name";
+    if (member !== null && FORBIDDEN_MEMBERS.has(member) && !namesOnly) problems.push(`${at(node)} uses .${member}`);
 
     if (ts.isIdentifier(node) && isReference(node)) {
       if (FORBIDDEN_GLOBALS.has(node.text)) problems.push(`${at(node)} uses ${node.text}`);
@@ -175,19 +226,25 @@ function dashboardProblems(code: ts.SourceFile): string[] {
   if (!policy || !ts.isStringLiteralLike(policy) || policy.text !== POLICY) {
     problems.push(`${code.fileName} does not declare exactly the expected CONTENT_SECURITY_POLICY`);
   }
-  const writes: ts.CallExpression[] = [];
+  // Every way to answer lives in `send`, which always carries the policy, and only the page
+  // this check reads may be served as HTML.
   const collect = (node: ts.Node): void => {
-    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "writeHead") {
-      writes.push(node);
+    if (ts.isPropertyAccessExpression(node) && RESPONSE_MEMBERS.has(node.name.text) && !inside(node, "send")) {
+      problems.push(`${code.fileName} answers with .${node.name.text} outside send, which carries the policy`);
+    }
+    if (ts.isCallExpression(node) && isName(node.expression, "send")) {
+      const [, , type, body] = node.arguments;
+      const html = type && ts.isStringLiteralLike(type) ? /html/i.test(type.text) : true;
+      if (html && !(body && isName(body, "PAGE"))) problems.push(`${code.fileName} serves HTML other than PAGE`);
+    }
+    if (ts.isFunctionDeclaration(node) && node.name?.text === "send") {
+      if (!node.getText(code).includes('"content-security-policy": CONTENT_SECURITY_POLICY')) {
+        problems.push(`${code.fileName} has a send that does not carry the content security policy`);
+      }
     }
     ts.forEachChild(node, collect);
   };
   collect(code);
-  for (const write of writes) {
-    if (!write.getText(code).includes('"content-security-policy": CONTENT_SECURITY_POLICY')) {
-      problems.push(`${code.fileName} answers without the content security policy`);
-    }
-  }
 
   const page = declared("PAGE");
   if (!page || !ts.isNoSubstitutionTemplateLiteral(page)) {
@@ -195,7 +252,8 @@ function dashboardProblems(code: ts.SourceFile): string[] {
     return problems;
   }
   const html = page.text.replace(/<script>[\s\S]*?<\/script>/g, "");
-  if (/\b(src|href|action|http-equiv)\s*=|url\s*\(|@import|<(link|iframe|object|embed|form|base)\b/i.test(html)) {
+  if (/<script\b[^>]+>/i.test(page.text)) problems.push(`${code.fileName} has a page script tag with attributes this check does not read`);
+  if (/\b(src|srcset|href|action|http-equiv)\s*=|(url|image-set)\s*\(|@import|<(link|iframe|object|embed|form|base)\b/i.test(html)) {
     problems.push(`${code.fileName} has a page that loads something beyond its own script`);
   }
   for (const [, body] of page.text.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
@@ -212,7 +270,14 @@ function dashboardProblems(code: ts.SourceFile): string[] {
         if (!ownRequest) problems.push(`${code.fileName} has a page script that uses ${node.text}`);
       }
       // Reaching a forbidden name through an object, `window.fetch` or `window[name]`, is the same reach.
-      if (ts.isPropertyAccessExpression(node) && (FORBIDDEN_GLOBALS.has(node.name.text) || PAGE_FORBIDDEN.has(node.name.text))) {
+      const onGlobal =
+        ts.isPropertyAccessExpression(node) &&
+        (node.expression.kind === ts.SyntaxKind.ThisKeyword ||
+          (ts.isIdentifier(node.expression) && GLOBAL_OBJECTS.has(node.expression.text)));
+      if (
+        ts.isPropertyAccessExpression(node) &&
+        (FORBIDDEN_GLOBALS.has(node.name.text) || (onGlobal && PAGE_FORBIDDEN.has(node.name.text)))
+      ) {
         problems.push(`${code.fileName} has a page script that uses .${node.name.text}`);
       }
       const global =
@@ -226,6 +291,24 @@ function dashboardProblems(code: ts.SourceFile): string[] {
         }
       }
       if (node.kind === ts.SyntaxKind.ImportKeyword) problems.push(`${code.fileName} has a page script that imports`);
+      // Markup the script writes into the page is the page too, and a navigation leaves it.
+      if (ts.isStringLiteralLike(node) && /\b(src|srcset|href|action|http-equiv)\s*=|(url|image-set)\s*\(|:\/\//i.test(node.text)) {
+        problems.push(`${code.fileName} has a page script that writes markup able to load or navigate`);
+      }
+      if (ts.isPropertyAccessExpression(node) && ["src", "srcset", "href", "action"].includes(node.name.text)) {
+        problems.push(`${code.fileName} has a page script that sets .${node.name.text}`);
+      }
+      if (
+        ts.isCallExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        ["setTimeout", "setInterval"].includes(node.expression.text) &&
+        node.arguments[0] &&
+        !ts.isArrowFunction(node.arguments[0]) &&
+        !ts.isFunctionExpression(node.arguments[0]) &&
+        !ts.isIdentifier(node.arguments[0])
+      ) {
+        problems.push(`${code.fileName} has a page script that runs a string as code`);
+      }
       ts.forEachChild(node, visit);
     };
     visit(script);
@@ -244,12 +327,33 @@ async function hookProblems(): Promise<string[]> {
     if (!/\.(mjs|js|cjs)$/.test(entry.name)) problems.push(`src/hooks/${entry.name} is not a file this check can read`);
   }
 
-  const template = await fs.readFile(path.join(repoRoot, "src", "state", ".state", "settings-template.json"), "utf8");
-  for (const [, command] of template.matchAll(/"command"\s*:\s*"((?:[^"\\]|\\.)*)"/g)) {
-    const hook = HOOK.exec(command!);
-    if (!hook || !names.has(hook[1]!)) problems.push(`the settings template runs ${command}, which is not a shipped hook`);
-  }
+  const template = JSON.parse(
+    await fs.readFile(path.join(repoRoot, "src", "state", ".state", "settings-template.json"), "utf8")
+  ) as unknown;
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) return value.forEach(walk);
+    if (!value || typeof value !== "object") return;
+    const entry = value as Record<string, unknown>;
+    if ("type" in entry || "command" in entry || "url" in entry) {
+      const hook = typeof entry.command === "string" ? HOOK.exec(entry.command) : null;
+      if (entry.type !== "command" || !hook || !names.has(hook[1]!) || "url" in entry) {
+        problems.push(`the settings template runs ${JSON.stringify(entry)}, which is not a shipped hook`);
+      }
+    }
+    Object.values(entry).forEach(walk);
+  };
+  walk(template);
   return problems;
+}
+
+/** Nothing runs when the package is installed. */
+async function packageProblems(): Promise<string[]> {
+  const manifest = JSON.parse(await fs.readFile(path.join(repoRoot, "packages", "create-religion", "package.json"), "utf8")) as {
+    scripts?: Record<string, string>;
+  };
+  return Object.keys(manifest.scripts ?? {})
+    .filter((name) => ["preinstall", "install", "postinstall", "prepare"].includes(name))
+    .map((name) => `packages/create-religion/package.json runs a ${name} script when installed`);
 }
 
 function kind(file: string): ts.ScriptKind {
@@ -286,10 +390,32 @@ function isReference(node: ts.Identifier): boolean {
     return false;
   }
   if (ts.isParameter(parent) && parent.name === node) return false;
+  if (ts.isBindingElement(parent) && (parent.propertyName === node || (parent.name === node && !parent.propertyName))) {
+    return false;
+  }
+  if ((ts.isGetAccessor(parent) || ts.isSetAccessor(parent) || ts.isEnumMember(parent)) && parent.name === node) return false;
   for (let current: ts.Node = node; current.parent; current = current.parent) {
+    // A class's `extends` runs; only other heritage and genuine type positions are erased.
+    if (ts.isExpressionWithTypeArguments(current) && isClassExtends(current)) return true;
     if (ts.isTypeNode(current) || ts.isTypeAliasDeclaration(current) || ts.isInterfaceDeclaration(current)) return false;
   }
   return true;
+}
+
+function isClassExtends(node: ts.ExpressionWithTypeArguments): boolean {
+  const clause = node.parent;
+  return (
+    ts.isHeritageClause(clause) &&
+    clause.token === ts.SyntaxKind.ExtendsKeyword &&
+    (ts.isClassDeclaration(clause.parent) || ts.isClassExpression(clause.parent))
+  );
+}
+
+function inside(node: ts.Node, name: string): boolean {
+  for (let current: ts.Node | undefined = node.parent; current; current = current.parent) {
+    if (ts.isFunctionDeclaration(current) && current.name?.text === name) return true;
+  }
+  return false;
 }
 
 /** Every file under `dir` that could ship as code, however deep, tests aside. */

@@ -182,7 +182,8 @@ promise.
   load and the globals and members that reach the network or the module loader; allows
   `process` only the members the tool uses; lets the dashboard use `node:http` only to serve,
   its page make only its one request for its own data, and its responses carry only one
-  exact content security policy; and lets the hook settings run only the shipped hooks
+  exact content security policy; lets the hook settings run only the shipped hooks; and
+  lets nothing run when the package is installed
 - the install tests that a path reached through a symbolic link, dangling or not, is never
   written, and that a recorded path outside Religion's own trees is never removed
 - the hook test in `scripts/hooks.test.ts` that the handoff is never written through a link

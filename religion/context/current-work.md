@@ -99,7 +99,7 @@ large, so split it.
   sections, each once, the filled-in Commands kept, a backup under
   `religion/.state/backups/`, exit 0, and a further `update` reporting the file as merged
   rather than rebuilt again.
-- [ ] **Step 4 - remove what the template dropped** - `planInstall` compares the previous
+- [x] **Step 4 - remove what the template dropped** - `planInstall` compares the previous
   manifest with the full template: a recorded path the template no longer ships is `remove`
   when it is unedited and `release` when it was edited. `applyInstall` deletes removed files
   and any directories that leaves empty, stopping at the project root, and leaves released

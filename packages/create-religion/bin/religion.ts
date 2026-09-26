@@ -127,7 +127,9 @@ async function runInstall(options: Options): Promise<void> {
     kept: plan.filter((p) => p.action === "seed-skip").length,
     merge: plan.filter((p) => p.action === "merge").length,
     remerge: plan.filter((p) => p.action === "remerge").length,
-    rebuild: plan.filter((p) => p.action === "rebuild").length
+    rebuild: plan.filter((p) => p.action === "rebuild").length,
+    remove: plan.filter((p) => p.action === "remove").length,
+    release: plan.filter((p) => p.action === "release").length
   };
 
   console.log(`\nAdapters: ${adapters.map((a) => ADAPTERS[a].label).join(", ")}`);
@@ -135,13 +137,13 @@ async function runInstall(options: Options): Promise<void> {
   console.log(`  update   ${counts.update}`);
   console.log(`  keep     ${counts.kept}  (your files, never overwritten)`);
   console.log(`  conflict ${counts.conflict}`);
+  for (const entry of plan.filter((p) => p.action === "conflict")) console.log(`    ${entry.relative}`);
   if (counts.merge > 0) console.log(`  merge    ${counts.merge}  (your file, awaiting a decision)`);
   if (counts.remerge > 0) console.log(`  merged   ${counts.remerge}  (your sections kept)`);
   if (counts.rebuild > 0) console.log(`  rebuilt  ${counts.rebuild}  (your sections kept, original backed up)`);
-
-  for (const entry of plan.filter((p) => p.action === "conflict")) {
-    console.log(`    ${entry.relative}`);
-  }
+  if (counts.remove > 0) console.log(`  remove   ${counts.remove}  (no longer shipped)`);
+  if (counts.release > 0) console.log(`  release  ${counts.release}  (no longer shipped, but edited by you, so left alone)`);
+  for (const entry of plan.filter((p) => p.action === "release")) console.log(`    ${entry.relative}`);
 
   const mergeable = plan.filter((p) => p.action === "merge").map((p) => p.relative);
   let merge = false;
@@ -179,6 +181,10 @@ async function runInstall(options: Options): Promise<void> {
       `Rebuilt ${result.rebuilt.length} entry file(s) around the sections you wrote. The originals are in ` +
         `${path.join(STATE_DIR, ".state", "backups")}.`
     );
+  }
+  if (result.removed.length > 0) console.log(`Removed ${result.removed.length} file(s) this version no longer ships.`);
+  if (result.released.length > 0) {
+    console.log(`Left ${result.released.length} file(s) this version no longer ships, because you edited them. They are yours now.`);
   }
   if (result.backups.length > 0) console.log(`Backed up ${result.backups.length} conflicting file(s).`);
   if (result.conflicts.length > 0) {

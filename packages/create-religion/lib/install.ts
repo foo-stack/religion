@@ -32,7 +32,17 @@ export interface Manifest {
 
 export interface PlanEntry {
   relative: string;
-  action: "create" | "update" | "seed-skip" | "conflict" | "unchanged" | "merge" | "remerge" | "rebuild";
+  action:
+    | "create"
+    | "update"
+    | "seed-skip"
+    | "conflict"
+    | "unchanged"
+    | "merge"
+    | "remerge"
+    | "rebuild"
+    | "remove"
+    | "release";
 }
 
 const MANIFEST = path.join(STATE_DIR, ".state", "manifest.json");
@@ -116,7 +126,38 @@ export async function planInstall(
     plan.push({ relative, action: "conflict" });
   }
 
+  return [...plan, ...(await planDropped(templateRoot, target, previous))];
+}
+
+/**
+ * Files the previous install recorded that the template no longer ships, for any adapter.
+ *
+ * Unedited ones are removed, which is what lets a skill or a hook be retired at all. Edited
+ * ones are released: left where they are and dropped from the manifest, since the edit makes
+ * them the owner's. The manifest is a file in someone's repository, so a recorded path is
+ * only acted on when it is a plain file inside the project and outside the state directory.
+ */
+async function planDropped(templateRoot: string, target: string, previous: Manifest | null): Promise<PlanEntry[]> {
+  if (!previous) return [];
+  const shipped = new Set(await walk(templateRoot));
+  const plan: PlanEntry[] = [];
+
+  for (const [relative, recorded] of Object.entries(previous.managed)) {
+    if (shipped.has(relative) || !isInsideProject(target, relative)) continue;
+    const stat = await fs.lstat(path.join(target, relative)).catch(() => null);
+    if (!stat?.isFile()) continue;
+
+    const current = await fs.readFile(path.join(target, relative));
+    plan.push({ relative, action: hash(current) === recorded ? "remove" : "release" });
+  }
+
   return plan;
+}
+
+function isInsideProject(target: string, relative: string): boolean {
+  if (!relative || path.isAbsolute(relative) || relative.split(/[\\/]/).includes("..")) return false;
+  if (path.normalize(relative) !== relative || !isManaged(relative)) return false;
+  return path.resolve(target, relative).startsWith(path.resolve(target) + path.sep);
 }
 
 export async function applyInstall(
@@ -124,15 +165,37 @@ export async function applyInstall(
   target: string,
   plan: readonly PlanEntry[],
   options: { force: boolean; merge?: boolean }
-): Promise<{ written: string[]; conflicts: string[]; backups: string[]; merged: string[]; rebuilt: string[] }> {
+): Promise<{
+  written: string[];
+  conflicts: string[];
+  backups: string[];
+  merged: string[];
+  rebuilt: string[];
+  removed: string[];
+  released: string[];
+}> {
   const written: string[] = [];
   const conflicts: string[] = [];
   const backups: string[] = [];
   const merged: string[] = [];
   const rebuilt: string[] = [];
+  const removed: string[] = [];
+  const released: string[] = [];
 
   for (const entry of plan) {
     if (entry.action === "unchanged" || entry.action === "seed-skip") continue;
+
+    if (entry.action === "release") {
+      released.push(entry.relative);
+      continue;
+    }
+
+    if (entry.action === "remove") {
+      await fs.rm(path.join(target, entry.relative));
+      await pruneEmptyParents(target, path.dirname(path.join(target, entry.relative)));
+      removed.push(entry.relative);
+      continue;
+    }
 
     if (entry.action === "conflict" && !options.force) {
       conflicts.push(entry.relative);
@@ -197,7 +260,21 @@ export async function applyInstall(
     written.push(entry.relative);
   }
 
-  return { written, conflicts, backups, merged, rebuilt };
+  return { written, conflicts, backups, merged, rebuilt, removed, released };
+}
+
+/** Remove directories a removal left empty, walking up and stopping at the project root. */
+async function pruneEmptyParents(target: string, dir: string): Promise<void> {
+  const root = path.resolve(target);
+  let current = path.resolve(dir);
+  while (current.startsWith(root + path.sep)) {
+    try {
+      await fs.rmdir(current);
+    } catch {
+      return;
+    }
+    current = path.dirname(current);
+  }
 }
 
 /**

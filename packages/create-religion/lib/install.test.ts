@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 
 import { applyInstall, hash, manifestRefusal, planInstall, writeManifest } from "./install.js";
+import { exists } from "./paths.js";
 import type { Manifest, PlanEntry } from "./install.js";
 import { MANAGED_END, MANAGED_START } from "./merge.js";
 
@@ -303,3 +304,73 @@ test("manifestRefusal never refuses on a version it cannot parse", () => {
   assert.equal(manifestRefusal(manifest({ version: undefined }), "0.6.0"), null);
   assert.equal(manifestRefusal(manifest({ version: "9.0.0" }), "dev"), null);
 });
+
+function recording(managed: Record<string, string>): Manifest {
+  return { schemaVersion: 1, version: "0.0.0", adapters: ["claude"], managed };
+}
+
+test("planInstall: a file the template dropped is removed when unedited and released when edited", async (t) => {
+  const { template, target } = await fixture(t);
+  await write(template, ".claude/skills/kept/SKILL.md", "kept\n");
+  await write(target, ".claude/skills/kept/SKILL.md", "kept\n");
+  await write(target, ".claude/skills/retired/SKILL.md", "as shipped\n");
+  await write(target, ".claude/skills/edited/SKILL.md", "changed by hand\n");
+  const previous = recording({
+    ".claude/skills/kept/SKILL.md": hash("kept\n"),
+    ".claude/skills/retired/SKILL.md": hash("as shipped\n"),
+    ".claude/skills/edited/SKILL.md": hash("as shipped\n"),
+    ".claude/skills/gone/SKILL.md": hash("as shipped\n")
+  });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(plan, ".claude/skills/retired/SKILL.md"), "remove");
+  assert.equal(actionFor(plan, ".claude/skills/edited/SKILL.md"), "release");
+  assert.equal(actionFor(plan, ".claude/skills/gone/SKILL.md"), undefined, "an already missing file needs nothing");
+  assert.ok(await exists(path.join(target, ".claude/skills/retired/SKILL.md")), "planning alone removes nothing");
+});
+
+test("applyInstall: a removal takes its empty directories with it and stops at the project", async (t) => {
+  const { template, target } = await fixture(t);
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(target, "CLAUDE.md", ENTRY);
+  await write(target, ".claude/hooks/old.mjs", "hook\n");
+  await write(target, ".claude/skills/edited/SKILL.md", "changed by hand\n");
+  const previous = recording({
+    "CLAUDE.md": hash(ENTRY),
+    ".claude/hooks/old.mjs": hash("hook\n"),
+    ".claude/skills/edited/SKILL.md": hash("as shipped\n")
+  });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  const result = await applyInstall(template, target, plan, { force: false });
+
+  assert.deepEqual(result.removed, [".claude/hooks/old.mjs"]);
+  assert.deepEqual(result.released, [".claude/skills/edited/SKILL.md"]);
+  assert.equal(await exists(path.join(target, ".claude/hooks")), false, "the emptied directory is gone");
+  assert.equal(await exists(path.join(target, ".claude")), true, "a directory with content left is kept");
+  assert.equal(await fs.readFile(path.join(target, ".claude/skills/edited/SKILL.md"), "utf8"), "changed by hand\n");
+  assert.equal(await exists(target), true);
+});
+
+test("planInstall: a recorded path outside the project or in its state is never acted on", async (t) => {
+  const { template, target } = await fixture(t);
+  const outside = path.join(path.dirname(target), "outside.md");
+  await fs.writeFile(outside, "bait\n", "utf8");
+  await write(target, "religion/context/findings.md", "bait\n");
+  const previous = recording({
+    "../outside.md": hash("bait\n"),
+    [outside]: hash("bait\n"),
+    "religion/context/findings.md": hash("bait\n"),
+    ".claude/../../outside.md": hash("bait\n"),
+    ".": hash("bait\n")
+  });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  const result = await applyInstall(template, target, plan, { force: false });
+
+  assert.deepEqual(plan, []);
+  assert.deepEqual(result.removed, []);
+  assert.equal(await fs.readFile(outside, "utf8"), "bait\n");
+  assert.equal(await fs.readFile(path.join(target, "religion/context/findings.md"), "utf8"), "bait\n");
+});
+

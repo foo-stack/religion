@@ -62,10 +62,10 @@ Everything else is generated from those, or archived from finished work.
 
 ## Commands
 
-Twenty-two skills. The loop is `feature`, `implement`, `check`, `audit`, `complete`.
-Around it: `setup`, `discovery`, `overview`, `fix`, `debug`, `rollback`, `try`, `status`,
-`doctor`, `tests`, `browser-tests`, `ci`, `prototype`, `release`, `auto`, `distill`,
-`extend`.
+Twenty-five skills. The loop is `feature`, `implement`, `check`, `audit`, `complete`.
+Around it: `setup`, `discovery`, `overview`, `fix`, `debug`, `rollback`, `refactor`, `try`,
+`spike`, `capture`, `status`, `doctor`, `tests`, `browser-tests`, `ci`, `prototype`,
+`release`, `auto`, `distill`, `extend`.
 
 Invoke them however your tool does: `/feature` in Claude Code, `$feature` in Codex, or
 plain language anywhere.
@@ -84,7 +84,7 @@ religion update      # update the workflow files, preserving yours
 | Claude Code | `CLAUDE.md` and `.claude/skills/` |
 | Codex | `AGENTS.md` and `.agents/skills/` |
 | GitHub Copilot | `AGENTS.md` and `.agents/skills/` |
-| OpenCode | `AGENTS.md` and either tree |
+| OpenCode | `AGENTS.md` and `.agents/skills/` |
 
 Each tool's files are generated from one source, so they carry that tool's own invocation
 syntax rather than a file hedging between four.
@@ -97,7 +97,7 @@ a rendered tree.
 ```bash
 npm run build          # render skills, entry files, and state templates
 npm test               # verification and routing checks
-npm run verify         # nine checks: drift, types, docs, and what the package ships
+npm run verify         # drift, types, docs, what the package ships, the public surface, and upgrades
 npm run test:routing   # routing corpus, plus description overlap
 ```
 

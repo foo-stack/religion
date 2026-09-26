@@ -319,7 +319,7 @@ Exit codes
   1   it ran and reports failure: no project found, a failing doctor check,
       conflicts left by install or update, a project installed by a newer
       version, or an unexpected error
-  2   usage error: nothing was read or written
+  2   usage error: nothing was written
 `);
 }
 

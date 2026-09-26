@@ -51,8 +51,8 @@ derives the same from the code and fails on any difference:
 
 | Failure | Meaning | What to do |
 | --- | --- | --- |
-| `breaking: ...` | something recorded was removed, renamed, or narrowed | restore it, or, when it is meant, ship it in a major release and edit the record in the same pull request |
-| `unrecorded: ...` | something new is not in the record yet | add it to the record in the same pull request; an addition is a minor release |
+| `breaking: ...` | something recorded was removed, renamed, or narrowed | restore it, or, when it is meant, edit the record in the same pull request and release it as the [stability statement](../stability.md#what-counts-as-a-breaking-change) says |
+| `unrecorded: ...` | something new is not in the record yet | add it to the record in the same pull request |
 
 Editing the record is the deliberate act. Its diff is what a reviewer reads to see what a
 change does to the promise, so an entry is never edited to make the check pass without that

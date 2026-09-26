@@ -22,13 +22,13 @@
 **Suggested fix:** Assert `localhost:4322` and `LOCALHOST:4322` are refused for port 4321.
 **Resolution:**
 
-### F-04 [P3] open - "Nothing was read" overstates what a usage error does
+### F-04 [P3] fixed - "Nothing was read" overstates what a usage error does
 
 **File:** packages/create-religion/bin/religion.ts:238
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** An unknown first word is checked with `statSync` before it is refused, so `religion stauts` stats `./stauts`. No contents are read and nothing is written, but the help text, the package readme and the changeset promise "nothing was read or written".
 **Suggested fix:** Say "nothing was written" or "nothing was changed" in all three.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: the help text, the package readme and the stability statement now say a usage error writes nothing, which is true; the directory check that precedes it is a read.
 
 ### F-05 [P3] open - Help text does not describe the grammar it enforces
 
@@ -342,13 +342,13 @@
 **Suggested fix:** Compare the record's keys too.
 **Resolution:**
 
-### F-65 [P3] open - The release notes do not say what an upgrade failure means
+### F-65 [P3] fixed - The release notes do not say what an upgrade failure means
 
 **File:** docs/architecture/releasing.md:51
 **Found:** 2026-09-26 by audit (scope: current; lens: quality)
 **Why it matters:** The table covers only the surface check, and it sets a versioning rule the stability statement should own.
 **Suggested fix:** Say an upgrade failure is a regression to fix, never re-record.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: the release notes now point at the stability statement for which release a change belongs in, and say an upgrade failure is a regression to fix.
 
 ### F-66 [P3] open - Shape tests never fail a primitive on its own
 

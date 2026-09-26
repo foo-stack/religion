@@ -32,8 +32,9 @@ deletion, waived check, or accepted finding.
 | `refactor.maxFileLines` | positive integer | `400` |
 | `refactor.maxFunctionLines` | positive integer | `50` |
 
-Thirteen settings, down from the source's fourteen, with a different distribution: the
-source spent six on quality gates and none on git mode.
+Fewer settings than the source had, with a different distribution: the source spent six on
+quality gates and none on git mode. The settings above, and the values each accepts, are part
+of the public surface described in the [stability statement](../stability.md#settings).
 
 ## Quality gates
 

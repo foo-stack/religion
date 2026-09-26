@@ -88,7 +88,7 @@ large, so split it.
   when:* both pass, adding an entry to the record without naming it in the statement fails,
   and adding a `fetch` call or a `node:https` import to a shipped module fails, each shown by
   a temporary edit.
-- [ ] **Step 5 - claims that agree** - correct the stale claims: twenty-two skills and nine
+- [x] **Step 5 - claims that agree** - correct the stale claims: twenty-two skills and nine
   checks in `README.md` and the entry sources, OpenCode reading either tree, the state
   model's missing paths and its claim that `CLAUDE.md` imports `AGENTS.md`, thirteen
   settings in the configuration reference, and the versioning rule in the release notes,

@@ -17,7 +17,7 @@ and says truthfully what it backed up.
 - **Files a newer version no longer ships are removed.** When a file the previous install
   recorded is gone from the template, `update` removes it if you never edited it, along with
   any directory that leaves empty. If you edited it, it is left where it is and becomes
-  yours. Only plain files inside the project and outside `religion/` are ever removed.
+  yours. Only files in Religion's own skill and hook folders are ever removed.
 - **A project installed by a newer version is refused.** `install` and `update` exit 1
   without writing anything when the manifest's version or format is newer than the package
   running, whatever the flags. Run `npx create-religion@latest update` instead.

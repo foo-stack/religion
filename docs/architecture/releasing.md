@@ -62,13 +62,17 @@ being the point of the pull request.
 
 `packages/create-religion/fixtures/` holds the tarball of the last published release, byte for
 byte, named by `lastRelease` in the record and pinned by `lastReleaseIntegrity`, the registry's
-own integrity for it. The check refuses to run a tarball that does not match. Otherwise it
-runs that release's own installer into a scratch project, edits it the way `setup` would,
-updates it with the current code, and fails unless every managed file is now the current
-template, each entry file holds every heading once with the edits kept, the plans, standards
-and configuration are untouched, doctor's install checks pass, the manifest carries the new
-version, and a second update changes nothing. It needs the built template, so run
-`npm run build` before `npm test`.
+own integrity for it. The check refuses to run a tarball that does not match, or one whose
+own version is not `lastRelease`. Otherwise it runs that release's own installer into a
+scratch project and edits it the way `setup` would, including every file the project owns.
+It then updates the project with a copy of the current tool whose template has been changed
+in every managed file, with one skill added and one retired, so the update always has real
+work to do however little changed since the release. It fails unless every managed file is
+the new template and nothing retired is left, each entry file holds the template's managed
+sections and imports exactly with the owner's title, sections and edits kept and backed up,
+no file the project owns has changed, doctor's install checks pass by name, the manifest
+records the new version and exactly the template's hashes, and a second update changes
+nothing. It needs the built template, so run `npm run build` before `npm test`.
 
 A failure here is a regression in `update`. Fix the code; never re-record or edit the fixture
 to make it pass.

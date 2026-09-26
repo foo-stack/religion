@@ -300,7 +300,7 @@
 **Found:** 2026-09-26 by audit (scope: current; lens: tests, quality)
 **Why it matters:** Everything it asserts is already true before the update: the entry files hold their edits once, the plans are intact, and a second run matches the first. A stub that only rewrote the manifest's version passed, so a planner marking everything unchanged, skipped skill writes, or a dropped managed section would all go unnoticed.
 **Suggested fix:** Require every managed file to match the current template afterwards, each template heading once in the entry files, and doctor's install checks to pass.
-**Resolution:** Repaired 2026-09-26: after the update the check requires every managed file to match the current template, each template heading exactly once in both entry files with the edits kept, and doctor's required-files, configuration, adapters and entry-file checks to pass. A no-op update now fails with the stale managed files named. Awaiting re-review.
+**Resolution:** Repaired 2026-09-26: after the update the check requires every managed file to match the current template, each template heading exactly once in both entry files with the edits kept, and doctor's required-files, configuration, adapters and entry-file checks to pass. A no-op update now fails with the stale managed files named. Re-reviewed 2026-09-26: not closed, since the check could only notice files that differed between the release and the current template, which after a capture is none. Repaired again 2026-09-26: the update now runs against a copy of the current tool whose template changes every managed file, adds a skill and retires one, and the check asserts managed files, leftovers, entry sections and imports taken from the template text, the owner's title, sections and edits, backups, every owned file (each carrying an edit), doctor checks by name, and the manifest's version and hashes. Thirteen regressions each failed it in a scratch copy, a correct update passed, and with the skill trees made identical to the release a no-op update still failed. 
 
 ### F-52 [P1] fixed - A shipped skill can be removed without failing the surface check
 
@@ -308,7 +308,7 @@
 **Found:** 2026-09-26 by audit (scope: current; lens: quality)
 **Why it matters:** Skills are read from `PLANNED_SKILLS`, a hand-kept roster, and the only related check requires authored skills to be a subset of it. Removing `src/skills/try` and its routing cases passed the whole suite; so does a rename that leaves the old name listed.
 **Suggested fix:** Derive skill names from the authored sources.
-**Resolution:** Repaired 2026-09-26: skill names are read from the authored sources with `readSkills`, so moving `src/skills/try` aside failed the check as `breaking: skills no longer includes try`. Awaiting re-review.
+**Resolution:** Repaired 2026-09-26: skill names are read from the authored sources with `readSkills`, so moving `src/skills/try` aside failed the check as `breaking: skills no longer includes try`. 
 
 ### F-53 [P2] fixed - The executed fixture has no integrity pin
 
@@ -348,7 +348,7 @@
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** The fixture runs with the full environment, including the release job's token request variables, and a hang stalls the suite.
 **Suggested fix:** Pass a minimal environment and a timeout.
-**Resolution:** Repaired 2026-09-26: every spawned command gets only `PATH`, a scratch `HOME` and `TMPDIR`, and a sixty-second limit.
+**Resolution:** Repaired 2026-09-26: every spawned command gets only `PATH`, a scratch `HOME` and `TMPDIR`, and a sixty-second limit. Re-reviewed 2026-09-26: the environment half held, but a fixture ignoring SIGTERM hung the suite. Repaired again 2026-09-26: the time limit now kills with SIGKILL; a process ignoring SIGTERM returned after two seconds with SIGKILL. The parent's environment remains readable through the process table, which only an isolated runner would close.
 
 ### F-58 [P3] fixed - The last release's version is used in a path unchecked
 
@@ -436,4 +436,20 @@
 **Found:** 2026-09-26 by audit (scope: current; lens: quality)
 **Why it matters:** `.claude/settings.json` and the shared `religion/` tree are installed but absent from the adapter record. The spec scoped trees and entry files narrowly.
 **Suggested fix:** Decide in the stability statement whether they are promised.
+**Resolution:**
+
+### F-69 [P2] open - Skills can be dropped at render or pack time without failing the surface check
+
+**File:** scripts/surface-current.ts:35
+**Found:** 2026-09-26 by audit (scope: current; lens: re-review of F-51 to F-60)
+**Why it matters:** Skill names come from the sources, so filtering a skill out of the render loop, or excluding its trees in the package's `files`, removed it from what ships while the suite passed.
+**Suggested fix:** Also compare the staged template's skill trees, and the packed file list, with the sources.
+**Resolution:**
+
+### F-70 [P3] open - The capture script leaves a stray tarball and throws on unexpected output
+
+**File:** scripts/capture-release.ts:31
+**Found:** 2026-09-26 by audit (scope: current; lens: re-review of F-51 to F-60)
+**Why it matters:** On a version mismatch the tarball npm wrote stays in `fixtures/`, and output that is not JSON throws uncaught.
+**Suggested fix:** Remove the stray file and report the parse failure.
 **Resolution:**

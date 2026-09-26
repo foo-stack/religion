@@ -297,3 +297,21 @@ from copies.
 **Why it matters:** Missing `tar`, an installer that writes no entry file, or a missing `tsx` throw, stopping the suite with a message that names no check.
 **Suggested fix:** Return a problem line.
 **Resolution:** Repaired 2026-09-26: spawn failures and any thrown error become a problem line naming the check. Re-reviewed 2026-09-26 in a fresh-context adversarial pass on a scratch copy: missing `tar`, missing `tsx` and an installer that writes nothing each produced a problem line. Closed.
+
+## Landed
+
+**Base:** 6b6e27df6123d5124ae94ab3d29ee89d04f15066
+**Commits:** 02d5965014f4a71edc351cbe23dcaaeae0ac4dec, 195db9f0a54ddb9241f9fb378057168491dfbe19, c4be4b7fad05f649371af7652751c67fd8d9a6ac, 25eb41f6a26e0f25c326c1b8bda109b33c9bccda, a9305eae753aaa8faf3af8e7cdd59491519bbfcc, 7509769d55890bd44aa2a0e2dd58f1996b7e4500, ed3f695155b2ee41e2e4e9ddfd43f7463be64532, 836420c919346d43d1b0b1b6cb27b01f7617fe3b, 59ab38fa4209fc36350291bd4cfcc935d44cd8a2, ba4ed35f6bf3539314c2f36804be85344aa56b0f, 2d8f665dbdf746630150fac44ef793562d200cb4, 06a0cb0e5c9c2294f290a1d932ada2e5e50c6712, 17ecf3dcc1f0d3ae48ffe4a443b0308ef744a1c6, 4765e04fe31aaa8a4da1df54633ba8a46ae58bf5
+**Product paths:** packages/create-religion/lib/args.ts, packages/create-religion/lib/args.test.ts,
+packages/create-religion/lib/doctor.ts, packages/create-religion/surface.json,
+packages/create-religion/fixtures/create-religion-0.5.0.tgz, scripts/surface.ts,
+scripts/surface.test.ts, scripts/surface-current.ts, scripts/upgrade.ts,
+scripts/capture-release.ts, scripts/verify.ts, package.json, .gitignore,
+docs/architecture/releasing.md
+
+The base is the tip of the update work, which this item was built on before either reached
+the default branch. Commit c4be4b7fad05f649371af7652751c67fd8d9a6ac is a copy of a fix made to that earlier item's archive on
+its own branch, carried here so this branch's suite passes; a reversal of this item should
+leave it in place. The changeset at `.changeset/repeated-adapter-flag.md` travels with this
+item and is consumed by the next release.
+

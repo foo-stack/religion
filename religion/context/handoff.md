@@ -9,12 +9,6 @@
 
 Plan: 6 of 8 item(s) complete. Next up: 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a breaking change
 
-## Blocking findings
-
-- F-81 [P1] open - The network check can be evaded
-
-These prevent completion until repaired and re-reviewed.
-
 ## Read first
 
 1. `religion/context/current-work.md` - the active spec and which steps are done

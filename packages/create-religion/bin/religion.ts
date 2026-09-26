@@ -165,6 +165,7 @@ async function runInstall(options: Options): Promise<void> {
   }
   if (result.backups.length > 0) console.log(`Backed up ${result.backups.length} conflicting file(s).`);
   if (result.conflicts.length > 0) {
+    process.exitCode = 1;
     console.log(
       `\n${result.conflicts.length} file(s) were changed locally and left alone.` +
         `\nReview them, then re-run with --force to replace them (originals are backed up).`
@@ -260,6 +261,12 @@ Options
   --force       replace locally-changed managed files, backing them up first
   --json        machine-readable output for status and doctor
   --yes         no prompts
+
+Exit codes
+  0   the command did what it was asked
+  1   it ran and reports failure: no project found, a failing doctor check,
+      conflicts left by install or update, or an unexpected error
+  2   usage error: nothing was read or written
 `);
 }
 

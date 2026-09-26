@@ -72,7 +72,7 @@ large, so split it.
   directory `religion stauts`, `religion update --dryrun`, `religion status --force` and
   `religion install a b` each exit 2 with no new file or directory, while `religion`,
   `religion .` and `religion install ./new --dry-run` still behave as they did.
-- [ ] **Step 2 - exit codes, fixed and written down** - `install` and `update` exit 1 when
+- [x] **Step 2 - exit codes, fixed and written down** - `install` and `update` exit 1 when
   `applyInstall` reports conflicts, and not on a dry run. Add an `Exit codes` block to
   `--help` and a matching section to `packages/create-religion/README.md`. *Done when:* in a
   scratch project each code is observed from a real run: 0 from a clean `update`, 1 from an

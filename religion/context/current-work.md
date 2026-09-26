@@ -86,7 +86,7 @@ large, so split it.
   then rebuild the rendered trees. *Done when:* the test passes, a scratch project's
   `religion doctor --json` output parses and carries all three keys, `healthy` is false
   exactly when the exit code is 1, and `npm test` passes with the rendered trees in sync.
-- [ ] **Step 4 - a dashboard that answers only itself** (with 3) - requests whose `Host`
+- [x] **Step 4 - a dashboard that answers only itself** (with 3) - requests whose `Host`
   header is not `127.0.0.1:<port>` or `localhost:<port>` for the dashboard's own port get a
   403 and no project state, on every path including the page itself. `localhost` matches
   case-insensitively; `[::1]` is not allowed, because the server binds IPv4 loopback only.

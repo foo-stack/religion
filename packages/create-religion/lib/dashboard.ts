@@ -19,13 +19,14 @@ export interface Dashboard {
 }
 
 export async function startDashboard(root: string): Promise<Dashboard> {
+  let port = 0;
   const server = http.createServer((request, response) => {
-    void handle(root, request, response);
+    void handle(root, port, request, response);
   });
 
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  const port = typeof address === "object" && address ? address.port : 0;
+  port = typeof address === "object" && address ? address.port : 0;
 
   return {
     url: `http://127.0.0.1:${port}`,
@@ -33,7 +34,25 @@ export async function startDashboard(root: string): Promise<Dashboard> {
   };
 }
 
-async function handle(root: string, request: http.IncomingMessage, response: http.ServerResponse) {
+/**
+ * Whether a request was addressed to this server by name, not only by socket.
+ *
+ * Binding to loopback keeps other machines out, but not a page elsewhere whose domain has
+ * been rebound to 127.0.0.1: the browser connects here and sends that domain as the Host.
+ * Answering only our own name refuses it.
+ */
+export function isOwnHost(host: string | undefined, port: number): boolean {
+  const name = host?.toLowerCase();
+  return name === `127.0.0.1:${port}` || name === `localhost:${port}`;
+}
+
+async function handle(root: string, port: number, request: http.IncomingMessage, response: http.ServerResponse) {
+  if (!isOwnHost(request.headers.host, port)) {
+    response.writeHead(403, { "content-type": "text/plain; charset=utf-8" });
+    response.end("Forbidden: this dashboard only answers requests addressed to itself.");
+    return;
+  }
+
   if (request.url === "/state.json") {
     const state = await readProjectState(root);
     const activity = await readActivity(root);

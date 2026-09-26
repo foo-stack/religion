@@ -74,7 +74,7 @@ large, so split it.
   breaking, minor and patch, and known limitations. *Done when:* every claim about
   behaviour cites the check, test or document that holds the code to it, and each is
   confirmed by reading that check.
-- [ ] **Step 3 - the upgrade guide** - write `docs/upgrading.md` from runs in a scratch
+- [x] **Step 3 - the upgrade guide** - write `docs/upgrading.md` from runs in a scratch
   project: running `update`, reading its summary, and every outcome it reports (updated,
   kept, conflict and `--force`, merged, rebuilt, removed, released, linked, declined,
   refused as newer), recovering from a backup, and what it never touches. *Done when:*

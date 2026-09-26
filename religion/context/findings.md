@@ -453,3 +453,11 @@
 **Why it matters:** Contrary to the principle the entry checks follow; not exploitable today because the release's own manifest pins the real function.
 **Suggested fix:** Compute the expected hash independently.
 **Resolution:**
+
+### F-79 [P3] open - Every update tells the user to enable hooks that are already enabled
+
+**File:** packages/create-religion/bin/religion.ts:217
+**Found:** 2026-09-26 while writing the upgrade guide from runs
+**Why it matters:** Once Religion has written `.claude/settings.json`, each later update prints "already exists and was left alone. To enable the hooks, merge ... into it", even when the file is Religion's own and the hooks are on, so the instruction reads as a problem on every run.
+**Suggested fix:** Say nothing when the settings file already wires every hook in the template.
+**Resolution:**

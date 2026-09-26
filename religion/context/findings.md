@@ -6,14 +6,6 @@
 > `closed`, and `complete` refuses to finish while any P0 or P1 finding is `open` or
 > `fixed`, then archives the resolved ones with the work and resets this file.
 
-### F-01 [P1] closed - Adapter flags match inherited object properties
-
-**File:** packages/create-religion/lib/args.ts:71
-**Found:** 2026-09-26 by audit (scope: current; lens: security, quality, tests)
-**Why it matters:** `flag.slice(2) in ADAPTERS` walks the prototype chain, so `--toString`, `--constructor`, `--__proto__` and `--hasOwnProperty` parse as adapters. The grammar promises exit 2 for any unknown option; instead `religion install --toString --dry-run --yes` crashes with `ADAPTERS[adapter].trees is not iterable` and exits 1 (reproduced in a scratch directory; nothing was written). This is the surface a stable release will freeze.
-**Suggested fix:** `Object.hasOwn(ADAPTERS, name)`, with refusal cases for `--toString` and `--__proto__` in `lib/args.test.ts`.
-**Resolution:** Repaired 2026-09-26: adapter names are checked with `Object.hasOwn(ADAPTERS, name)`, and `lib/args.test.ts` asserts `--toString`, `--__proto__` and `--constructor` are refused. A real run of `religion install --toString --dry-run --yes` now exits 2. Re-reviewed 2026-09-26 in a fresh-context audit of the whole of `lib/args.ts` and its tests: 90 probe cases over every `Object.prototype` name and each command were all refused as unknown options, the four real adapters are still accepted with install and update and refused elsewhere, real runs exit 2, and `Object.hasOwn` is available on every supported Node and TypeScript target. Closed.
-
 ### F-02 [P2] open - The upper edge of the command suggestion is not pinned
 
 **File:** packages/create-religion/lib/args.test.ts:46

@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 4a0efa2c66102c74 -->
+<!-- religion:source-hash e4225895f1baf333 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -51,8 +51,6 @@ nothing to sign into.
 
 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a
    breaking change
-   - 4a. **A command-line surface fit to freeze** - unknown commands and flags refused,
-     documented exit codes, versioned JSON output, a dashboard that rejects foreign hosts
    - 4b. **Update keeps its promises** - removes files the template dropped, refuses a
      manifest from a newer version, backs up what it says it backs up, and cannot duplicate
      an edited entry file

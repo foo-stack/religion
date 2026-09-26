@@ -12,7 +12,7 @@
 - [x] 2. **Setup drafts usable plans from an existing codebase** - survey an unfamiliar repository with real history and produce two plans a person would keep
 - [x] 3. **Documentation for people who did not build it** - a getting-started walkthrough, what the loop feels like in practice, and what to do when `doctor` complains
 - [ ] 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a breaking change
-  - [ ] 4a. **A command-line surface fit to freeze** - unknown commands and flags refused, documented exit codes, versioned JSON output, a dashboard that rejects foreign hosts
+  - [x] 4a. **A command-line surface fit to freeze** - unknown commands and flags refused, documented exit codes, versioned JSON output, a dashboard that rejects foreign hosts
   - [ ] 4b. **Update keeps its promises** - removes files the template dropped, refuses a manifest from a newer version, backs up what it says it backs up, and cannot duplicate an edited entry file
   - [ ] 4c. **Compatibility guards** - checks that fail when the public surface changes by accident: JSON shapes, skill names, flags, config keys, and an upgrade from the last release
   - [ ] 4d. **The stability statement** - what is public and what is internal, what a 1.x update guarantees, the three promises, an upgrade guide, and the major changeset that makes it 1.0

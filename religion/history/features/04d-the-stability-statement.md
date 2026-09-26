@@ -304,3 +304,24 @@ following commit made the change.
 **Why it matters:** The statement and the command-line changeset still say "read or written"; the exit table's citation says the help lists the same meanings when it omits two; a dry run exits 0 with conflicts planned, unsaid; the `religion/` row ignores created and rewritten state; decision 100 overstates what the statement check checks; the overview stamp's parsing is cited but untested; the major changeset omits the dashboard's host check; the guide claims every line is quoted when some are omitted; the breaking-change table leaves marker text and state formats unclassified and calls skill changes minor while calling them internal; and the generated overview still counts ten checks.
 **Suggested fix:** Correct each.
 **Resolution:** Repaired 2026-09-26: each inaccuracy corrected, in the statement, the guide, both changesets, the help text and readme, the decision log and the overview's code map. Re-reviewed 2026-09-26: not closed, since the stamp citation pointed at a check that compares types only, and breaking the stamp parser passed the whole suite. Repaired again 2026-09-26: a state test now reads matching, stale and missing stamps through `readProjectState`, fails on that same broken parser, and the statement cites it. Re-reviewed 2026-09-26: a broken stamp pattern fails the new state test, which passes unmodified. Closed.
+
+## Landed
+
+**Base:** fd5fbbe3b031b1bf4006049b6d718aa5c9bb5075
+**Commits:** a4744a4bf0058c7674395a4b74a75bb5d7def639, 72177e746f7697ee1a934bba3642e4066d9cd59e, 56c429378e7d0ab3be8def355f3e4948f7fdfa1b, d85002f0cb3fd2e188bcd900358acca76c1f1379, 1a6051158b3524ae2ae14271a6b53c2343c03348, ee53904d89c06646ee30c953c1ae102f0db43c1a, 2977b9451c2864b371927059649163e5bc2a85eb, 0794c6e2981ace9e7e756a70df03ed400d9ec4a3, 3fce61ff88be90fe20d2314ba7f0a0381b24d216, ac605009fc7cfba1fdce8095b100261878e0ba41, b22fc4202b0bf8fa874acbf2e27f575fcdb104e8, bd0756000d217b2ce3233b758269b255eb7e89b4, 460842a80527cbd495b260b21571d16f6e246ba8, 549fd2a9b574239e126abbbabc7f55b2a0ad8d8d, 655f63edaef0a2fbb59e972fa7560c93440cb370, c6b091aeeb30c7d62ad2e17a5b8c4fa763df573c, 67f306c2afc5f1bedfac01b0fd4a23e70629d375, 6df4f54d47cd0fa415ee1b69882c6d6b1670012c, 5bf2ff5544752a085052cd23d66ab19941abe206, fe43c85a964bc3f019e2d6dc96090f798635cce2, e9af6b295b27c15ee27e66573e884b4a0aea829f, 31e7e6f03b390af515b90aba160906882f606811
+**Product paths:** docs/stability.md, docs/upgrading.md, docs/README.md, docs/decisions.md,
+docs/getting-started.md, docs/architecture/config.md, docs/architecture/releasing.md,
+docs/architecture/state-model.md, README.md, CLAUDE.md, AGENTS.md,
+packages/create-religion/README.md, packages/create-religion/package.json,
+packages/create-religion/surface.json, packages/create-religion/bin/religion.ts,
+packages/create-religion/lib/dashboard.ts, packages/create-religion/lib/dashboard.test.ts,
+packages/create-religion/lib/state.test.ts, src/hooks/write-handoff.mjs,
+scripts/promises.ts, scripts/network-probes.ts, scripts/network-probes.test.ts,
+scripts/fixtures/network-probes.json, scripts/hooks.test.ts, scripts/surface-current.ts,
+scripts/verify.ts, .github/workflows/ci.yml
+
+The base is the tip of the compatibility guards, which this item was built on before any of
+the four stacked items reached the default branch. The changesets at
+`.changeset/one-point-zero.md`, and the corrections to `.changeset/cli-surface.md`, travel
+with this item and are consumed by the next release.
+

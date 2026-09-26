@@ -14,6 +14,9 @@ import { fileURLToPath } from "node:url";
 
 import { SHARED, TREES } from "../src/lib/adapters.js";
 import { PLANNED_SKILLS, readSkills } from "../src/lib/skills.js";
+import { compareSurface } from "./surface.js";
+import type { Surface } from "./surface.js";
+import { currentSurface, SURFACE_RECORD } from "./surface-current.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -247,6 +250,17 @@ const checks: Check[] = [
         }
       }
       return problems;
+    }
+  },
+  {
+    name: "the public surface matches its record",
+    run: async () => {
+      // A removal here breaks someone's scripts or installs; an addition is only a problem
+      // while it is unrecorded, since the record is what a stable release promises.
+      const record = JSON.parse(await fs.readFile(SURFACE_RECORD, "utf8")) as Record<string, Surface>;
+      const current = await currentSurface();
+      const recorded = Object.fromEntries(Object.keys(current).map((key) => [key, record[key] ?? null]));
+      return compareSurface(recorded, current).map((problem) => `surface.json: ${problem}`);
     }
   },
   {

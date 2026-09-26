@@ -37,7 +37,8 @@ const REQUIRED = [
   "reference"
 ];
 
-const ALLOWED: Record<string, readonly string[]> = {
+/** The values each enumerated setting accepts. Other settings are not checked. */
+export const ALLOWED: Record<string, readonly string[]> = {
   "workflow.stepReview": ["every", "item"],
   "git.mode": ["trunk", "branch-per-item", "pull-request"],
   "git.checkpoints": ["none", "every-step", "squash"],

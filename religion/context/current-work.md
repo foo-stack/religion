@@ -71,7 +71,7 @@ large, so split it.
   command widened to include `scripts/`. *Done when:* tests cover a removal, a rename, an
   addition, a narrowed value list, an unchanged surface, and each shape kind matching and
   failing, including an extra key and a missing one.
-- [ ] **Step 3 - the record, and a check against it** - `packages/create-religion/surface.json`
+- [x] **Step 3 - the record, and a check against it** - `packages/create-religion/surface.json`
   records commands and flags, skills, adapters with their trees and entry files, and
   configuration keys with their allowed values or type. A verification check computes the
   current surface from the code (`GRAMMAR`, `PLANNED_SKILLS`, `ADAPTERS`, the shipped

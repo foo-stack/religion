@@ -1,0 +1,156 @@
+{
+  "lastRelease": "0.5.0",
+  "commands": {
+    "install": [
+      "--help",
+      "-h",
+      "--dry-run",
+      "--force",
+      "--yes",
+      "-y",
+      "--claude",
+      "--codex",
+      "--copilot",
+      "--opencode"
+    ],
+    "update": [
+      "--help",
+      "-h",
+      "--dry-run",
+      "--force",
+      "--yes",
+      "-y",
+      "--claude",
+      "--codex",
+      "--copilot",
+      "--opencode"
+    ],
+    "status": [
+      "--help",
+      "-h",
+      "--json"
+    ],
+    "doctor": [
+      "--help",
+      "-h",
+      "--json"
+    ],
+    "dashboard": [
+      "--help",
+      "-h"
+    ],
+    "help": [
+      "--help",
+      "-h"
+    ]
+  },
+  "skills": [
+    "audit",
+    "auto",
+    "browser-tests",
+    "capture",
+    "check",
+    "ci",
+    "complete",
+    "discovery",
+    "distill",
+    "debug",
+    "doctor",
+    "extend",
+    "feature",
+    "fix",
+    "implement",
+    "overview",
+    "prototype",
+    "refactor",
+    "release",
+    "rollback",
+    "setup",
+    "spike",
+    "status",
+    "tests",
+    "try"
+  ],
+  "adapters": {
+    "claude": {
+      "trees": [
+        ".claude/skills",
+        ".claude/hooks"
+      ],
+      "entry": [
+        "CLAUDE.md"
+      ]
+    },
+    "codex": {
+      "trees": [
+        ".agents/skills"
+      ],
+      "entry": [
+        "AGENTS.md"
+      ]
+    },
+    "copilot": {
+      "trees": [
+        ".agents/skills"
+      ],
+      "entry": [
+        "AGENTS.md"
+      ]
+    },
+    "opencode": {
+      "trees": [
+        ".agents/skills"
+      ],
+      "entry": [
+        "AGENTS.md"
+      ]
+    }
+  },
+  "config": {
+    "schemaVersion": "number",
+    "workflow.stepReview": [
+      "every",
+      "item"
+    ],
+    "workflow.parallelSteps": "boolean",
+    "git.mode": [
+      "trunk",
+      "branch-per-item",
+      "pull-request"
+    ],
+    "git.checkpoints": [
+      "none",
+      "every-step",
+      "squash"
+    ],
+    "git.featureBranchPrefix": "string",
+    "git.fixBranchPrefix": "string",
+    "git.rollbackBranchPrefix": "string",
+    "git.refactorBranchPrefix": "string",
+    "git.integrationBranchPrefix": "string",
+    "verification.logicTests": [
+      "when-configured",
+      "required"
+    ],
+    "verification.uiEvidence": [
+      "when-available",
+      "required"
+    ],
+    "qualityGates.audit": [
+      "manual",
+      "when-sensitive",
+      "always"
+    ],
+    "qualityGates.check": [
+      "manual",
+      "when-behavioral",
+      "always"
+    ],
+    "security.blockInjection": "boolean",
+    "refactor.maxFileLines": "number",
+    "refactor.maxFunctionLines": "number",
+    "auto.maxItems": "null",
+    "auto.maxRepairAttempts": "number",
+    "auto.finalAudit": "boolean"
+  }
+}

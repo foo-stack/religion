@@ -486,13 +486,13 @@
 **Suggested fix:** Correct the guide and the hint, and list it as a known limitation.
 **Resolution:**
 
-### F-83 [P1] open - A linked settings file exits 0 though the statement and changesets say 1
+### F-83 [P1] fixed - A linked settings file exits 0 though the statement and changesets say 1
 
 **File:** packages/create-religion/bin/religion.ts:216
 **Found:** 2026-09-26 by audit (scope: current; lens: quality)
 **Why it matters:** The linked branch of hook wiring prints a message but sets no exit code, contradicting the statement's exit table, the major changeset and the pending update changeset.
 **Suggested fix:** Exit 1 there, as every other linked file does.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: the linked branch now sets exit code 1; a scratch update with a linked `.claude/settings.json` printed the linked message, exited 1, and wrote nothing through the link. Awaiting re-review.
 
 ### F-84 [P2] open - Update removes a hook script that settings still run
 

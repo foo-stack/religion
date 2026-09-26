@@ -224,6 +224,7 @@ async function runInstall(options: Options): Promise<void> {
     if (wired === "written") {
       console.log("Wired the enforcement hooks into .claude/settings.json.");
     } else if (wired === "linked") {
+      process.exitCode = 1;
       console.log(
         "\n.claude/settings.json is a symbolic link and was left alone." +
           `\nTo enable the hooks, merge ${path.join(STATE_DIR, ".state", "settings-template.json")} into the file it points to.`

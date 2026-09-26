@@ -113,7 +113,7 @@ large, so split it.
   `/state.json`, and the dashboard page carries a content security policy. Also a test that
   the dashboard binds loopback and refuses a foreign host (F-87). *Done when:* every evasion
   the audit reported fails the check, shown by temporary edits, and the new tests pass.
-- [ ] **Repair F-83 - a linked settings file exits 1** - *Done when:* a scratch run with a
+- [x] **Repair F-83 - a linked settings file exits 1** - *Done when:* a scratch run with a
   linked `.claude/settings.json` exits 1.
 - [ ] **Repair F-82 - the statement and guide say only what is true** - correct the guide and
   the tool's hint about the settings template, and fix F-85, F-86 and F-88 in the statement,

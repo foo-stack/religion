@@ -141,9 +141,8 @@ The state files keep their names and locations within 1.x, and the formats the t
 from them (the build plan's checkboxes, the active spec's steps, the findings ledger's
 headings, the overview's source stamp) keep parsing.
 
-**Held by:** the parser tests in `packages/create-religion/lib/state.test.ts` for the build
-plan, the spec and the ledger; the surface check's busy project for the overview's stamp; the
-install tests in `packages/create-religion/lib/install.test.ts`; and the upgrade check
+**Held by:** the parser tests in `packages/create-religion/lib/state.test.ts`, for the build
+plan, the spec, the ledger and the overview's stamp; the install tests in `packages/create-religion/lib/install.test.ts`; and the upgrade check
 described under [What an update guarantees](#what-a-1x-update-guarantees).
 
 ### Node

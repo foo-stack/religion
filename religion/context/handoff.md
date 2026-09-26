@@ -11,7 +11,7 @@ Plan: 6 of 8 item(s) complete. Next up: 4. **A path to 1.0** - state what is sta
 
 ## Blocking findings
 
-- F-81 [P1] fixed - The network check can be evaded
+- F-81 [P1] open - The network check can be evaded
 
 These prevent completion until repaired and re-reviewed.
 

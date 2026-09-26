@@ -13,6 +13,8 @@ import path from "node:path";
 import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
+import { parseArgs } from "../lib/args.js";
+import type { Options } from "../lib/args.js";
 import { startDashboard } from "../lib/dashboard.js";
 import { renderDoctor, runDoctor } from "../lib/doctor.js";
 import {
@@ -56,18 +58,15 @@ function findPackageRoot(from: string): string {
 const packageRoot = findPackageRoot(here);
 const templateRoot = path.join(packageRoot, "template");
 
-interface Options {
-  command: "install" | "update" | "status" | "doctor" | "dashboard" | "help";
-  adapters: Adapter[] | null;
-  json: boolean;
-  dryRun: boolean;
-  force: boolean;
-  yes: boolean;
-  target: string;
-}
-
 async function main(argv: readonly string[]): Promise<void> {
-  const options = parse(argv);
+  const parsed = parseArgs(argv, { cwd: process.cwd(), isDirectory });
+  if (!parsed.ok) {
+    console.error(parsed.error);
+    console.error("Run `religion help` for usage.");
+    process.exitCode = 2;
+    return;
+  }
+  const options = parsed.options;
 
   if (options.command === "help") return printHelp();
   if (options.command === "install" || options.command === "update") return runInstall(options);
@@ -235,33 +234,12 @@ async function version(): Promise<string> {
   }
 }
 
-function parse(argv: readonly string[]): Options {
-  const options: Options = {
-    command: "install",
-    adapters: null,
-    json: false,
-    dryRun: false,
-    force: false,
-    yes: false,
-    target: process.cwd()
-  };
-
-  const commands = new Set(["install", "update", "status", "doctor", "dashboard", "help"]);
-  const adapters: Adapter[] = [];
-
-  for (const arg of argv) {
-    if (commands.has(arg)) options.command = arg as Options["command"];
-    else if (arg === "--json") options.json = true;
-    else if (arg === "--dry-run") options.dryRun = true;
-    else if (arg === "--force") options.force = true;
-    else if (arg === "--yes" || arg === "-y") options.yes = true;
-    else if (arg === "--help" || arg === "-h") options.command = "help";
-    else if (arg.startsWith("--") && arg.slice(2) in ADAPTERS) adapters.push(arg.slice(2) as Adapter);
-    else if (!arg.startsWith("-")) options.target = arg;
+function isDirectory(candidate: string): boolean {
+  try {
+    return fsSync.statSync(path.resolve(candidate)).isDirectory();
+  } catch {
+    return false;
   }
-
-  if (adapters.length > 0) options.adapters = adapters;
-  return options;
 }
 
 function printHelp(): void {

@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { applyInstall, hash, manifestRefusal, planInstall, writeManifest } from "./install.js";
+import { applyInstall, hash, manifestRefusal, planInstall, wireHooks, writeManifest } from "./install.js";
 import { exists } from "./paths.js";
 import type { Manifest, PlanEntry } from "./install.js";
 import { MANAGED_END, MANAGED_START } from "./merge.js";
@@ -418,7 +418,7 @@ test("applyInstall: a declined merge is reported as declined, untouched and not 
   assert.equal(await fs.readFile(path.join(target, "CLAUDE.md"), "utf8"), "# Acme\n\nmy own instructions\n");
 });
 
-test("planInstall: an entry file that is a link, or recorded by a forged value, is a conflict, not a rebuild", async (t) => {
+test("planInstall: an entry file that is a link is never written, and a forged record is a conflict, not a rebuild", async (t) => {
   const { template, target } = await fixture(t);
   const outside = path.join(path.dirname(target), "outside-claude.md");
   await fs.writeFile(outside, "# Theirs\n\n## Workflow\n\nmine\n", "utf8");
@@ -431,9 +431,10 @@ test("planInstall: an entry file that is a link, or recorded by a forged value, 
   const plan = await planInstall(template, target, ["claude", "codex"], forged as unknown as Manifest);
   const result = await applyInstall(template, target, plan, { force: false });
 
-  assert.equal(actionFor(plan, "CLAUDE.md"), "conflict");
+  assert.equal(actionFor(plan, "CLAUDE.md"), "linked");
   assert.equal(actionFor(plan, "AGENTS.md"), "conflict");
   assert.deepEqual(result.rebuilt, []);
+  assert.deepEqual(result.linked, ["CLAUDE.md"]);
   assert.equal(await fs.readFile(outside, "utf8"), "# Theirs\n\n## Workflow\n\nmine\n");
 });
 
@@ -451,10 +452,87 @@ test("applyInstall: a run that would back up through a link refuses before writi
 
   const plan = await planInstall(template, target, ["claude"], previous);
   assert.equal(actionFor(plan, "CLAUDE.md"), "rebuild");
-  await assert.rejects(applyInstall(template, target, plan, { force: false }), /symbolic link at religion\/\.state\/backups/);
+  await assert.rejects(applyInstall(template, target, plan, { force: false }), /religion\/\.state\/backups\/CLAUDE\.md because part of that path is a symbolic link/);
 
   assert.equal(await fs.readFile(path.join(target, "CLAUDE.md"), "utf8"), edited);
   assert.equal(await exists(path.join(target, ".claude/skills/feature/SKILL.md")), false, "nothing else was written first");
   assert.deepEqual(await fs.readdir(elsewhere), []);
+});
+
+/** A directory beside the project, standing in for anywhere a link could point. */
+async function outsideOf(target: string): Promise<string> {
+  const outside = path.join(path.dirname(target), "outside");
+  await fs.mkdir(outside, { recursive: true });
+  return outside;
+}
+
+test("planInstall: a shipped or seeded path reached through a link, dangling or not, is never written", async (t) => {
+  const { template, target } = await fixture(t);
+  const outside = await outsideOf(target);
+  await write(template, ".claude/skills/audit/SKILL.md", "skill\n");
+  await write(template, "religion/build-plan.md", "plan\n");
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(outside, "marked.md", `# Theirs\n\n${MANAGED_START}\nold\n${MANAGED_END}\n`);
+  await fs.mkdir(path.join(target, ".claude/skills/audit"), { recursive: true });
+  await fs.mkdir(path.join(target, "religion"), { recursive: true });
+  await fs.symlink(path.join(outside, "skill.md"), path.join(target, ".claude/skills/audit/SKILL.md"));
+  await fs.symlink(path.join(outside, "plan.md"), path.join(target, "religion/build-plan.md"));
+  await fs.symlink(path.join(outside, "marked.md"), path.join(target, "CLAUDE.md"));
+
+  const plan = await planInstall(template, target, ["claude"], null);
+  for (const relative of [".claude/skills/audit/SKILL.md", "religion/build-plan.md", "CLAUDE.md"]) {
+    assert.equal(actionFor(plan, relative), "linked", relative);
+  }
+
+  const result = await applyInstall(template, target, plan, { force: true, merge: true });
+  assert.deepEqual([...result.linked].sort(), [".claude/skills/audit/SKILL.md", "CLAUDE.md", "religion/build-plan.md"]);
+  assert.deepEqual((await fs.readdir(outside)).sort(), ["marked.md"], "no dangling link was followed");
+  assert.match(await fs.readFile(path.join(outside, "marked.md"), "utf8"), /\nold\n/, "the linked entry file was not remerged");
+});
+
+test("planInstall: everything under a linked directory is never written", async (t) => {
+  const { template, target } = await fixture(t);
+  const outside = await outsideOf(target);
+  await write(template, ".claude/skills/audit/SKILL.md", "skill\n");
+  await write(template, ".claude/hooks/scan.mjs", "hook\n");
+  await fs.symlink(outside, path.join(target, ".claude"));
+
+  const plan = await planInstall(template, target, ["claude"], null);
+  const result = await applyInstall(template, target, plan, { force: true });
+
+  assert.deepEqual(plan.map((entry) => entry.action), ["linked", "linked"]);
+  assert.deepEqual(result.written, []);
+  assert.deepEqual(await fs.readdir(outside), []);
+});
+
+test("applyInstall: a linked or dangling manifest path refuses the run before anything is written", async (t) => {
+  for (const dangling of [false, true]) {
+    const { template, target } = await fixture(t);
+    const outside = await outsideOf(target);
+    const victim = path.join(outside, "victim.json");
+    if (!dangling) await fs.writeFile(victim, "theirs\n", "utf8");
+    await write(template, ".claude/skills/audit/SKILL.md", "skill\n");
+    await fs.mkdir(path.join(target, "religion/.state"), { recursive: true });
+    await fs.symlink(victim, path.join(target, "religion/.state/manifest.json"));
+
+    const plan = await planInstall(template, target, ["claude"], null);
+    await assert.rejects(applyInstall(template, target, plan, { force: false }), /manifest\.json because part of that path is a symbolic link/);
+    await assert.rejects(writeManifest(target, "0.0.0", ["claude"], template, null, []), /symbolic link/);
+
+    assert.equal(await exists(path.join(target, ".claude/skills/audit/SKILL.md")), false, "nothing was written first");
+    assert.deepEqual(await fs.readdir(outside), dangling ? [] : ["victim.json"]);
+    if (!dangling) assert.equal(await fs.readFile(victim, "utf8"), "theirs\n");
+  }
+});
+
+test("wireHooks: a linked settings file is left alone, even a dangling one", async (t) => {
+  const { target } = await fixture(t);
+  const outside = await outsideOf(target);
+  await write(target, "religion/.state/settings-template.json", "ATTACKER CONTENT\n");
+  await fs.mkdir(path.join(target, ".claude"), { recursive: true });
+  await fs.symlink(path.join(outside, "LaunchAgent.plist"), path.join(target, ".claude/settings.json"));
+
+  assert.equal(await wireHooks(target), "linked");
+  assert.deepEqual(await fs.readdir(outside), []);
 });
 

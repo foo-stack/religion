@@ -42,12 +42,14 @@ export interface PlanEntry {
     | "remerge"
     | "rebuild"
     | "remove"
-    | "release";
+    | "release"
+    | "linked";
   /** For a removal, the hash it was planned against, checked again just before deleting. */
   recorded?: string;
 }
 
-const MANIFEST = path.join(STATE_DIR, ".state", "manifest.json");
+const MANIFEST_PATH = `${STATE_DIR}/.state/manifest.json`;
+const MANIFEST = path.join(...MANIFEST_PATH.split("/"));
 
 /** Where originals are copied before install or update changes them, relative to the project. */
 export const BACKUPS = `${STATE_DIR}/.state/backups`;
@@ -78,6 +80,13 @@ export async function planInstall(
 
   for (const relative of await walk(templateRoot)) {
     if (!wanted(relative)) continue;
+
+    // Checked before anything else, since `exists` follows links: a dangling one would read as
+    // absent and be created wherever it points.
+    if (await throughLink(target, relative)) {
+      plan.push({ relative, action: "linked" });
+      continue;
+    }
 
     const destination = path.join(target, relative);
     const source = await fs.readFile(path.join(templateRoot, relative));
@@ -198,6 +207,7 @@ export async function applyInstall(
   removed: string[];
   released: string[];
   declined: string[];
+  linked: string[];
 }> {
   const written: string[] = [];
   const conflicts: string[] = [];
@@ -207,8 +217,9 @@ export async function applyInstall(
   const removed: string[] = [];
   const released: string[] = [];
   const declined: string[] = [];
+  const linked: string[] = [];
 
-  await refuseLinkedBackups(target, plan, options);
+  await refuseLinkedState(target, plan, options);
 
   for (const entry of plan) {
     if (entry.action === "unchanged" || entry.action === "seed-skip") continue;
@@ -242,6 +253,13 @@ export async function applyInstall(
 
     // Replacing only what is between the markers is the whole point of having merged: the
     // user's own prose sits outside them and is never read, let alone rewritten.
+    // Checked again at the write, because a prompt may have waited since planning and a link
+    // swapped in meanwhile would carry the write outside the project.
+    if (entry.action === "linked" || (await throughLink(target, entry.relative))) {
+      linked.push(entry.relative);
+      continue;
+    }
+
     if (entry.action === "remerge" || (entry.action === "merge" && options.merge)) {
       const destination = path.join(target, entry.relative);
       const template = await fs.readFile(path.join(templateRoot, entry.relative), "utf8");
@@ -297,7 +315,7 @@ export async function applyInstall(
     written.push(entry.relative);
   }
 
-  return { written, conflicts, backups, merged, rebuilt, removed, released, declined };
+  return { written, conflicts, backups, merged, rebuilt, removed, released, declined, linked };
 }
 
 /**
@@ -318,13 +336,25 @@ async function backUp(target: string, relative: string): Promise<void> {
   await fs.copyFile(path.join(target, relative), backup);
 }
 
+/** Whether any existing component of a project path is a symbolic link. Missing ones are not. */
+async function throughLink(target: string, relative: string): Promise<boolean> {
+  let current = target;
+  for (const part of relative.split("/")) {
+    current = path.join(current, part);
+    const stat = await fs.lstat(current).catch(() => null);
+    if (!stat) return false;
+    if (stat.isSymbolicLink()) return true;
+  }
+  return false;
+}
+
 /**
- * Refuse, before anything is written, a run that would back up through a symbolic link.
+ * Refuse, before anything is written, a run whose manifest or backups would pass through a link.
  *
  * The state directory is part of someone's repository, and a link at any point on the way
- * to a backup would put a copy of their file wherever the link points.
+ * would put the manifest, or a copy of their file, wherever the link points.
  */
-async function refuseLinkedBackups(
+async function refuseLinkedState(
   target: string,
   plan: readonly PlanEntry[],
   options: { force: boolean; merge?: boolean }
@@ -335,18 +365,13 @@ async function refuseLinkedBackups(
       (entry.action === "merge" && options.merge) ||
       (entry.action === "conflict" && options.force)
   );
+  const paths = [MANIFEST_PATH, ...backedUp.map((entry) => `${BACKUPS}/${entry.relative}`)];
 
-  for (const entry of backedUp) {
-    let current = target;
-    for (const part of `${BACKUPS}/${entry.relative}`.split("/")) {
-      current = path.join(current, part);
-      const stat = await fs.lstat(current).catch(() => null);
-      if (!stat) break;
-      if (stat.isSymbolicLink()) {
-        throw new Error(
-          `Refusing to back up through a symbolic link at ${path.relative(target, current)}. Make it a real directory and run again.`
-        );
-      }
+  for (const relative of paths) {
+    if (await throughLink(target, relative)) {
+      throw new Error(
+        `Refusing to write ${relative} because part of that path is a symbolic link. Replace the link with a real directory or file and run again.`
+      );
     }
   }
 }
@@ -400,6 +425,9 @@ export async function writeManifest(
     managed[relative] = hash(await fs.readFile(path.join(templateRoot, relative)));
   }
 
+  if (await throughLink(target, MANIFEST_PATH)) {
+    throw new Error(`Refusing to write ${MANIFEST_PATH} because part of that path is a symbolic link.`);
+  }
   const manifest: Manifest = { schemaVersion: 1, version, adapters: [...adapters], managed };
   const file = path.join(target, MANIFEST);
   await fs.mkdir(path.dirname(file), { recursive: true });
@@ -413,11 +441,12 @@ export async function writeManifest(
  * merging into them blind is how a tool destroys configuration it did not write. When they
  * exist, the caller is told to wire it manually and shown where the template is.
  */
-export async function wireHooks(target: string): Promise<"written" | "exists" | "no-template"> {
+export async function wireHooks(target: string): Promise<"written" | "exists" | "no-template" | "linked"> {
   const template = path.join(target, STATE_DIR, ".state", "settings-template.json");
   const settings = path.join(target, ".claude", "settings.json");
 
   if (!(await exists(template))) return "no-template";
+  if (await throughLink(target, ".claude/settings.json")) return "linked";
   if (await exists(settings)) return "exists";
 
   await fs.mkdir(path.dirname(settings), { recursive: true });

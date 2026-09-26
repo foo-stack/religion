@@ -135,6 +135,18 @@ large, so split it.
   tests refuse a symlinked entry file, a forged `true` record, and a symlinked backups
   directory with nothing written, and the two reported scratch vectors leave the outside
   files intact.
+- [x] **Repair F-36, F-39, F-40 - no write follows a symbolic link** - every path install and
+  update write to, whether a shipped file, a seeded file, an entry file being merged,
+  remerged or rebuilt, the manifest, or `.claude/settings.json`, is refused when any
+  component of it is a link, dangling or not. Such files get a `linked` action that is never
+  written, not even with `--force`, are reported on their own, keep their manifest record,
+  and exit 1. The check runs again just before each write, and the manifest's path is
+  checked before anything is written. This also closes F-41, F-43 and F-44, which the same
+  check covers. *Done when:* tests reproduce each vector the re-review ran (a linked and a
+  dangling manifest, a dangling shipped skill and seeded file, a linked entry file under
+  merge, remerge and `--force`, a linked `.claude`, and a dangling `settings.json` with an
+  attacker template) and each leaves the outside path untouched; and the same vectors run
+  through the CLI in a scratch project do too.
 
 ## Files and areas
 

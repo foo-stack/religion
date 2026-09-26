@@ -130,7 +130,8 @@ async function runInstall(options: Options): Promise<void> {
     remerge: plan.filter((p) => p.action === "remerge").length,
     rebuild: plan.filter((p) => p.action === "rebuild").length,
     remove: plan.filter((p) => p.action === "remove").length,
-    release: plan.filter((p) => p.action === "release").length
+    release: plan.filter((p) => p.action === "release").length,
+    linked: plan.filter((p) => p.action === "linked").length
   };
 
   console.log(`\nAdapters: ${adapters.map((a) => ADAPTERS[a].label).join(", ")}`);
@@ -145,6 +146,8 @@ async function runInstall(options: Options): Promise<void> {
   if (counts.remove > 0) console.log(`  remove   ${counts.remove}  (no longer shipped)`);
   if (counts.release > 0) console.log(`  release  ${counts.release}  (no longer shipped, but edited by you, so left alone)`);
   for (const entry of plan.filter((p) => p.action === "release")) console.log(`    ${entry.relative}`);
+  if (counts.linked > 0) console.log(`  linked   ${counts.linked}  (reached through a symbolic link, never written)`);
+  for (const entry of plan.filter((p) => p.action === "linked")) console.log(`    ${entry.relative}`);
 
   const mergeable = plan.filter((p) => p.action === "merge").map((p) => p.relative);
   let merge = false;
@@ -173,7 +176,8 @@ async function runInstall(options: Options): Promise<void> {
   const result = await applyInstall(templateRoot, target, plan, { force: options.force, merge });
   await writeManifest(target, packageVersion, adapters, templateRoot, previous, [
     ...result.conflicts,
-    ...result.declined
+    ...result.declined,
+    ...result.linked
   ]);
 
   console.log(`\nWrote ${result.written.length} file(s).`);
@@ -192,6 +196,13 @@ async function runInstall(options: Options): Promise<void> {
   }
   if (result.backups.length > 0) {
     console.log(`Backed up ${result.backups.length} file(s) to ${BACKUPS} before changing them.`);
+  }
+  if (result.linked.length > 0) {
+    process.exitCode = 1;
+    console.log(
+      `\n${result.linked.length} file(s) are reached through a symbolic link and were left alone, since writing` +
+        `\nthem would write wherever the link points. Replace the links with real files and run again.`
+    );
   }
   if (result.declined.length > 0) {
     process.exitCode = 1;
@@ -212,6 +223,11 @@ async function runInstall(options: Options): Promise<void> {
     const wired = await wireHooks(target);
     if (wired === "written") {
       console.log("Wired the enforcement hooks into .claude/settings.json.");
+    } else if (wired === "linked") {
+      console.log(
+        "\n.claude/settings.json is a symbolic link and was left alone." +
+          `\nTo enable the hooks, merge ${path.join(STATE_DIR, ".state", "settings-template.json")} into the file it points to.`
+      );
     } else if (wired === "exists") {
       console.log(
         "\n.claude/settings.json already exists and was left alone." +

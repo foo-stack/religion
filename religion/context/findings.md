@@ -278,13 +278,13 @@
 **Suggested fix:** Pin each with a small case.
 **Resolution:**
 
-### F-36 [P1] open - Older write paths follow symlinked parents
+### F-36 [P1] fixed - Older write paths follow symlinked parents
 
 **File:** packages/create-religion/lib/install.ts:252
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** `create`, `update`, the forced conflict write and `writeManifest` also write through a symlinked `.claude` or `religion/.state`. Predates this work; not reproduced.
 **Suggested fix:** Share one no-symlinked-component check with the removal guard.
-**Resolution:** Confirmed 2026-09-26 by the re-review: a plain `update` overwrote an outside file through a linked `manifest.json`, created one through a dangling link, created outside files through a dangling shipped skill file and a dangling `religion/build-plan.md`, and `--force` wrote the template through a linked `CLAUDE.md`. Raised to P1.
+**Resolution:** Repaired 2026-09-26: every template path with a symbolic link in any existing component, dangling or not, is planned as `linked` before existence is checked, re-checked immediately before each write, never written even with `--force`, reported on its own, kept in the manifest, and exits 1; the manifest path is checked before anything is written and again in `writeManifest`. Tests and CLI runs cover a linked and a dangling manifest, a dangling shipped skill and seeded file, a linked `.claude`, and `--force` through a linked entry file, each leaving the outside path untouched. Awaiting re-review. Confirmed 2026-09-26 by the re-review: a plain `update` overwrote an outside file through a linked `manifest.json`, created one through a dangling link, created outside files through a dangling shipped skill file and a dangling `religion/build-plan.md`, and `--force` wrote the template through a linked `CLAUDE.md`. Raised to P1.
 
 ### F-37 [P3] unverified - A later backup overwrites an earlier one
 
@@ -302,29 +302,29 @@
 **Suggested fix:** Plan each real file once.
 **Resolution:**
 
-### F-39 [P0] open - Wiring the hooks writes attacker-chosen content outside the project
+### F-39 [P0] fixed - Wiring the hooks writes attacker-chosen content outside the project
 
 **File:** packages/create-religion/lib/install.ts:416
 **Found:** 2026-09-26 by audit (scope: current; lens: security re-review of F-14 to F-19)
 **Why it matters:** `wireHooks` checks `.claude/settings.json` with `stat`, which follows links, and copies the project's own `religion/.state/settings-template.json` to it. With `settings.json` a dangling link to an outside path and the template holding attacker text, a plain `update` with no flags and no terminal created the outside file with exactly that text and exited 0. Predates this work.
 **Suggested fix:** Refuse a settings path with a link in any component, using the same check as removal.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: `wireHooks` returns `linked` and writes nothing when any component of `.claude/settings.json` is a link, dangling or not. Tested, and a CLI run with a dangling link and an attacker template created nothing outside. Awaiting re-review.
 
-### F-40 [P1] open - Merging and remerging write through a linked entry file
+### F-40 [P1] fixed - Merging and remerging write through a linked entry file
 
 **File:** packages/create-religion/lib/install.ts:245
 **Found:** 2026-09-26 by audit (scope: current; lens: security re-review of F-14 to F-19)
 **Why it matters:** With `CLAUDE.md` linked to an outside file that carries Religion's markers, a plain non-interactive `update` rewrote the outside file; with no record and `--yes`, text was appended to any outside file and its contents copied into the backups directory. Predates this work.
 **Suggested fix:** Treat a linked entry file as a conflict for merge and remerge too.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: a linked entry file is `linked` before merge, remerge or rebuild is considered, so none of them writes through it. Tested with a marked outside file under `--force --yes`, and CLI runs of the remerge and `--yes` merge vectors left the outside files unchanged. Awaiting re-review.
 
-### F-41 [P2] open - A linked entry file's conflict advice writes through the link
+### F-41 [P2] fixed - A linked entry file's conflict advice writes through the link
 
 **File:** packages/create-religion/bin/religion.ts:207
 **Found:** 2026-09-26 by audit (scope: current; lens: security re-review of F-14 to F-19)
 **Why it matters:** A linked entry file is now a conflict, and the message advises `--force`, which writes the template through the link and copies the outside file into backups. The rebuild guard's promise to leave the file alone depends on F-36.
 **Suggested fix:** Fixed with F-36, or give linked files their own message.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: a linked entry file is no longer a conflict, so it gets no `--force` advice; it is reported as linked with advice to replace the link.
 
 ### F-42 [P3] open - The rebuild gate's comment overstates what it stops
 
@@ -334,21 +334,21 @@
 **Suggested fix:** Say it rejects malformed records, not forged ones.
 **Resolution:**
 
-### F-43 [P3] open - The backup refusal says to make a directory when the link is the file
+### F-43 [P3] fixed - The backup refusal says to make a directory when the link is the file
 
 **File:** packages/create-religion/lib/install.ts:347
 **Found:** 2026-09-26 by audit (scope: current; lens: security re-review of F-14 to F-19)
 **Why it matters:** A dangling link at `backups/CLAUDE.md` is refused with "Make it a real directory".
 **Suggested fix:** Name what to fix by what the link is.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: the refusal now names the path and says to replace the link with a real directory or file.
 
-### F-44 [P3] open - A linked managed file can hang update
+### F-44 [P3] fixed - A linked managed file can hang update
 
 **File:** packages/create-religion/lib/install.ts:96
 **Found:** 2026-09-26 by audit (scope: current; lens: security re-review of F-14 to F-19)
 **Why it matters:** With a shipped skill file linked to `/dev/zero`, `update` read forever and had to be killed after 150 seconds. Related to F-33.
 **Suggested fix:** Skip anything that is not a plain file before reading it.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: a linked file is classed as `linked` before it is read, so a link to `/dev/zero` exits 1 at once instead of hanging.
 
 ### F-45 [P3] open - A case or normalisation variant of a shipped path is retired
 

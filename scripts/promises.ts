@@ -52,7 +52,7 @@ const DASHBOARD = "packages/create-religion/lib/dashboard.ts";
 /** The only request any shipped code makes: the dashboard page asking its own server for its data. */
 const OWN_REQUEST = 'fetch("/state.json")';
 const ESCAPES =
-  /\b(fetch|WebSocket|EventSource|XMLHttpRequest|sendBeacon|importScripts|createRequire|Worker|eval|Function|globalThis)\b|\b(global|window|self)\s*[.[]|\.\s*(binding|dlopen)\b|["'](binding|dlopen)["']/g;
+  /\b(fetch|WebSocket|EventSource|XMLHttpRequest|sendBeacon|importScripts|createRequire|Worker|eval|Function|globalThis|getBuiltinModule|mainModule|constructor)\b|\b(global|window|self|process)\s*\[|\b(global|window|self)\s*\.|\.\s*(binding|dlopen)\b|["'](binding|dlopen|getBuiltinModule|constructor)["']/g;
 
 /**
  * No shipped module can open a network connection.
@@ -76,7 +76,7 @@ export async function networkProblems(): Promise<string[]> {
     const relative = path.relative(repoRoot, file);
     const dashboard = relative === DASHBOARD;
     // Block comments go first, so one cannot sit between an import and its name unseen.
-    let text = (await fs.readFile(file, "utf8")).replace(/\/\*[\s\S]*?\*\//g, " ");
+    let text = (await fs.readFile(file, "utf8")).replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^\s*\/\/.*$/gm, "");
     if (dashboard) text = text.split(OWN_REQUEST).join("");
 
     // Any Node module named anywhere, in any syntax, must be one shipped code may use.
@@ -101,13 +101,19 @@ export async function networkProblems(): Promise<string[]> {
     }
     for (const match of text.matchAll(ESCAPES)) problems.push(`${relative} uses ${match[0]}`);
 
+    // `process` reaches every built-in module through its members, so only the ones shipped
+    // code uses are allowed, and any other mention, however it is spelled, is refused.
+    const processUse = text.replace(/\bprocess\.(argv|cwd|exit|exitCode|on|stdin|stdout|stderr)\b/g, "");
+    if (/\bprocess\b/.test(processUse)) problems.push(`${relative} uses process beyond the members shipped code needs`);
+
     if (dashboard) {
-      for (const match of text.matchAll(/\bhttp\s*(\.|\[)\s*([A-Za-z]*)/g)) {
-        if (!["createServer", "IncomingMessage", "ServerResponse"].includes(match[2]!) || match[1] === "[") {
-          problems.push(`${relative} uses http${match[1]}${match[2]}, not only its server`);
-        }
-      }
-      if (/=\s*http\s*[;\n]/.test(text)) problems.push(`${relative} takes members out of node:http`);
+      // The server's import, the three members it uses, and its own address are the only
+      // places `http` may appear; any other mention could be a way to make a request.
+      const rest = text
+        .replace(/import http from "node:http";/, "")
+        .replace(/\bhttp\.(createServer|IncomingMessage|ServerResponse)\b/g, "")
+        .replace(/`http:\/\/127\.0\.0\.1:\$\{port\}`/, "");
+      if (/\bhttp\b/.test(rest)) problems.push(`${relative} uses http beyond its server`);
       if (!/default-src 'none'/.test(text) || !/connect-src 'self'/.test(text)) {
         problems.push(`${relative} serves its page without a policy confining it to its own server`);
       }

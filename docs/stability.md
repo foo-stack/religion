@@ -176,7 +176,10 @@ following a skill is governed by the authority tiers in your entry file, not by 
 promise.
 
 **Held by:** the check "shipped code opens no network connection", which allows shipped code
-only a fixed set of modules and the dashboard only its own server; the install tests that a
+only a fixed set of modules, the dashboard only its own server, and `process` only the members
+the tool uses, and refuses the known ways around those lists. It reads source text, so it
+catches a change that reaches for the network by accident, not code written to hide it; that
+is left to review of every change to shipped code. the install tests that a
 path reached through a symbolic link, dangling or not, is never written, and that a
 recorded path outside Religion's own trees is never removed; the hook test that the handoff
 is never written through a link, in `scripts/hooks.test.ts`; and the dashboard test that

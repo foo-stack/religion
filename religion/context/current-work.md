@@ -103,6 +103,23 @@ large, so split it.
   naming the stability statement and every breaking change since 0.5.0: Node 22, refused
   input and exit codes, the `doctor --json` shape, and conflicts and declined merges
   exiting 1. *Done when:* the changeset exists, names each, and `npm test` passes.
+- [x] **Repair F-80 - the handoff hook never writes through a link** - the hook leaves the
+  handoff unwritten when `religion`, `religion/context` or `handoff.md` is a symbolic link.
+  *Done when:* a test running the hook against each link leaves the outside target intact,
+  and a normal project still gets its handoff.
+- [ ] **Repair F-81 - a network check that holds** - each shipped file may import only a
+  fixed allowlist, dynamic imports must be literal, the escape hatches are refused, every
+  shipped extension is walked recursively, the dashboard's only allowed request is its own
+  `/state.json`, and the dashboard page carries a content security policy. Also a test that
+  the dashboard binds loopback and refuses a foreign host (F-87). *Done when:* every evasion
+  the audit reported fails the check, shown by temporary edits, and the new tests pass.
+- [ ] **Repair F-83 - a linked settings file exits 1** - *Done when:* a scratch run with a
+  linked `.claude/settings.json` exits 1.
+- [ ] **Repair F-82 - the statement and guide say only what is true** - correct the guide and
+  the tool's hint about the settings template, and fix F-85, F-86 and F-88 in the statement,
+  the guide, the changesets, the decision log and the overview, listing the settings
+  template and a retired hook's wiring (F-84) as known limitations. *Done when:* each
+  corrected sentence is checked against the code or a run.
 
 ## Files and areas
 

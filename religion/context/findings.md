@@ -461,3 +461,83 @@
 **Why it matters:** Once Religion has written `.claude/settings.json`, each later update prints "already exists and was left alone. To enable the hooks, merge ... into it", even when the file is Religion's own and the hooks are on, so the instruction reads as a problem on every run.
 **Suggested fix:** Say nothing when the settings file already wires every hook in the template.
 **Resolution:**
+
+### F-80 [P1] fixed - The handoff hook writes through symbolic links
+
+**File:** src/hooks/write-handoff.mjs:82
+**Found:** 2026-09-26 by audit (scope: current; lens: security, quality)
+**Why it matters:** It writes `religion/context/handoff.md` with no link check, so a cloned repository linking that path, or either directory above it, elsewhere has the target overwritten at the end of every turn, partly with text the repository controls. Reproduced: an outside file was replaced. The statement promises the hooks write nothing outside the project.
+**Suggested fix:** Leave the handoff unwritten when any component of its path is a link, and test it.
+**Resolution:** Repaired 2026-09-26: the hook leaves the handoff unwritten when `religion`, `religion/context` or `handoff.md` is a link; `scripts/hooks.test.ts` runs the real hook against each and the outside target stays intact, and two of its three tests fail against the unguarded hook. Awaiting re-review.
+
+### F-81 [P1] open - The network check can be evaded
+
+**File:** scripts/promises.ts:45
+**Found:** 2026-09-26 by audit (scope: current; lens: security)
+**Why it matters:** It denies a list of spellings over part of what ships, so a computed dynamic import, `createRequire`, `child_process` running curl, a stored `fetch`, `process.binding`, a worker, `http["request"]`, a protocol-relative `fetch("//evil.example")` in the dashboard page, an `<img>` pixel, a subdirectory under `lib/`, or a `.cjs` hook all passed it. The shipped code is clean today, but the check cannot catch a regression, and the statement cites it.
+**Suggested fix:** Allow only a fixed set of imports per file, reject non-literal imports and the escape hatches, walk every shipped extension recursively, and give the dashboard page a content security policy.
+**Resolution:**
+
+### F-82 [P1] open - The update guide says a new hook reaches the settings template, which update never refreshes
+
+**File:** docs/upgrading.md:196
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** `religion/.state/settings-template.json` is under `religion/`, so it is seeded once and never updated; the guide and the tool's own hint send users to merge a stale file. This repository's own template still wires the hook removed in 0.5.0.
+**Suggested fix:** Correct the guide and the hint, and list it as a known limitation.
+**Resolution:**
+
+### F-83 [P1] open - A linked settings file exits 0 though the statement and changesets say 1
+
+**File:** packages/create-religion/bin/religion.ts:216
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** The linked branch of hook wiring prints a message but sets no exit code, contradicting the statement's exit table, the major changeset and the pending update changeset.
+**Suggested fix:** Exit 1 there, as every other linked file does.
+**Resolution:**
+
+### F-84 [P2] open - Update removes a hook script that settings still run
+
+**File:** packages/create-religion/lib/install.ts:143
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** A retired, unedited hook is removed while `.claude/settings.json`, which update never rewires, still runs it; the hook then fails with `MODULE_NOT_FOUND` on every call. Neither the statement nor the guide says so.
+**Suggested fix:** Warn naming the settings file when a removed file is a hook, and document it.
+**Resolution:**
+
+### F-85 [P2] open - The statement overstates who owns the entry files
+
+**File:** docs/stability.md:133
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** A fresh install writes them without markers, so until the first update or merge the file is Religion's, and the one-time rebuild drops edits inside Religion's sections and any import lines the user added.
+**Suggested fix:** Qualify the row.
+**Resolution:**
+
+### F-86 [P2] open - The settings row claims the record holds values it does not
+
+**File:** docs/stability.md:123
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** Only seven enumerated settings have recorded values; the rest are recorded by their default's type, so ranges, formats and even booleans are unchecked, and `doctor` accepts `"parallelSteps": "yes"`.
+**Suggested fix:** Say exactly what is recorded, and widen the known limitation.
+**Resolution:**
+
+### F-87 [P2] open - Nothing tests that the dashboard binds loopback or refuses a foreign host end to end
+
+**File:** packages/create-religion/lib/dashboard.ts:27
+**Found:** 2026-09-26 by audit (scope: current; lens: security)
+**Why it matters:** Only the pure host check is tested; binding every interface and skipping the check both passed the suite, though the statement cites the dashboard's tests.
+**Suggested fix:** Start the dashboard in a test and assert its address and a foreign host's 403.
+**Resolution:**
+
+### F-88 [P3] open - Smaller inaccuracies in the statement and its companions
+
+**File:** docs/stability.md:29
+**Found:** 2026-09-26 by audit (scope: current; lens: quality)
+**Why it matters:** The statement and the command-line changeset still say "read or written"; the exit table's citation says the help lists the same meanings when it omits two; a dry run exits 0 with conflicts planned, unsaid; the `religion/` row ignores created and rewritten state; decision 100 overstates what the statement check checks; the overview stamp's parsing is cited but untested; the major changeset omits the dashboard's host check; the guide claims every line is quoted when some are omitted; the breaking-change table leaves marker text and state formats unclassified and calls skill changes minor while calling them internal; and the generated overview still counts ten checks.
+**Suggested fix:** Correct each.
+**Resolution:**
+
+### F-89 [P3] unverified - Hooks resolve the project from their working directory
+
+**File:** src/hooks/write-handoff.mjs:14
+**Found:** 2026-09-26 by audit (scope: current; lens: security)
+**Why it matters:** They use `process.cwd()` and are launched by a relative path; if a hook ever runs from another directory it would act on that directory. How the tool chooses a hook's working directory was not confirmed.
+**Suggested fix:** Use the project directory the tool passes in.
+**Resolution:**

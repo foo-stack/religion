@@ -5,10 +5,15 @@
 
 ## Where the work sits
 
-**A command-line surface fit to freeze** is in progress: 1 step(s) done, 4 to go.
-Next step: Step 2.
+**A command-line surface fit to freeze** is in progress: 6 step(s) done, 0 to go.
 
 Plan: 3 of 8 item(s) complete. Next up: 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a breaking change
+
+## Blocking findings
+
+- F-01 [P1] fixed - Adapter flags match inherited object properties
+
+These prevent completion until repaired and re-reviewed.
 
 ## Read first
 

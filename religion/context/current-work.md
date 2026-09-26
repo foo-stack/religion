@@ -80,7 +80,7 @@ large, so split it.
   refused as newer), recovering from a backup, and what it never touches. *Done when:*
   every command shown was run and every quoted line of output appears verbatim in a
   captured run, with each outcome triggered at least once.
-- [ ] **Step 4 - checks behind the words** - a verification check that every command, option,
+- [x] **Step 4 - checks behind the words** - a verification check that every command, option,
   skill, adapter, setting and the Node range in `surface.json` appears in
   `docs/stability.md`; and a second that the shipped code, the command-line tool and the
   hooks, imports no module that can open a network connection, the dashboard's loopback

@@ -18,6 +18,7 @@ import { compareSurface, shapeProblems } from "./surface.js";
 import type { Shape, Surface } from "./surface.js";
 import { currentOutputs, currentSurface, SURFACE_RECORD } from "./surface-current.js";
 import { upgradeProblems } from "./upgrade.js";
+import { networkProblems, statementProblems } from "./promises.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -279,6 +280,14 @@ const checks: Check[] = [
   {
     name: "a project the last release installed updates cleanly",
     run: upgradeProblems
+  },
+  {
+    name: "the stability statement names the whole recorded surface",
+    run: statementProblems
+  },
+  {
+    name: "shipped code opens no network connection",
+    run: networkProblems
   },
   {
     name: "the command-line tool has unit tests",

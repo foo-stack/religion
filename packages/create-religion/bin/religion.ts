@@ -126,7 +126,8 @@ async function runInstall(options: Options): Promise<void> {
     conflict: plan.filter((p) => p.action === "conflict").length,
     kept: plan.filter((p) => p.action === "seed-skip").length,
     merge: plan.filter((p) => p.action === "merge").length,
-    remerge: plan.filter((p) => p.action === "remerge").length
+    remerge: plan.filter((p) => p.action === "remerge").length,
+    rebuild: plan.filter((p) => p.action === "rebuild").length
   };
 
   console.log(`\nAdapters: ${adapters.map((a) => ADAPTERS[a].label).join(", ")}`);
@@ -136,6 +137,7 @@ async function runInstall(options: Options): Promise<void> {
   console.log(`  conflict ${counts.conflict}`);
   if (counts.merge > 0) console.log(`  merge    ${counts.merge}  (your file, awaiting a decision)`);
   if (counts.remerge > 0) console.log(`  merged   ${counts.remerge}  (your sections kept)`);
+  if (counts.rebuild > 0) console.log(`  rebuilt  ${counts.rebuild}  (your sections kept, original backed up)`);
 
   for (const entry of plan.filter((p) => p.action === "conflict")) {
     console.log(`    ${entry.relative}`);
@@ -171,6 +173,12 @@ async function runInstall(options: Options): Promise<void> {
   console.log(`\nWrote ${result.written.length} file(s).`);
   if (result.merged.length > 0) {
     console.log(`Merged ${result.merged.length} entry file(s), keeping what you wrote.`);
+  }
+  if (result.rebuilt.length > 0) {
+    console.log(
+      `Rebuilt ${result.rebuilt.length} entry file(s) around the sections you wrote. The originals are in ` +
+        `${path.join(STATE_DIR, ".state", "backups")}.`
+    );
   }
   if (result.backups.length > 0) console.log(`Backed up ${result.backups.length} conflicting file(s).`);
   if (result.conflicts.length > 0) {

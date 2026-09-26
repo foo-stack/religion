@@ -12,7 +12,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { exists, STATE_DIR } from "./paths.js";
-import { hasDamagedMarkers, hasMarkers, replaceManagedBlock, spliceEntry } from "./merge.js";
+import { hasDamagedMarkers, hasMarkers, rebuildEntry, replaceManagedBlock, spliceEntry } from "./merge.js";
 
 export type Adapter = "claude" | "codex" | "copilot" | "opencode";
 
@@ -32,7 +32,7 @@ export interface Manifest {
 
 export interface PlanEntry {
   relative: string;
-  action: "create" | "update" | "seed-skip" | "conflict" | "unchanged" | "merge" | "remerge";
+  action: "create" | "update" | "seed-skip" | "conflict" | "unchanged" | "merge" | "remerge" | "rebuild";
 }
 
 const MANIFEST = path.join(STATE_DIR, ".state", "manifest.json");
@@ -99,8 +99,16 @@ export async function planInstall(
     if (entries.has(relative)) {
       const text = current.toString("utf8");
       // A damaged marker pair is a conflict, never a fresh merge: splicing a second block
-      // into a file that already has one is worse than the damage.
-      const action = hasMarkers(text) ? "remerge" : hasDamagedMarkers(text) ? "conflict" : "merge";
+      // into a file that already has one is worse than the damage. An unmarked file the
+      // manifest records is one Religion wrote and setup edited, so it already holds
+      // Religion's sections and is rebuilt around the owner's rather than spliced.
+      const action = hasMarkers(text)
+        ? "remerge"
+        : hasDamagedMarkers(text)
+          ? "conflict"
+          : recorded
+            ? "rebuild"
+            : "merge";
       plan.push({ relative, action });
       continue;
     }
@@ -116,11 +124,12 @@ export async function applyInstall(
   target: string,
   plan: readonly PlanEntry[],
   options: { force: boolean; merge?: boolean }
-): Promise<{ written: string[]; conflicts: string[]; backups: string[]; merged: string[] }> {
+): Promise<{ written: string[]; conflicts: string[]; backups: string[]; merged: string[]; rebuilt: string[] }> {
   const written: string[] = [];
   const conflicts: string[] = [];
   const backups: string[] = [];
   const merged: string[] = [];
+  const rebuilt: string[] = [];
 
   for (const entry of plan) {
     if (entry.action === "unchanged" || entry.action === "seed-skip") continue;
@@ -162,6 +171,19 @@ export async function applyInstall(
       continue;
     }
 
+    if (entry.action === "rebuild") {
+      const destination = path.join(target, entry.relative);
+      const template = await fs.readFile(path.join(templateRoot, entry.relative), "utf8");
+      const current = await fs.readFile(destination, "utf8");
+      const backup = path.join(target, STATE_DIR, ".state", "backups", entry.relative);
+      await fs.mkdir(path.dirname(backup), { recursive: true });
+      await fs.copyFile(destination, backup);
+      backups.push(entry.relative);
+      await fs.writeFile(destination, rebuildEntry(current, template), "utf8");
+      rebuilt.push(entry.relative);
+      continue;
+    }
+
     const destination = path.join(target, entry.relative);
     if (entry.action === "conflict") {
       const backup = path.join(target, STATE_DIR, ".state", "backups", entry.relative);
@@ -175,7 +197,7 @@ export async function applyInstall(
     written.push(entry.relative);
   }
 
-  return { written, conflicts, backups, merged };
+  return { written, conflicts, backups, merged, rebuilt };
 }
 
 /**

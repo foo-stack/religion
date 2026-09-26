@@ -91,7 +91,7 @@ large, so split it.
   of every section, its edited title and Commands intact, the managed block current, a
   section the user added kept outside the block, and a second rebuild of the result changing
   nothing.
-- [ ] **Step 3 - plan and apply the rebuild** - in `planInstall`, an entry file with no
+- [x] **Step 3 - plan and apply the rebuild** - in `planInstall`, an entry file with no
   markers that the previous manifest records, and that no longer matches that record, gets
   a new `rebuild` action instead of `merge`. `applyInstall` backs it up and writes
   `rebuildEntry`. The summary counts it. *Done when:* install tests cover the plan and the

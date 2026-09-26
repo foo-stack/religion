@@ -105,6 +105,45 @@ test("planInstall: an existing entry file is offered as a merge, not a conflict"
   assert.equal(actionFor(plan, "CLAUDE.md"), "merge");
 });
 
+test("planInstall: an unmarked entry file Religion installed is rebuilt, not merged", async (t) => {
+  // setup edits the entry file in place, so it matches neither the template nor the
+  // manifest. Merging it would append a second copy of every section Religion put there.
+  const { template, target } = await fixture(t);
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(target, "CLAUDE.md", ENTRY.replace("<command>", "make dev"));
+  const previous: Manifest = { schemaVersion: 1, version: "0.0.0", adapters: ["claude"], managed: { "CLAUDE.md": hash(ENTRY) } };
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(plan, "CLAUDE.md"), "rebuild");
+});
+
+test("applyInstall: a rebuild keeps their sections once and backs the original up", async (t) => {
+  const { template, target } = await fixture(t);
+  const newer = ENTRY.replace("\nw\n", "\nw2\n");
+  const edited = ENTRY.replace("# Project Name", "# Acme").replace("<command>", "make dev");
+  await write(template, "CLAUDE.md", newer);
+  await write(target, "CLAUDE.md", edited);
+  const previous: Manifest = { schemaVersion: 1, version: "0.0.0", adapters: ["claude"], managed: { "CLAUDE.md": hash(ENTRY) } };
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  const result = await applyInstall(template, target, plan, { force: false });
+
+  assert.deepEqual(result.rebuilt, ["CLAUDE.md"]);
+  assert.deepEqual(result.conflicts, []);
+  const onDisk = await fs.readFile(path.join(target, "CLAUDE.md"), "utf8");
+  assert.equal(onDisk.match(/^## Workflow$/gm)?.length, 1);
+  assert.equal(onDisk.match(/^## Commands$/gm)?.length, 1);
+  assert.match(onDisk, /^# Acme$/m);
+  assert.match(onDisk, /make dev/);
+  assert.match(onDisk, /\nw2\n/);
+  assert.ok(onDisk.includes(MANAGED_START) && onDisk.includes(MANAGED_END));
+  const backup = await fs.readFile(path.join(target, "religion", ".state", "backups", "CLAUDE.md"), "utf8");
+  assert.equal(backup, edited);
+
+  const again = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(again, "CLAUDE.md"), "remerge", "once rebuilt, later updates only replace the block");
+});
+
 test("planInstall: an already merged entry file is remerged", async (t) => {
   const { template, target } = await fixture(t);
   await write(template, "CLAUDE.md", ENTRY);

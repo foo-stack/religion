@@ -152,5 +152,56 @@
     "auto.maxItems": "null",
     "auto.maxRepairAttempts": "number",
     "auto.finalAudit": "boolean"
+  },
+  "json": {
+    "status": {
+      "schemaVersion": "number",
+      "next": {
+        "command": "string",
+        "because": "string"
+      },
+      "plan": {
+        "done": "number",
+        "total": "number",
+        "nextItem": "string|null"
+      },
+      "work": {
+        "active": "boolean",
+        "title": "string|null",
+        "type": "string|null",
+        "status": "string|null",
+        "stepsDone": "number",
+        "stepsTotal": "number",
+        "nextStep": "string|null"
+      },
+      "findings": {
+        "total": "number",
+        "blocking": [
+          "string"
+        ],
+        "byStatus": {
+          "*": "number"
+        }
+      },
+      "overview": {
+        "present": "boolean",
+        "fresh": "boolean|null"
+      },
+      "warnings": [
+        "string"
+      ]
+    },
+    "doctor": {
+      "schemaVersion": "number",
+      "healthy": "boolean",
+      "checks": [
+        {
+          "name": "string",
+          "ok": "boolean",
+          "detail": "string",
+          "blocks": "string"
+        }
+      ]
+    }
   }
 }

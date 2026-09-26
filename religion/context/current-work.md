@@ -79,7 +79,7 @@ large, so split it.
   the current code, and removing a skill, dropping a flag, or adding a config value each
   makes it fail with a message naming what changed, shown by temporary edits that are then
   reverted.
-- [ ] **Step 4 - the JSON shapes** - the record gains the shapes of `status --json` and
+- [x] **Step 4 - the JSON shapes** - the record gains the shapes of `status --json` and
   `doctor --json`, and the check runs both against a scratch project it builds with an
   active item, several findings and a failing doctor check, so nullable and array fields
   are exercised. *Done when:* the check passes, and removing a field from `Status` or

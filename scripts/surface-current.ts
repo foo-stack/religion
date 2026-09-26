@@ -6,12 +6,15 @@
  */
 
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { GRAMMAR } from "../packages/create-religion/lib/args.js";
-import { ALLOWED } from "../packages/create-religion/lib/doctor.js";
+import { ALLOWED, doctorReport, runDoctor } from "../packages/create-religion/lib/doctor.js";
 import { ADAPTERS } from "../packages/create-religion/lib/install.js";
+import { readProjectState } from "../packages/create-religion/lib/state.js";
+import { computeStatus } from "../packages/create-religion/lib/status.js";
 import { PLANNED_SKILLS } from "../src/lib/skills.js";
 import type { Surface } from "./surface.js";
 
@@ -50,3 +53,49 @@ async function currentConfig(): Promise<Record<string, Surface>> {
   }
   return config;
 }
+
+/**
+ * What `status --json` and `doctor --json` print, for an idle project and a busy one.
+ *
+ * Two projects because each shape has fields that are only filled in one state: an idle
+ * project gives the nulls, a busy one gives populated arrays whose elements can be checked.
+ */
+export async function currentOutputs(): Promise<{ status: unknown[]; doctor: unknown[] }> {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-surface-"));
+  try {
+    const outputs = { status: [] as unknown[], doctor: [] as unknown[] };
+    for (const [name, files] of Object.entries(PROJECTS)) {
+      const project = path.join(root, name);
+      for (const [relative, contents] of Object.entries(files)) {
+        await fs.mkdir(path.dirname(path.join(project, relative)), { recursive: true });
+        await fs.writeFile(path.join(project, relative), contents, "utf8");
+      }
+      outputs.status.push(JSON.parse(JSON.stringify(computeStatus(await readProjectState(project)))));
+      outputs.doctor.push(JSON.parse(JSON.stringify(doctorReport(await runDoctor(project)))));
+    }
+    return outputs;
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+}
+
+const PROJECTS: Record<string, Record<string, string>> = {
+  idle: {
+    "religion/config.json": "{}\n",
+    "religion/build-plan.md": "## Plan\n\n- [x] 1. **Done** - finished\n",
+    "religion/context/current-work.md": "# Current Work\n\n_Nothing in progress._\n"
+  },
+  busy: {
+    "religion/config.json": '{ "git": { "mode": "not-a-mode" } }\n',
+    "religion/project-plan.md": "# Plan\n",
+    "religion/build-plan.md": "## Plan\n\n- [x] 1. **Done** - finished\n- [ ] 2. **Next** - queued\n",
+    "religion/context/current-work.md":
+      "# Export reports\n\n**Type:** Feature\n**Status:** in progress\n\n## Build steps\n\n" +
+      "- [x] **Step 1 - the serializer** - done\n- [ ] **Step 2 - the route** - next\n",
+    "religion/context/findings.md":
+      "# Findings\n\n### F-01 [P1] open - A missing guard\n\n### F-02 [P3] closed - A cleanup\n",
+    "religion/context/project-overview.md":
+      "# Overview\n\n<!-- religion:source-hash 0000000000000000 -->\n\n## Open questions\n\n" +
+      "- **Storage** (affects: item 2) - undecided\n"
+  }
+};

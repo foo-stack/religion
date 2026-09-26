@@ -14,9 +14,9 @@ import { fileURLToPath } from "node:url";
 
 import { SHARED, TREES } from "../src/lib/adapters.js";
 import { PLANNED_SKILLS, readSkills } from "../src/lib/skills.js";
-import { compareSurface } from "./surface.js";
-import type { Surface } from "./surface.js";
-import { currentSurface, SURFACE_RECORD } from "./surface-current.js";
+import { compareSurface, shapeProblems } from "./surface.js";
+import type { Shape, Surface } from "./surface.js";
+import { currentOutputs, currentSurface, SURFACE_RECORD } from "./surface-current.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -260,7 +260,19 @@ const checks: Check[] = [
       const record = JSON.parse(await fs.readFile(SURFACE_RECORD, "utf8")) as Record<string, Surface>;
       const current = await currentSurface();
       const recorded = Object.fromEntries(Object.keys(current).map((key) => [key, record[key] ?? null]));
-      return compareSurface(recorded, current).map((problem) => `surface.json: ${problem}`);
+      const problems = compareSurface(recorded, current);
+
+      const shapes = (record.json ?? {}) as Record<string, Shape>;
+      const outputs = await currentOutputs();
+      for (const [kind, values] of Object.entries(outputs)) {
+        const shape = shapes[kind];
+        if (!shape) {
+          problems.push(`unrecorded: json.${kind} has no recorded shape`);
+          continue;
+        }
+        problems.push(...values.flatMap((value) => shapeProblems(value, shape, `${kind} --json`)));
+      }
+      return [...new Set(problems)].map((problem) => `surface.json: ${problem}`);
     }
   },
   {

@@ -116,7 +116,7 @@ large, so split it.
   real run. *Done when:* a scratch run of each case, accepting a merge, declining one, and
   leaving a local edit, prints messages that match what happened on disk, and every line
   `docs/getting-started.md` quotes appears verbatim in a captured run.
-- [ ] **Step 6 - a changeset** - add `.changeset/update-keeps-its-promises.md` as a minor
+- [x] **Step 6 - a changeset** - add `.changeset/update-keeps-its-promises.md` as a minor
   bump naming the rebuild, removals, the refusal, and the corrected messages. *Done when:*
   the changeset exists, names all four, and `npm test` passes.
 

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { parseArgs } from "./args.js";
+import { GRAMMAR, parseArgs } from "./args.js";
 import type { Options, Parsed } from "./args.js";
 
 const context = { cwd: "/work", isDirectory: (candidate: string) => candidate === "./app" || candidate === "status" };
@@ -91,3 +91,26 @@ test("an option named after an inherited object property is not an adapter", () 
   assert.equal(error(["update", "--__proto__"]), "Unknown option '--__proto__'.");
   assert.equal(error(["install", "--constructor"]), "Unknown option '--constructor'.");
 });
+
+test("GRAMMAR lists the options each command accepts", () => {
+  const writes = ["--help", "-h", "--dry-run", "--force", "--yes", "-y", "--claude", "--codex", "--copilot", "--opencode"];
+  assert.deepEqual(GRAMMAR, {
+    install: writes,
+    update: writes,
+    status: ["--help", "-h", "--json"],
+    doctor: ["--help", "-h", "--json"],
+    dashboard: ["--help", "-h"],
+    help: ["--help", "-h"]
+  });
+});
+
+test("every option GRAMMAR lists is accepted by its command", () => {
+  for (const [command, flags] of Object.entries(GRAMMAR)) {
+    for (const flag of flags) assert.ok(parseArgs([command, flag], context).ok, `${command} ${flag}`);
+  }
+});
+
+test("a repeated adapter option is recorded once, in first-seen order", () => {
+  assert.deepEqual(options(["--codex", "--claude", "--codex", "--claude"]).adapters, ["codex", "claude"]);
+});
+

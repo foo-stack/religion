@@ -32,6 +32,44 @@ export interface ParseContext {
 const COMMANDS: readonly Command[] = ["install", "update", "status", "doctor", "dashboard", "help"];
 const WRITES: ReadonlySet<Command> = new Set(["install", "update"]);
 const REPORTS: ReadonlySet<Command> = new Set(["status", "doctor"]);
+const EVERY: ReadonlySet<Command> = new Set(COMMANDS);
+
+interface Flag {
+  commands: ReadonlySet<Command>;
+  apply: (options: Options) => void;
+}
+
+/** Every option, the commands it applies to, and what it does. Parsing dispatches on this alone. */
+const FLAGS: Readonly<Record<string, Flag>> = {
+  "--help": { commands: EVERY, apply: (options) => void (options.command = "help") },
+  "-h": { commands: EVERY, apply: (options) => void (options.command = "help") },
+  "--dry-run": { commands: WRITES, apply: (options) => void (options.dryRun = true) },
+  "--force": { commands: WRITES, apply: (options) => void (options.force = true) },
+  "--yes": { commands: WRITES, apply: (options) => void (options.yes = true) },
+  "-y": { commands: WRITES, apply: (options) => void (options.yes = true) },
+  "--json": { commands: REPORTS, apply: (options) => void (options.json = true) },
+  ...Object.fromEntries(
+    (Object.keys(ADAPTERS) as Adapter[]).map((adapter): [string, Flag] => [
+      `--${adapter}`,
+      {
+        commands: WRITES,
+        apply: (options) => {
+          const chosen = options.adapters ?? [];
+          if (!chosen.includes(adapter)) options.adapters = [...chosen, adapter];
+        }
+      }
+    ])
+  )
+};
+
+/** The options each command accepts, read from the same table parsing uses. */
+export const GRAMMAR: Readonly<Record<Command, readonly string[]>> = grammar();
+
+function grammar(): Record<Command, readonly string[]> {
+  const table = {} as Record<Command, readonly string[]>;
+  for (const command of COMMANDS) table[command] = Object.keys(FLAGS).filter((flag) => FLAGS[flag]!.commands.has(command));
+  return table;
+}
 
 export function parseArgs(argv: readonly string[], context: ParseContext): Parsed {
   const options: Options = {
@@ -65,23 +103,13 @@ export function parseArgs(argv: readonly string[], context: ParseContext): Parse
     return fail(`Unexpected argument '${extra[0]}'. ${options.command} takes at most one directory.`);
   }
 
-  const adapters: Adapter[] = [];
   for (const flag of argv.filter((arg) => arg.startsWith("-"))) {
-    const scope = flag === "--json" ? REPORTS : WRITES;
-    const adapter = flag.startsWith("--") && Object.hasOwn(ADAPTERS, flag.slice(2)) ? (flag.slice(2) as Adapter) : null;
-    const known = ["--json", "--dry-run", "--force", "--yes", "-y"].includes(flag) || adapter !== null;
-
+    const known = Object.hasOwn(FLAGS, flag) ? FLAGS[flag] : undefined;
     if (!known) return fail(`Unknown option '${flag}'.`);
-    if (!scope.has(options.command)) return fail(`Option '${flag}' does not apply to ${options.command}.`);
-
-    if (adapter) adapters.push(adapter);
-    else if (flag === "--json") options.json = true;
-    else if (flag === "--dry-run") options.dryRun = true;
-    else if (flag === "--force") options.force = true;
-    else options.yes = true;
+    if (!known.commands.has(options.command)) return fail(`Option '${flag}' does not apply to ${options.command}.`);
+    known.apply(options);
   }
 
-  if (adapters.length > 0) options.adapters = adapters;
   return { ok: true, options };
 }
 

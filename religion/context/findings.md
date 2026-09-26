@@ -38,13 +38,13 @@
 **Suggested fix:** Show `[dir]` on those commands and label the install flags as install and update only.
 **Resolution:**
 
-### F-06 [P3] open - Flag dispatch ends in a catch-all branch
+### F-06 [P3] fixed - Flag dispatch ends in a catch-all branch
 
 **File:** packages/create-religion/lib/args.ts:72
 **Found:** 2026-09-26 by audit (scope: current; lens: quality)
 **Why it matters:** The known-flag list and the if/else chain duplicate each other, and the final `else options.yes = true` catches any other known flag, so a flag added to the list without its own branch silently becomes `--yes`.
 **Suggested fix:** Make the last branch explicit, or drive scope and effect from one table.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: options are dispatched from one table of commands and effects (`FLAGS`), so an option cannot be listed without its effect, and `GRAMMAR` is read from the same table. Tested.
 
 ### F-07 [P3] open - Thin coverage across flags and commands
 
@@ -94,13 +94,13 @@
 **Suggested fix:** Filter adapters with `Object.hasOwn(ADAPTERS, name)` when reading.
 **Resolution:**
 
-### F-13 [P3] open - A repeated adapter flag is recorded twice
+### F-13 [P3] fixed - A repeated adapter flag is recorded twice
 
 **File:** packages/create-religion/lib/args.ts:77
 **Found:** 2026-09-26 by audit (scope: current; lens: re-review of F-01)
 **Why it matters:** `install --claude --claude --dry-run --yes` prints "Adapters: Claude Code, Claude Code", and the list reaches `writeManifest` unchanged, so a real install would record the adapter twice. Seen in a dry run; the written manifest was not inspected.
 **Suggested fix:** push only when the adapter is not already in the list.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: an adapter option adds its adapter only when it is not already chosen, keeping first-seen order. Tested.
 
 ### F-20 [P2] open - The exit-code lists omit a declined merge
 

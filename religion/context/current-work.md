@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 4c
-**Status:** not started
+**Status:** in progress
 
 ## Goal
 
@@ -57,7 +57,7 @@ large, so split it.
 
 ## Build steps
 
-- [ ] **Step 1 - the grammar as one table** - `lib/args.ts` exports `GRAMMAR`, the flags each
+- [x] **Step 1 - the grammar as one table** - `lib/args.ts` exports `GRAMMAR`, the flags each
   command accepts, built from a single flag table that `parseArgs` also dispatches on, so a
   flag cannot be listed without its effect (F-06). A repeated adapter flag is recorded once
   (F-13). Behaviour is otherwise unchanged. Add a patch changeset for the duplicate fix.
@@ -126,8 +126,8 @@ large, so split it.
   as sets so order never matters. Anything in the record
   that is missing or narrowed is reported as breaking; anything current that is not in the
   record is reported as unrecorded. Both fail the check.
-- **The shape language**: `"string"`, `"number"`, `"boolean"`, `"null"`; an array of those
-  names is a union; `{ key: shape }` is an object with exactly those keys; `[shape]` is an
+- **The shape language**: `"string"`, `"number"`, `"boolean"`, `"null"`; names joined by
+  `|`, such as `"string|null"`, are a union; `{ key: shape }` is an object with exactly those keys; `[shape]` is an
   array whose every element matches; `{ "*": shape }` is an object with any keys whose
   every value matches.
 - **The fixture is the published tarball, byte for byte.** It is never edited; a new release

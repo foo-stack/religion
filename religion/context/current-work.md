@@ -63,7 +63,7 @@ large, so split it.
   (F-13). Behaviour is otherwise unchanged. Add a patch changeset for the duplicate fix.
   *Done when:* every existing args test passes unchanged, new tests pin `GRAMMAR` for every
   command and a repeated `--claude`, and `npm test` passes.
-- [ ] **Step 2 - comparing a surface with its record** - a pure `compareSurface(record,
+- [x] **Step 2 - comparing a surface with its record** - a pure `compareSurface(record,
   current)` and `shapeProblems(value, shape)` in `scripts/surface.ts`. The comparison names
   each removed or changed entry as breaking and each new one as unrecorded. The shape
   language covers strings, numbers, booleans, null, unions, objects with exactly their

@@ -119,6 +119,22 @@ large, so split it.
 - [x] **Step 6 - a changeset** - add `.changeset/update-keeps-its-promises.md` as a minor
   bump naming the rebuild, removals, the refusal, and the corrected messages. *Done when:*
   the changeset exists, names all four, and `npm test` passes.
+- [x] **Repair F-14, F-16, F-17 - removal confined to Religion's trees and plain paths** -
+  only a recorded path under a skill or hook tree, by exact case, with no backslash, no
+  `..`, and no symbolic link in any component, is ever removed; the path and hash are
+  checked again immediately before deleting; pruning stops at the tree. This also closes
+  F-18, F-19 and F-31, which sit on the same lines. *Done when:* tests reproduce each
+  reported vector (a symlinked parent, `RELIGION/...`, `.git/HEAD`, `package.json`, a
+  backslash key, an edit between planning and applying, a manifest without `managed`) and
+  each is refused, and a scratch run of the symlink vector leaves the outside file intact.
+- [ ] **Repair F-15 - rebuild only a plain, genuinely recorded file, never backing up
+  through a link** - a rebuild needs a well-formed recorded hash and an entry file with no
+  symbolic link in its path, otherwise it is a conflict; any run that would back something
+  up refuses before writing anything when the backup path passes through a link. One
+  backup helper and one exported location replace the five copies (F-23). *Done when:*
+  tests refuse a symlinked entry file, a forged `true` record, and a symlinked backups
+  directory with nothing written, and the two reported scratch vectors leave the outside
+  files intact.
 
 ## Files and areas
 

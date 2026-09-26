@@ -329,39 +329,58 @@ test("planInstall: a file the template dropped is removed when unedited and rele
   assert.ok(await exists(path.join(target, ".claude/skills/retired/SKILL.md")), "planning alone removes nothing");
 });
 
-test("applyInstall: a removal takes its empty directories with it and stops at the project", async (t) => {
+test("applyInstall: a removal takes its empty directories with it and keeps the tree", async (t) => {
+  // The removed file is the only thing in the project, so nothing but the boundary stops the
+  // walk up from reaching the tree or the project itself.
   const { template, target } = await fixture(t);
   await write(template, "CLAUDE.md", ENTRY);
-  await write(target, "CLAUDE.md", ENTRY);
-  await write(target, ".claude/hooks/old.mjs", "hook\n");
-  await write(target, ".claude/skills/edited/SKILL.md", "changed by hand\n");
-  const previous = recording({
-    "CLAUDE.md": hash(ENTRY),
-    ".claude/hooks/old.mjs": hash("hook\n"),
-    ".claude/skills/edited/SKILL.md": hash("as shipped\n")
-  });
+  await write(target, ".claude/skills/retired/nested/SKILL.md", "skill\n");
+  const previous = recording({ ".claude/skills/retired/nested/SKILL.md": hash("skill\n") });
 
   const plan = await planInstall(template, target, ["claude"], previous);
-  const result = await applyInstall(template, target, plan, { force: false });
+  const result = await applyInstall(template, target, plan.filter((p) => p.action === "remove"), { force: false });
 
-  assert.deepEqual(result.removed, [".claude/hooks/old.mjs"]);
-  assert.deepEqual(result.released, [".claude/skills/edited/SKILL.md"]);
-  assert.equal(await exists(path.join(target, ".claude/hooks")), false, "the emptied directory is gone");
-  assert.equal(await exists(path.join(target, ".claude")), true, "a directory with content left is kept");
-  assert.equal(await fs.readFile(path.join(target, ".claude/skills/edited/SKILL.md"), "utf8"), "changed by hand\n");
-  assert.equal(await exists(target), true);
+  assert.deepEqual(result.removed, [".claude/skills/retired/nested/SKILL.md"]);
+  assert.equal(await exists(path.join(target, ".claude/skills/retired")), false, "the emptied directories are gone");
+  assert.equal(await exists(path.join(target, ".claude/skills")), true, "the tree itself is kept");
 });
 
-test("planInstall: a recorded path outside the project or in its state is never acted on", async (t) => {
+test("applyInstall: a file edited between planning and applying is released, not removed", async (t) => {
   const { template, target } = await fixture(t);
-  const outside = path.join(path.dirname(target), "outside.md");
-  await fs.writeFile(outside, "bait\n", "utf8");
+  await write(target, ".claude/skills/retired/SKILL.md", "as shipped\n");
+  const previous = recording({ ".claude/skills/retired/SKILL.md": hash("as shipped\n") });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(plan, ".claude/skills/retired/SKILL.md"), "remove");
+  await write(target, ".claude/skills/retired/SKILL.md", "as shipped\nplus an edit made while a prompt waited\n");
+  const result = await applyInstall(template, target, plan, { force: false });
+
+  assert.deepEqual(result.removed, []);
+  assert.deepEqual(result.released, [".claude/skills/retired/SKILL.md"]);
+  assert.match(await fs.readFile(path.join(target, ".claude/skills/retired/SKILL.md"), "utf8"), /plus an edit/);
+});
+
+test("planInstall: a recorded path outside Religion's trees is never acted on", async (t) => {
+  // Each of these was shown to delete a real file before the guard was tightened.
+  const { template, target } = await fixture(t);
+  const outside = path.join(path.dirname(target), "outside");
+  await write(outside, "evil/sub/SKILL.md", "bait\n");
+  await fs.mkdir(path.join(target, ".claude/skills"), { recursive: true });
+  await fs.symlink(path.join(outside, "evil"), path.join(target, ".claude/skills/evil"));
   await write(target, "religion/context/findings.md", "bait\n");
+  await write(target, ".git/HEAD", "bait\n");
+  await write(target, "package.json", "bait\n");
   const previous = recording({
-    "../outside.md": hash("bait\n"),
-    [outside]: hash("bait\n"),
+    "../outside/evil/sub/SKILL.md": hash("bait\n"),
+    [path.join(outside, "evil/sub/SKILL.md")]: hash("bait\n"),
+    ".claude/skills/evil/sub/SKILL.md": hash("bait\n"),
+    ".claude/skills/../../package.json": hash("bait\n"),
+    ".claude\\skills\\x\\SKILL.md": hash("bait\n"),
     "religion/context/findings.md": hash("bait\n"),
-    ".claude/../../outside.md": hash("bait\n"),
+    "RELIGION/context/findings.md": hash("bait\n"),
+    ".CLAUDE/skills/../../package.json": hash("bait\n"),
+    ".git/HEAD": hash("bait\n"),
+    "package.json": hash("bait\n"),
     ".": hash("bait\n")
   });
 
@@ -370,8 +389,19 @@ test("planInstall: a recorded path outside the project or in its state is never 
 
   assert.deepEqual(plan, []);
   assert.deepEqual(result.removed, []);
-  assert.equal(await fs.readFile(outside, "utf8"), "bait\n");
-  assert.equal(await fs.readFile(path.join(target, "religion/context/findings.md"), "utf8"), "bait\n");
+  assert.equal(await fs.readFile(path.join(outside, "evil/sub/SKILL.md"), "utf8"), "bait\n");
+  for (const kept of ["religion/context/findings.md", ".git/HEAD", "package.json"]) {
+    assert.equal(await fs.readFile(path.join(target, kept), "utf8"), "bait\n", kept);
+  }
+});
+
+test("planInstall: a manifest without a managed record plans no removals", async (t) => {
+  const { template, target } = await fixture(t);
+  await write(template, ".claude/skills/feature/SKILL.md", "skill\n");
+  const broken = { schemaVersion: 1, version: "0.0.0", adapters: ["claude"] } as unknown as Manifest;
+
+  const plan = await planInstall(template, target, ["claude"], broken);
+  assert.deepEqual(plan, [{ relative: ".claude/skills/feature/SKILL.md", action: "create" }]);
 });
 
 test("applyInstall: a declined merge is reported as declined, untouched and not backed up", async (t) => {

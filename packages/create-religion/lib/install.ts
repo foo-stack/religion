@@ -43,6 +43,8 @@ export interface PlanEntry {
     | "rebuild"
     | "remove"
     | "release";
+  /** For a removal, the hash it was planned against, checked again just before deleting. */
+  recorded?: string;
 }
 
 const MANIFEST = path.join(STATE_DIR, ".state", "manifest.json");
@@ -134,30 +136,49 @@ export async function planInstall(
  *
  * Unedited ones are removed, which is what lets a skill or a hook be retired at all. Edited
  * ones are released: left where they are and dropped from the manifest, since the edit makes
- * them the owner's. The manifest is a file in someone's repository, so a recorded path is
- * only acted on when it is a plain file inside the project and outside the state directory.
+ * them the owner's. The manifest is a file in someone's repository, so it must not be able to
+ * steer a deletion: only a plain file under one of Religion's own trees is ever a candidate.
  */
 async function planDropped(templateRoot: string, target: string, previous: Manifest | null): Promise<PlanEntry[]> {
-  if (!previous) return [];
+  const managed = previous?.managed;
+  if (!managed || typeof managed !== "object") return [];
   const shipped = new Set(await walk(templateRoot));
   const plan: PlanEntry[] = [];
 
-  for (const [relative, recorded] of Object.entries(previous.managed)) {
-    if (shipped.has(relative) || !isInsideProject(target, relative)) continue;
-    const stat = await fs.lstat(path.join(target, relative)).catch(() => null);
-    if (!stat?.isFile()) continue;
-
-    const current = await fs.readFile(path.join(target, relative));
-    plan.push({ relative, action: hash(current) === recorded ? "remove" : "release" });
+  for (const [relative, recorded] of Object.entries(managed)) {
+    if (shipped.has(relative) || !retiringTree(relative) || !(await isPlainFile(target, relative))) continue;
+    const current = await fs.readFile(path.join(target, ...relative.split("/")));
+    plan.push({ relative, action: hash(current) === recorded ? "remove" : "release", recorded });
   }
 
   return plan;
 }
 
-function isInsideProject(target: string, relative: string): boolean {
-  if (!relative || path.isAbsolute(relative) || relative.split(/[\\/]/).includes("..")) return false;
-  if (path.normalize(relative) !== relative || !isManaged(relative)) return false;
-  return path.resolve(target, relative).startsWith(path.resolve(target) + path.sep);
+/**
+ * The tree a recorded path can be retired from, or null when it may not be touched.
+ *
+ * Exact case, forward slashes and no climbing, checked as text before the filesystem is
+ * asked anything. A case-insensitive disk would otherwise let `RELIGION/` or `.CLAUDE/`
+ * reach files the comparison was meant to exclude.
+ */
+function retiringTree(relative: string): string | null {
+  if (relative.includes("\\") || path.posix.isAbsolute(relative)) return null;
+  if (path.posix.normalize(relative) !== relative || relative.split("/").includes("..")) return null;
+  const trees = new Set(Object.values(ADAPTERS).flatMap((adapter) => adapter.trees));
+  return [...trees].find((tree) => relative.startsWith(`${tree}/`)) ?? null;
+}
+
+/** Every component a real directory and the last a regular file, with no symbolic link anywhere. */
+async function isPlainFile(target: string, relative: string): Promise<boolean> {
+  const parts = relative.split("/");
+  let current = target;
+  for (const [index, part] of parts.entries()) {
+    current = path.join(current, part);
+    const stat = await fs.lstat(current).catch(() => null);
+    const last = index === parts.length - 1;
+    if (!stat || stat.isSymbolicLink() || (last ? !stat.isFile() : !stat.isDirectory())) return false;
+  }
+  return true;
 }
 
 export async function applyInstall(
@@ -193,8 +214,18 @@ export async function applyInstall(
     }
 
     if (entry.action === "remove") {
-      await fs.rm(path.join(target, entry.relative));
-      await pruneEmptyParents(target, path.dirname(path.join(target, entry.relative)));
+      // Checked again here because a prompt may have waited between planning and now, and a
+      // file edited in that time is the owner's.
+      const tree = retiringTree(entry.relative);
+      const file = path.join(target, ...entry.relative.split("/"));
+      const unchanged =
+        tree !== null && (await isPlainFile(target, entry.relative)) && hash(await fs.readFile(file)) === entry.recorded;
+      if (!unchanged) {
+        released.push(entry.relative);
+        continue;
+      }
+      await fs.rm(file);
+      await pruneEmptyParents(path.join(target, tree), path.dirname(file));
       removed.push(entry.relative);
       continue;
     }
@@ -265,9 +296,9 @@ export async function applyInstall(
   return { written, conflicts, backups, merged, rebuilt, removed, released, declined };
 }
 
-/** Remove directories a removal left empty, walking up and stopping at the project root. */
-async function pruneEmptyParents(target: string, dir: string): Promise<void> {
-  const root = path.resolve(target);
+/** Remove directories a removal left empty, walking up and stopping at the tree it came from. */
+async function pruneEmptyParents(tree: string, dir: string): Promise<void> {
+  const root = path.resolve(tree);
   let current = path.resolve(dir);
   while (current.startsWith(root + path.sep)) {
     try {

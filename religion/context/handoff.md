@@ -5,10 +5,15 @@
 
 ## Where the work sits
 
-**The stability statement** is in progress: 1 step(s) done, 6 to go.
-Next step: Step 2.
+**The stability statement** is in progress: 11 step(s) done, 0 to go.
 
 Plan: 6 of 8 item(s) complete. Next up: 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a breaking change
+
+## Blocking findings
+
+- F-81 [P1] fixed - The network check can be evaded
+
+These prevent completion until repaired and re-reviewed.
 
 ## Read first
 

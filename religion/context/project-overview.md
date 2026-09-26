@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 3d8c124ed3a4cd05 -->
+<!-- religion:source-hash b57748fc132d4329 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -51,9 +51,6 @@ nothing to sign into.
 
 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a
    breaking change
-   - 4c. **Compatibility guards** - checks that fail when the public surface changes by
-     accident: JSON shapes, skill names, flags, config keys, and an upgrade from the last
-     release
    - 4d. **The stability statement** - what is public and what is internal, what a 1.x update
      guarantees, the three promises, an upgrade guide, and the major changeset that makes it 1.0
 

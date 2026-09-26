@@ -14,7 +14,7 @@
 - [ ] 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a breaking change
   - [x] 4a. **A command-line surface fit to freeze** - unknown commands and flags refused, documented exit codes, versioned JSON output, a dashboard that rejects foreign hosts
   - [x] 4b. **Update keeps its promises** - removes files the template dropped, refuses a manifest from a newer version, backs up what it says it backs up, and cannot duplicate an edited entry file
-  - [ ] 4c. **Compatibility guards** - checks that fail when the public surface changes by accident: JSON shapes, skill names, flags, config keys, and an upgrade from the last release
+  - [x] 4c. **Compatibility guards** - checks that fail when the public surface changes by accident: JSON shapes, skill names, flags, config keys, and an upgrade from the last release
   - [ ] 4d. **The stability statement** - what is public and what is internal, what a 1.x update guarantees, the three promises, an upgrade guide, and the major changeset that makes it 1.0
 
 ## Order

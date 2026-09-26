@@ -20,6 +20,7 @@ import { doctorReport, renderDoctor, runDoctor } from "../lib/doctor.js";
 import {
   ADAPTERS,
   applyInstall,
+  manifestRefusal,
   planInstall,
   readManifest,
   wireHooks,
@@ -103,6 +104,14 @@ async function runInstall(options: Options): Promise<void> {
   const target = path.resolve(options.target);
   const updating = options.command === "update";
   const previous = await readManifest(target);
+  const packageVersion = await version();
+
+  const refusal = manifestRefusal(previous, packageVersion);
+  if (refusal) {
+    console.error(refusal);
+    process.exitCode = 1;
+    return;
+  }
 
   if (updating && !previous) {
     console.log("No manifest found. Files matching the template will be adopted; others are conflicts.");
@@ -157,7 +166,7 @@ async function runInstall(options: Options): Promise<void> {
   }
 
   const result = await applyInstall(templateRoot, target, plan, { force: options.force, merge });
-  await writeManifest(target, await version(), adapters, templateRoot, previous, result.conflicts);
+  await writeManifest(target, packageVersion, adapters, templateRoot, previous, result.conflicts);
 
   console.log(`\nWrote ${result.written.length} file(s).`);
   if (result.merged.length > 0) {
@@ -265,7 +274,8 @@ Options
 Exit codes
   0   the command did what it was asked
   1   it ran and reports failure: no project found, a failing doctor check,
-      conflicts left by install or update, or an unexpected error
+      conflicts left by install or update, a project installed by a newer
+      version, or an unexpected error
   2   usage error: nothing was read or written
 `);
 }

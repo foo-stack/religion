@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { applyInstall, hash, planInstall, writeManifest } from "./install.js";
+import { applyInstall, hash, manifestRefusal, planInstall, writeManifest } from "./install.js";
 import type { Manifest, PlanEntry } from "./install.js";
 import { MANAGED_END, MANAGED_START } from "./merge.js";
 
@@ -236,4 +236,31 @@ test("a local edit survives three consecutive updates", async (t) => {
       await fs.readFile(path.join(target, "religion", ".state", "manifest.json"), "utf8")
     ) as Manifest;
   }
+});
+
+function manifest(fields: Partial<Record<keyof Manifest, unknown>>): Manifest {
+  return { schemaVersion: 1, version: "0.5.0", adapters: ["claude"], managed: {}, ...fields } as Manifest;
+}
+
+test("manifestRefusal lets an older, equal or missing manifest through", () => {
+  assert.equal(manifestRefusal(null, "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: "0.5.9" }), "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: "0.6.0" }), "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: "0.10.0" }), "1.0.0"), null);
+});
+
+test("manifestRefusal refuses a manifest written by a newer release", () => {
+  assert.match(manifestRefusal(manifest({ version: "0.6.1" }), "0.6.0") ?? "", /installed by create-religion 0\.6\.1, newer than this 0\.6\.0/);
+  assert.match(manifestRefusal(manifest({ version: "0.10.0" }), "0.9.9") ?? "", /newer than this 0\.9\.9/);
+  assert.match(manifestRefusal(manifest({ version: "2.0.0-beta.1" }), "1.9.0") ?? "", /newer/);
+});
+
+test("manifestRefusal refuses a manifest format it does not understand", () => {
+  assert.match(manifestRefusal(manifest({ schemaVersion: 2 }), "0.6.0") ?? "", /format 2/);
+});
+
+test("manifestRefusal never refuses on a version it cannot parse", () => {
+  assert.equal(manifestRefusal(manifest({ version: "latest" }), "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: undefined }), "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: "9.0.0" }), "dev"), null);
 });

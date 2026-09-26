@@ -238,6 +238,41 @@ export async function wireHooks(target: string): Promise<"written" | "exists" | 
   return "written";
 }
 
+/**
+ * Why this package must not act on a project, or null when it may.
+ *
+ * An older package applying its template over a newer install is a silent downgrade: it
+ * rewrites managed files to older versions and records them as installed. A version that
+ * cannot be parsed never refuses, since a hand-edited manifest is no evidence of a newer one.
+ */
+export function manifestRefusal(manifest: Manifest | null, packageVersion: string): string | null {
+  if (!manifest) return null;
+  const schema = manifest.schemaVersion as number;
+  if (typeof schema === "number" && schema > 1) {
+    return `This project's manifest uses format ${schema}, which create-religion ${packageVersion} does not understand. Run \`npx create-religion@latest update\` instead.`;
+  }
+  if (isNewer(manifest.version, packageVersion)) {
+    return `This project was installed by create-religion ${manifest.version}, newer than this ${packageVersion}. Run \`npx create-religion@latest update\` instead.`;
+  }
+  return null;
+}
+
+function isNewer(candidate: unknown, than: string): boolean {
+  const a = parseVersion(candidate);
+  const b = parseVersion(than);
+  if (!a || !b) return false;
+  for (let i = 0; i < 3; i += 1) {
+    if (a[i]! !== b[i]!) return a[i]! > b[i]!;
+  }
+  return false;
+}
+
+function parseVersion(version: unknown): number[] | null {
+  if (typeof version !== "string") return null;
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-.*)?$/.exec(version.trim());
+  return match ? match.slice(1, 4).map(Number) : null;
+}
+
 export async function readManifest(target: string): Promise<Manifest | null> {
   try {
     return JSON.parse(await fs.readFile(path.join(target, MANIFEST), "utf8")) as Manifest;

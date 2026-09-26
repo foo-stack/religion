@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 4b
-**Status:** not started
+**Status:** in progress
 
 ## Goal
 
@@ -74,7 +74,7 @@ large, so split it.
 
 ## Build steps
 
-- [ ] **Step 1 - refuse a manifest from a newer version** - a pure `manifestRefusal(manifest,
+- [x] **Step 1 - refuse a manifest from a newer version** - a pure `manifestRefusal(manifest,
   packageVersion)` in `lib/install.ts` returns a message when the manifest's `schemaVersion`
   is above 1 or its `version` is a newer release than the package, and nothing otherwise.
   `runInstall` checks it before planning and, on a refusal, prints it to stderr and exits 1

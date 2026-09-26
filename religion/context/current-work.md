@@ -99,7 +99,7 @@ large, so split it.
   from `README.md` and the package readme; add decision entries for the settled promises,
   the Node policy, and the retired shell-command hook, which never got one. *Done when:*
   every file under `docs/` is in the index and every new relative link resolves.
-- [ ] **Step 7 - the major changeset** - add `.changeset/one-point-zero.md` as a major bump
+- [x] **Step 7 - the major changeset** - add `.changeset/one-point-zero.md` as a major bump
   naming the stability statement and every breaking change since 0.5.0: Node 22, refused
   input and exit codes, the `doctor --json` shape, and conflicts and declined merges
   exiting 1. *Done when:* the changeset exists, names each, and `npm test` passes.

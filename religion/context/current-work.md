@@ -65,7 +65,7 @@ large, so split it.
   the range to the surface record, derived from the package's `engines` by the surface
   check. *Done when:* `npm test` passes when run on Node 22.18 and on Node 24, and changing
   `engines` fails the surface check, shown by a temporary edit.
-- [ ] **Step 2 - the statement** - write `docs/stability.md` from `surface.json`: what is
+- [x] **Step 2 - the statement** - write `docs/stability.md` from `surface.json`: what is
   public (commands, options and exit codes, the JSON shapes, skill names and how they are
   invoked, adapters and the paths they install, settings and their values, where state
   lives and who owns it, the Node range), what is internal (skill wording and steps, the

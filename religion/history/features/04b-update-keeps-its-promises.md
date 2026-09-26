@@ -370,3 +370,18 @@ files for unrendered tokens.
 **Why it matters:** With a shipped skill file linked to `/dev/zero`, `update` read forever and had to be killed after 150 seconds. Related to F-33.
 **Suggested fix:** Skip anything that is not a plain file before reading it.
 **Resolution:** Repaired 2026-09-26: a linked file is classed as `linked` before it is read, so a link to `/dev/zero` exits 1 at once instead of hanging. Re-reviewed 2026-09-26 in a fresh-context adversarial pass enumerating every write, copy, mkdir, rm and rmdir in `lib/install.ts` and `bin/religion.ts` on a case-insensitive APFS scratch disk: a skill linked to `/dev/zero` exits 1 in about a second. Closed.
+
+## Landed
+
+**Base:** d32eaf9d86e7974df2a88467d92aa3129dd77434
+**Commits:** 912b6f8bbbae6b90b9471296751579b0a366aa4d, 40a91e327c75a404ff574775bf62061f9415a541, 28efab1092026ab268676979f91f1b1c647f7ca1, e010fd98628093c1f8cc97af5d3020cb81021945, 52af5a3571118f4611c08caa8ad647743e584c64, f6e99735fc409c6bd5f9e3405797202d54e73b9e, cc640a6eacd30bfa84e320fbab874587f327f862, cb6b083df08ca721b85f8d8b4e3c71b9c8d7fddd, f6544939c709fc122c907a40045d70c9b266f8af, 700a63a4422170dead95e0e334b4d2e8de691926, 1b3f215e94d57714b648d3320f80dab9503b6571, 284c9f6a80ade49e5db8e8bd94d37f926dd14e9f, d485a0628fe82e63480f4942160ed719ce9cb9d6, 1e45f24ec64a51f65231c78243c21d9b29ecd0f2
+**Product paths:** packages/create-religion/lib/install.ts, packages/create-religion/lib/install.test.ts,
+packages/create-religion/lib/merge.ts, packages/create-religion/lib/merge.test.ts,
+packages/create-religion/bin/religion.ts, packages/create-religion/README.md,
+docs/getting-started.md
+
+The base is the tip of the command-line work, which this item was built on before that work
+reached the default branch. The changeset at `.changeset/update-keeps-its-promises.md`
+travels with this item and is consumed by the next release rather than being part of what
+it delivers.
+

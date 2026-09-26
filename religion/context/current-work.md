@@ -98,6 +98,9 @@ large, so split it.
   refused input, the new exit code for conflicts, the `doctor --json` shape change, and the
   dashboard check, so anyone scripting against 0.5 knows what moved. *Done when:* the
   changeset exists, names all four, and `npm test` passes.
+- [x] **Repair F-01 - adapter flags match inherited object properties** - check adapter
+  names with `Object.hasOwn` rather than `in`. *Done when:* `--toString` and `--__proto__`
+  are refused as unknown options by a test and by a real run exiting 2.
 
 ## Files and areas
 

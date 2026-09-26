@@ -85,3 +85,9 @@ test("an unknown option is refused", () => {
   assert.equal(error(["status", "--json=true"]), "Unknown option '--json=true'.");
   assert.equal(error(["-yf"]), "Unknown option '-yf'.");
 });
+
+test("an option named after an inherited object property is not an adapter", () => {
+  assert.equal(error(["--toString"]), "Unknown option '--toString'.");
+  assert.equal(error(["update", "--__proto__"]), "Unknown option '--__proto__'.");
+  assert.equal(error(["install", "--constructor"]), "Unknown option '--constructor'.");
+});

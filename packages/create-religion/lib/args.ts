@@ -68,7 +68,7 @@ export function parseArgs(argv: readonly string[], context: ParseContext): Parse
   const adapters: Adapter[] = [];
   for (const flag of argv.filter((arg) => arg.startsWith("-"))) {
     const scope = flag === "--json" ? REPORTS : WRITES;
-    const adapter = flag.startsWith("--") && flag.slice(2) in ADAPTERS ? (flag.slice(2) as Adapter) : null;
+    const adapter = flag.startsWith("--") && Object.hasOwn(ADAPTERS, flag.slice(2)) ? (flag.slice(2) as Adapter) : null;
     const known = ["--json", "--dry-run", "--force", "--yes", "-y"].includes(flag) || adapter !== null;
 
     if (!known) return fail(`Unknown option '${flag}'.`);

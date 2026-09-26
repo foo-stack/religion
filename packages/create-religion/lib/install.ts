@@ -49,6 +49,9 @@ export interface PlanEntry {
 
 const MANIFEST = path.join(STATE_DIR, ".state", "manifest.json");
 
+/** Where originals are copied before install or update changes them, relative to the project. */
+export const BACKUPS = `${STATE_DIR}/.state/backups`;
+
 export function hash(contents: Buffer | string): string {
   return crypto.createHash("sha256").update(contents).digest("hex").slice(0, 16);
 }
@@ -119,7 +122,7 @@ export async function planInstall(
         : hasDamagedMarkers(text)
           ? "conflict"
           : recorded
-            ? "rebuild"
+            ? await rebuildOrConflict(target, relative, recorded)
             : "merge";
       plan.push({ relative, action });
       continue;
@@ -205,6 +208,8 @@ export async function applyInstall(
   const released: string[] = [];
   const declined: string[] = [];
 
+  await refuseLinkedBackups(target, plan, options);
+
   for (const entry of plan) {
     if (entry.action === "unchanged" || entry.action === "seed-skip") continue;
 
@@ -243,9 +248,7 @@ export async function applyInstall(
       const current = await fs.readFile(destination, "utf8");
 
       if (entry.action === "merge") {
-        const backup = path.join(target, STATE_DIR, ".state", "backups", entry.relative);
-        await fs.mkdir(path.dirname(backup), { recursive: true });
-        await fs.copyFile(destination, backup);
+        await backUp(target, entry.relative);
         backups.push(entry.relative);
       }
 
@@ -268,12 +271,15 @@ export async function applyInstall(
     }
 
     if (entry.action === "rebuild") {
+      // A prompt may have waited since planning; a link swapped in meanwhile is not rewritten.
+      if (!(await isPlainFile(target, entry.relative))) {
+        conflicts.push(entry.relative);
+        continue;
+      }
       const destination = path.join(target, entry.relative);
       const template = await fs.readFile(path.join(templateRoot, entry.relative), "utf8");
       const current = await fs.readFile(destination, "utf8");
-      const backup = path.join(target, STATE_DIR, ".state", "backups", entry.relative);
-      await fs.mkdir(path.dirname(backup), { recursive: true });
-      await fs.copyFile(destination, backup);
+      await backUp(target, entry.relative);
       backups.push(entry.relative);
       await fs.writeFile(destination, rebuildEntry(current, template), "utf8");
       rebuilt.push(entry.relative);
@@ -282,9 +288,7 @@ export async function applyInstall(
 
     const destination = path.join(target, entry.relative);
     if (entry.action === "conflict") {
-      const backup = path.join(target, STATE_DIR, ".state", "backups", entry.relative);
-      await fs.mkdir(path.dirname(backup), { recursive: true });
-      await fs.copyFile(destination, backup);
+      await backUp(target, entry.relative);
       backups.push(entry.relative);
     }
 
@@ -294,6 +298,57 @@ export async function applyInstall(
   }
 
   return { written, conflicts, backups, merged, rebuilt, removed, released, declined };
+}
+
+/**
+ * Rebuild only a file the manifest genuinely recorded, and only a plain one.
+ *
+ * A rebuild rewrites without asking, so it must not be reachable by a forged manifest value
+ * standing in for a hash, or by an entry file that is a link to somewhere else. Either is a
+ * conflict instead, which leaves the file alone and says so.
+ */
+async function rebuildOrConflict(target: string, relative: string, recorded: unknown): Promise<"rebuild" | "conflict"> {
+  const genuine = typeof recorded === "string" && /^[0-9a-f]{16}$/.test(recorded);
+  return genuine && (await isPlainFile(target, relative)) ? "rebuild" : "conflict";
+}
+
+async function backUp(target: string, relative: string): Promise<void> {
+  const backup = path.join(target, ...`${BACKUPS}/${relative}`.split("/"));
+  await fs.mkdir(path.dirname(backup), { recursive: true });
+  await fs.copyFile(path.join(target, relative), backup);
+}
+
+/**
+ * Refuse, before anything is written, a run that would back up through a symbolic link.
+ *
+ * The state directory is part of someone's repository, and a link at any point on the way
+ * to a backup would put a copy of their file wherever the link points.
+ */
+async function refuseLinkedBackups(
+  target: string,
+  plan: readonly PlanEntry[],
+  options: { force: boolean; merge?: boolean }
+): Promise<void> {
+  const backedUp = plan.filter(
+    (entry) =>
+      entry.action === "rebuild" ||
+      (entry.action === "merge" && options.merge) ||
+      (entry.action === "conflict" && options.force)
+  );
+
+  for (const entry of backedUp) {
+    let current = target;
+    for (const part of `${BACKUPS}/${entry.relative}`.split("/")) {
+      current = path.join(current, part);
+      const stat = await fs.lstat(current).catch(() => null);
+      if (!stat) break;
+      if (stat.isSymbolicLink()) {
+        throw new Error(
+          `Refusing to back up through a symbolic link at ${path.relative(target, current)}. Make it a real directory and run again.`
+        );
+      }
+    }
+  }
 }
 
 /** Remove directories a removal left empty, walking up and stopping at the tree it came from. */

@@ -110,13 +110,13 @@
 **Suggested fix:** Refuse any recorded path with a symlink in any component, and re-check before deleting.
 **Resolution:** Repaired 2026-09-26: a removal candidate must be a plain file with no symbolic link in any component (`isPlainFile`), and pruning stops at the tree. The symlinked-parent vector is refused by a test and by a CLI run that left the outside file intact. Awaiting re-review.
 
-### F-15 [P0] open - A rebuild writes through symlinks, and a forged record skips the merge prompt
+### F-15 [P0] fixed - A rebuild writes through symlinks, and a forged record skips the merge prompt
 
 **File:** packages/create-religion/lib/install.ts:119
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** Any truthy manifest value for `CLAUDE.md` turns the consented `merge` into an unprompted `rebuild`, whose write follows a symlinked entry file and whose backup follows a symlinked `religion/.state/backups`. Reproduced non-interactively: a file outside the project was rewritten, and a file under a fake home `.claude/` was overwritten with attacker text.
 **Suggested fix:** Rebuild only for a well-formed recorded hash and a plain file, and refuse to back up through a symlinked directory before writing anything.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: a rebuild needs a 16-hex-digit recorded hash and an entry file with no symbolic link in its path (`rebuildOrConflict`), re-checked at apply; otherwise it is a conflict. Any run that would back something up refuses before writing anything when the path to the backup passes through a link (`refuseLinkedBackups`). Both reported vectors refused by tests and by CLI runs that left the outside files intact. Awaiting re-review.
 
 ### F-16 [P1] fixed - A case variant of the state directory passes the removal guard
 
@@ -174,13 +174,13 @@
 **Suggested fix:** Describe the rebuild and removal in the readme and scope the doctor sentence.
 **Resolution:**
 
-### F-23 [P2] open - The backup location is spelled out five times
+### F-23 [P2] fixed - The backup location is spelled out five times
 
 **File:** packages/create-religion/lib/install.ts:215
 **Found:** 2026-09-26 by audit (scope: current; lens: quality)
 **Why it matters:** Three identical backup blocks in `applyInstall` and two in the CLI's messages must all agree for "says where" to stay true.
 **Suggested fix:** One exported constant and one backup helper.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: one exported `BACKUPS` location and one `backUp` helper replace the three blocks and the CLI's two copies.
 
 ### F-24 [P2] open - The test that pruning stops at the project cannot fail
 

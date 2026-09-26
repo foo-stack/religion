@@ -418,3 +418,43 @@ test("applyInstall: a declined merge is reported as declined, untouched and not 
   assert.equal(await fs.readFile(path.join(target, "CLAUDE.md"), "utf8"), "# Acme\n\nmy own instructions\n");
 });
 
+test("planInstall: an entry file that is a link, or recorded by a forged value, is a conflict, not a rebuild", async (t) => {
+  const { template, target } = await fixture(t);
+  const outside = path.join(path.dirname(target), "outside-claude.md");
+  await fs.writeFile(outside, "# Theirs\n\n## Workflow\n\nmine\n", "utf8");
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(template, "AGENTS.md", ENTRY);
+  await fs.symlink(outside, path.join(target, "CLAUDE.md"));
+  await write(target, "AGENTS.md", "# Theirs\n\nmine\n");
+  const forged = { schemaVersion: 1, version: "0.0.0", adapters: ["claude", "codex"], managed: { "CLAUDE.md": hash(ENTRY), "AGENTS.md": true } };
+
+  const plan = await planInstall(template, target, ["claude", "codex"], forged as unknown as Manifest);
+  const result = await applyInstall(template, target, plan, { force: false });
+
+  assert.equal(actionFor(plan, "CLAUDE.md"), "conflict");
+  assert.equal(actionFor(plan, "AGENTS.md"), "conflict");
+  assert.deepEqual(result.rebuilt, []);
+  assert.equal(await fs.readFile(outside, "utf8"), "# Theirs\n\n## Workflow\n\nmine\n");
+});
+
+test("applyInstall: a run that would back up through a link refuses before writing anything", async (t) => {
+  const { template, target } = await fixture(t);
+  const elsewhere = path.join(path.dirname(target), "elsewhere");
+  await fs.mkdir(elsewhere, { recursive: true });
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(template, ".claude/skills/feature/SKILL.md", "skill\n");
+  const edited = ENTRY.replace("<command>", "make dev");
+  await write(target, "CLAUDE.md", edited);
+  await fs.mkdir(path.join(target, "religion/.state"), { recursive: true });
+  await fs.symlink(elsewhere, path.join(target, "religion/.state/backups"));
+  const previous = recording({ "CLAUDE.md": hash(ENTRY) });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(plan, "CLAUDE.md"), "rebuild");
+  await assert.rejects(applyInstall(template, target, plan, { force: false }), /symbolic link at religion\/\.state\/backups/);
+
+  assert.equal(await fs.readFile(path.join(target, "CLAUDE.md"), "utf8"), edited);
+  assert.equal(await exists(path.join(target, ".claude/skills/feature/SKILL.md")), false, "nothing else was written first");
+  assert.deepEqual(await fs.readdir(elsewhere), []);
+});
+

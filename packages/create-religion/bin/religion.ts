@@ -20,6 +20,7 @@ import { doctorReport, renderDoctor, runDoctor } from "../lib/doctor.js";
 import {
   ADAPTERS,
   applyInstall,
+  BACKUPS,
   manifestRefusal,
   planInstall,
   readManifest,
@@ -182,7 +183,7 @@ async function runInstall(options: Options): Promise<void> {
   if (result.rebuilt.length > 0) {
     console.log(
       `Rebuilt ${result.rebuilt.length} entry file(s) around the sections you wrote. The originals are in ` +
-        `${path.join(STATE_DIR, ".state", "backups")}.`
+        `${BACKUPS}.`
     );
   }
   if (result.removed.length > 0) console.log(`Removed ${result.removed.length} file(s) this version no longer ships.`);
@@ -190,7 +191,7 @@ async function runInstall(options: Options): Promise<void> {
     console.log(`Left ${result.released.length} file(s) this version no longer ships, because you edited them. They are yours now.`);
   }
   if (result.backups.length > 0) {
-    console.log(`Backed up ${result.backups.length} file(s) to ${path.join(STATE_DIR, ".state", "backups")} before changing them.`);
+    console.log(`Backed up ${result.backups.length} file(s) to ${BACKUPS} before changing them.`);
   }
   if (result.declined.length > 0) {
     process.exitCode = 1;

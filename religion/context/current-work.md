@@ -127,7 +127,7 @@ large, so split it.
   reported vector (a symlinked parent, `RELIGION/...`, `.git/HEAD`, `package.json`, a
   backslash key, an edit between planning and applying, a manifest without `managed`) and
   each is refused, and a scratch run of the symlink vector leaves the outside file intact.
-- [ ] **Repair F-15 - rebuild only a plain, genuinely recorded file, never backing up
+- [x] **Repair F-15 - rebuild only a plain, genuinely recorded file, never backing up
   through a link** - a rebuild needs a well-formed recorded hash and an entry file with no
   symbolic link in its path, otherwise it is a conflict; any run that would back something
   up refuses before writing anything when the backup path passes through a link. One

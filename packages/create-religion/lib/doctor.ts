@@ -167,6 +167,17 @@ function invalidSettings(config: unknown): string[] {
   return problems;
 }
 
+/** The `doctor --json` shape, versioned so it can gain fields without breaking readers. */
+export interface DoctorReport {
+  schemaVersion: 1;
+  healthy: boolean;
+  checks: CheckResult[];
+}
+
+export function doctorReport(checks: readonly CheckResult[]): DoctorReport {
+  return { schemaVersion: 1, healthy: checks.every((check) => check.ok), checks: [...checks] };
+}
+
 export function renderDoctor(results: readonly CheckResult[]): string {
   const failures = results.filter((r) => !r.ok);
   const order = { work: 0, completion: 1, nothing: 2 } as const;

@@ -79,7 +79,7 @@ large, so split it.
   `update` with a locally edited managed file, 1 from `status` outside any project, 1 from
   `doctor` with a failing check, 2 from a usage error; and the help text and readme list the
   same three codes with the same meanings.
-- [ ] **Step 3 - a versioned doctor report** - `doctor --json` prints
+- [x] **Step 3 - a versioned doctor report** - `doctor --json` prints
   `{ schemaVersion: 1, healthy, checks }` instead of a bare array, built by a pure function
   in `lib/doctor.ts` with a test beside it. Check `src/skills/doctor/SKILL.md` and
   `docs/doctor.md` for anything describing the old shape and correct it through the source,

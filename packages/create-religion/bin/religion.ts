@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "../lib/args.js";
 import type { Options } from "../lib/args.js";
 import { startDashboard } from "../lib/dashboard.js";
-import { renderDoctor, runDoctor } from "../lib/doctor.js";
+import { doctorReport, renderDoctor, runDoctor } from "../lib/doctor.js";
 import {
   ADAPTERS,
   applyInstall,
@@ -85,9 +85,9 @@ async function main(argv: readonly string[]): Promise<void> {
   }
 
   if (options.command === "doctor") {
-    const results = await runDoctor(root);
-    console.log(options.json ? JSON.stringify(results, null, 2) : renderDoctor(results));
-    if (results.some((r) => !r.ok)) process.exitCode = 1;
+    const report = doctorReport(await runDoctor(root));
+    console.log(options.json ? JSON.stringify(report, null, 2) : renderDoctor(report.checks));
+    if (!report.healthy) process.exitCode = 1;
     return;
   }
 

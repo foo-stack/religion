@@ -120,6 +120,17 @@ large, so split it.
   the guide, the changesets, the decision log and the overview, listing the settings
   template and a retired hook's wiring (F-84) as known limitations. *Done when:* each
   corrected sentence is checked against the code or a run.
+- [x] **Repair F-81 - a network check that reads code, not text** - rebuild the check on the
+  TypeScript parser, so comments and strings are never mistaken for code: module specifiers,
+  run-time loads, forbidden globals, dangerous members, and `process` and the dashboard's
+  `http` are judged on the syntax tree; the dashboard page's script is parsed too and may make
+  only its one request, and its HTML may load nothing; every dashboard response goes through
+  one helper that sends one exact security policy; `src/hooks` may hold only scanned file
+  types, and every settings-template command must run one of them. Fix the broken sentence
+  in the statement (F-95) and say what the check does and does not prove; the rewrite also
+  removes the false positives (F-96). *Done when:* every evasion and accidental change
+  reported so far fails the check, every reported false positive passes it, a test shows
+  every dashboard response carries the exact policy, and the unmodified code passes.
 
 ## Files and areas
 

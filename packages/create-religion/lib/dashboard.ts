@@ -49,28 +49,31 @@ export function isOwnHost(host: string | undefined, port: number): boolean {
   return name === `127.0.0.1:${port}` || name === `localhost:${port}`;
 }
 
+/** What every response allows a browser to load: inline script and style, and its own server. */
+export const CONTENT_SECURITY_POLICY =
+  "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'";
+
 async function handle(root: string, port: number, request: http.IncomingMessage, response: http.ServerResponse) {
   if (!isOwnHost(request.headers.host, port)) {
-    response.writeHead(403, { "content-type": "text/plain; charset=utf-8" });
-    response.end("Forbidden: this dashboard only answers requests addressed to itself.");
+    send(response, 403, "text/plain; charset=utf-8", "Forbidden: this dashboard only answers requests addressed to itself.");
     return;
   }
 
   if (request.url === "/state.json") {
     const state = await readProjectState(root);
     const activity = await readActivity(root);
-    response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ status: computeStatus(state), plan: state.plan, findings: state.findings, activity }));
+    const body = JSON.stringify({ status: computeStatus(state), plan: state.plan, findings: state.findings, activity });
+    send(response, 200, "application/json", body);
     return;
   }
 
-  // The page may reach its own server and nothing else, whatever it is made to contain.
-  response.writeHead(200, {
-    "content-type": "text/html; charset=utf-8",
-    "content-security-policy":
-      "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'"
-  });
-  response.end(PAGE);
+  send(response, 200, "text/html; charset=utf-8", PAGE);
+}
+
+/** The only way this server answers, so no response can leave out the policy. */
+function send(response: http.ServerResponse, status: number, type: string, body: string): void {
+  response.writeHead(status, { "content-type": type, "content-security-policy": CONTENT_SECURITY_POLICY });
+  response.end(body);
 }
 
 async function readActivity(root: string): Promise<unknown> {

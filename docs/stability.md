@@ -175,16 +175,23 @@ addressed to it. Reversing any of that is a major release. What an agent does wh
 following a skill is governed by the authority tiers in your entry file, not by this
 promise.
 
-**Held by:** the check "shipped code opens no network connection", which allows shipped code
-only a fixed set of modules, the dashboard only its own server, and `process` only the members
-the tool uses, and refuses the known ways around those lists. It reads source text, so it
-catches a change that reaches for the network by accident, not code written to hide it; that
-is left to review of every change to shipped code. the install tests that a
-path reached through a symbolic link, dangling or not, is never written, and that a
-recorded path outside Religion's own trees is never removed; the hook test that the handoff
-is never written through a link, in `scripts/hooks.test.ts`; and the dashboard test that
-starts it and checks its loopback address, its refusal of a foreign host, and the policy
-that confines its page to its own server.
+**Held by:**
+
+- the check "shipped code opens no network connection", which parses every shipped file and
+  hook as TypeScript does and allows imports only from a fixed list; refuses any other module
+  load and the globals and members that reach the network or the module loader; allows
+  `process` only the members the tool uses; lets the dashboard use `node:http` only to serve,
+  its page make only its one request for its own data, and its responses carry only one
+  exact content security policy; and lets the hook settings run only the shipped hooks
+- the install tests that a path reached through a symbolic link, dangling or not, is never
+  written, and that a recorded path outside Religion's own trees is never removed
+- the hook test in `scripts/hooks.test.ts` that the handoff is never written through a link
+- the dashboard test that starts it and checks its loopback address, its refusal of a
+  foreign host, and the policy on every response
+
+The check reads code rather than running it, so it catches a change that reaches for the
+network by accident. Code written deliberately to hide a connection is a matter for the
+review every change to shipped code goes through.
 
 **The four adapters stay.** See [Adapters](#adapters).
 

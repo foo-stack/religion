@@ -6,7 +6,7 @@ import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 
-import { isOwnHost, startDashboard } from "./dashboard.js";
+import { CONTENT_SECURITY_POLICY, isOwnHost, startDashboard } from "./dashboard.js";
 
 test("isOwnHost accepts the loopback address and localhost on its own port", () => {
   assert.equal(isOwnHost("127.0.0.1:4321", 4321), true);
@@ -40,7 +40,7 @@ function get(url: string, host: string): Promise<{ status: number; headers: http
   });
 }
 
-test("the dashboard binds loopback, refuses a foreign host, and confines its page", async (t) => {
+test("the dashboard binds loopback, refuses a foreign host, and confines every response", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-dashboard-"));
   const dashboard = await startDashboard(root);
   t.after(async () => {
@@ -50,11 +50,18 @@ test("the dashboard binds loopback, refuses a foreign host, and confines its pag
   const own = new URL(dashboard.url).host;
 
   assert.equal(dashboard.address, "127.0.0.1");
-  assert.equal((await get(`${dashboard.url}/state.json`, "evil.example")).status, 403);
-  assert.equal((await get(`${dashboard.url}/state.json`, own)).status, 200);
-
+  const refused = await get(`${dashboard.url}/state.json`, "evil.example");
+  const data = await get(`${dashboard.url}/state.json`, own);
   const page = await get(`${dashboard.url}/`, own);
-  assert.equal(page.status, 200);
-  assert.match(String(page.headers["content-security-policy"]), /default-src 'none'.*connect-src 'self'/);
+  const other = await get(`${dashboard.url}/anything-else`, own);
+  assert.deepEqual([refused.status, data.status, page.status, other.status], [403, 200, 200, 200]);
+
+  assert.equal(
+    CONTENT_SECURITY_POLICY,
+    "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'"
+  );
+  for (const response of [refused, data, page, other]) {
+    assert.equal(response.headers["content-security-policy"], CONTENT_SECURITY_POLICY, "every response carries the exact policy");
+  }
 });
 

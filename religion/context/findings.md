@@ -470,13 +470,13 @@
 **Suggested fix:** Leave the handoff unwritten when any component of its path is a link, and test it.
 **Resolution:** Repaired 2026-09-26: the hook leaves the handoff unwritten when `religion`, `religion/context` or `handoff.md` is a link; `scripts/hooks.test.ts` runs the real hook against each and the outside target stays intact, and two of its three tests fail against the unguarded hook. Awaiting re-review.
 
-### F-81 [P1] open - The network check can be evaded
+### F-81 [P1] fixed - The network check can be evaded
 
 **File:** scripts/promises.ts:45
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** It denies a list of spellings over part of what ships, so a computed dynamic import, `createRequire`, `child_process` running curl, a stored `fetch`, `process.binding`, a worker, `http["request"]`, a protocol-relative `fetch("//evil.example")` in the dashboard page, an `<img>` pixel, a subdirectory under `lib/`, or a `.cjs` hook all passed it. The shipped code is clean today, but the check cannot catch a regression, and the statement cites it.
 **Suggested fix:** Allow only a fixed set of imports per file, reject non-literal imports and the escape hatches, walk every shipped extension recursively, and give the dashboard page a content security policy.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: the check is now an allowlist of seven module names, with `node:http` for the dashboard alone; it strips block comments, refuses any Node module named anywhere outside the list, any computed or unlisted run-time load, and `fetch`, `WebSocket`, `EventSource`, `XMLHttpRequest`, `sendBeacon`, `createRequire`, workers, `eval`, `Function`, `globalThis` and other global lookups, and the native bindings; it walks every code extension recursively; the dashboard may use only its server and must send a content security policy confining the page to its own server, and its page's only allowed request is its own data. Twenty-two evasions, including every one reported, each failed it in a scratch copy, and the unmodified code passes. Awaiting re-review.
 
 ### F-82 [P1] open - The update guide says a new hook reaches the settings template, which update never refreshes
 
@@ -518,13 +518,13 @@
 **Suggested fix:** Say exactly what is recorded, and widen the known limitation.
 **Resolution:**
 
-### F-87 [P2] open - Nothing tests that the dashboard binds loopback or refuses a foreign host end to end
+### F-87 [P2] fixed - Nothing tests that the dashboard binds loopback or refuses a foreign host end to end
 
 **File:** packages/create-religion/lib/dashboard.ts:27
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** Only the pure host check is tested; binding every interface and skipping the check both passed the suite, though the statement cites the dashboard's tests.
 **Suggested fix:** Start the dashboard in a test and assert its address and a foreign host's 403.
-**Resolution:**
+**Resolution:** Repaired 2026-09-26: a test starts the real dashboard and asserts it is bound to 127.0.0.1, answers a foreign host with 403, serves its own host, and sends the page's content security policy.
 
 ### F-88 [P3] open - Smaller inaccuracies in the statement and its companions
 

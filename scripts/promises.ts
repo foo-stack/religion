@@ -39,44 +39,90 @@ export async function statementProblems(): Promise<string[]> {
   return entries.filter(([, name]) => !named(name)).map(([kind, name]) => `docs/stability.md does not name the ${kind} ${name}`);
 }
 
-const NETWORK_MODULES = ["net", "http", "https", "http2", "tls", "dgram", "dns", "undici"];
+/** Every module shipped code may import. Anything else fails, which is what makes this an allowlist. */
+const ALLOWED_IMPORTS = new Set([
+  "node:fs",
+  "node:fs/promises",
+  "node:path",
+  "node:url",
+  "node:crypto",
+  "node:readline/promises"
+]);
+const DASHBOARD = "packages/create-religion/lib/dashboard.ts";
+/** The only request any shipped code makes: the dashboard page asking its own server for its data. */
+const OWN_REQUEST = 'fetch("/state.json")';
+const ESCAPES =
+  /\b(fetch|WebSocket|EventSource|XMLHttpRequest|sendBeacon|importScripts|createRequire|Worker|eval|Function|globalThis)\b|\b(global|window|self)\s*[.[]|\.\s*(binding|dlopen)\b|["'](binding|dlopen)["']/g;
 
 /**
- * No shipped module imports anything that can open a connection, or calls `fetch`.
+ * No shipped module can open a network connection.
  *
- * The one exception is the dashboard, which serves on loopback: it may import `node:http` to
- * create its server, never to make a request, and its page may fetch its own relative path.
+ * An allowlist rather than a list of spellings to refuse: each shipped file may import only
+ * the modules above, the dashboard alone may add `node:http` to serve on loopback, an import
+ * whose name is computed is refused outright, and the ways around an import, from a stored
+ * `fetch` to a worker, are refused by name. The dashboard page's one request for its own data
+ * is the single exception, and the page must carry a policy that lets it reach nothing else.
  */
 export async function networkProblems(): Promise<string[]> {
-  const files = [
-    ...(await sources(path.join(repoRoot, "packages", "create-religion", "bin"))),
-    ...(await sources(path.join(repoRoot, "packages", "create-religion", "lib"))),
-    ...(await sources(path.join(repoRoot, "src", "hooks")))
+  const roots = [
+    path.join(repoRoot, "packages", "create-religion", "bin"),
+    path.join(repoRoot, "packages", "create-religion", "lib"),
+    path.join(repoRoot, "src", "hooks")
   ];
-  const modules = NETWORK_MODULES.join("|");
-  const imports = new RegExp(`(?:from|import|require)\\s*\\(?\\s*["'](?:node:)?(${modules})(?:/[^"']*)?["']`, "g");
+  const files = (await Promise.all(roots.map(sources))).flat();
 
   const problems: string[] = [];
   for (const file of files) {
     const relative = path.relative(repoRoot, file);
-    const text = await fs.readFile(file, "utf8");
-    const server = relative === "packages/create-religion/lib/dashboard.ts";
+    const dashboard = relative === DASHBOARD;
+    // Block comments go first, so one cannot sit between an import and its name unseen.
+    let text = (await fs.readFile(file, "utf8")).replace(/\/\*[\s\S]*?\*\//g, " ");
+    if (dashboard) text = text.split(OWN_REQUEST).join("");
 
-    for (const match of text.matchAll(imports)) {
-      if (!(server && match[1] === "http")) problems.push(`${relative} imports ${match[1]}, which can open a connection`);
+    // Any Node module named anywhere, in any syntax, must be one shipped code may use.
+    for (const match of text.matchAll(/["'](node:[^"']+)["']/g)) {
+      const name = match[1]!;
+      if (!ALLOWED_IMPORTS.has(name) && !(dashboard && name === "node:http")) {
+        problems.push(`${relative} names ${name}, which is not on the list shipped code may use`);
+      }
     }
-    if (server && /\bhttp\.(request|get)\s*\(/.test(text)) problems.push(`${relative} makes an HTTP request`);
-    for (const match of text.matchAll(/\bfetch\s*\(\s*(["'`]?)([^"'`)]*)/g)) {
-      if (!(server && match[1] && match[2]!.startsWith("/"))) problems.push(`${relative} calls fetch`);
+
+    for (const match of text.matchAll(/\b(?:from|import)\s*(?:\/\/[^\n]*\n\s*)*["']([^"']+)["']/g)) {
+      const name = match[1]!;
+      const allowed = name.startsWith(".") || ALLOWED_IMPORTS.has(name) || (dashboard && name === "node:http");
+      if (!allowed) problems.push(`${relative} imports ${name}, which is not on the list shipped code may use`);
     }
-    if (/\b(WebSocket|EventSource)\s*\(/.test(text)) problems.push(`${relative} opens a socket`);
+    for (const match of text.matchAll(/\b(?:import|require)\s*\(\s*([^)]*)\)/g)) {
+      const argument = match[1]!.trim();
+      const literal = /^["'][^"']+["']$/.test(argument) ? argument.slice(1, -1) : null;
+      if (!literal || !(literal.startsWith(".") || ALLOWED_IMPORTS.has(literal))) {
+        problems.push(`${relative} loads ${argument || "a module"} at run time`);
+      }
+    }
+    for (const match of text.matchAll(ESCAPES)) problems.push(`${relative} uses ${match[0]}`);
+
+    if (dashboard) {
+      for (const match of text.matchAll(/\bhttp\s*(\.|\[)\s*([A-Za-z]*)/g)) {
+        if (!["createServer", "IncomingMessage", "ServerResponse"].includes(match[2]!) || match[1] === "[") {
+          problems.push(`${relative} uses http${match[1]}${match[2]}, not only its server`);
+        }
+      }
+      if (/=\s*http\s*[;\n]/.test(text)) problems.push(`${relative} takes members out of node:http`);
+      if (!/default-src 'none'/.test(text) || !/connect-src 'self'/.test(text)) {
+        problems.push(`${relative} serves its page without a policy confining it to its own server`);
+      }
+    }
   }
-  return problems;
+  return [...new Set(problems)];
 }
 
+/** Every file under `dir` that could ship as code, however deep, tests aside. */
 async function sources(dir: string): Promise<string[]> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  return entries
-    .filter((entry) => entry.isFile() && /\.(ts|mjs|js)$/.test(entry.name) && !entry.name.endsWith(".test.ts"))
-    .map((entry) => path.join(dir, entry.name));
+  const files: string[] = [];
+  for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...(await sources(full)));
+    else if (/\.(ts|mts|cts|js|mjs|cjs)$/.test(entry.name) && !/\.test\.[cm]?ts$/.test(entry.name)) files.push(full);
+  }
+  return files;
 }

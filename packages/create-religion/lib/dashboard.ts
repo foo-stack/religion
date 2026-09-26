@@ -15,6 +15,8 @@ import { computeStatus } from "./status.js";
 
 export interface Dashboard {
   url: string;
+  /** The address the server is bound to, which must be loopback. */
+  address: string;
   close: () => Promise<void>;
 }
 
@@ -30,6 +32,7 @@ export async function startDashboard(root: string): Promise<Dashboard> {
 
   return {
     url: `http://127.0.0.1:${port}`,
+    address: typeof address === "object" && address ? address.address : "",
     close: () => new Promise((resolve) => server.close(() => resolve()))
   };
 }
@@ -61,7 +64,12 @@ async function handle(root: string, port: number, request: http.IncomingMessage,
     return;
   }
 
-  response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  // The page may reach its own server and nothing else, whatever it is made to contain.
+  response.writeHead(200, {
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy":
+      "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'"
+  });
   response.end(PAGE);
 }
 

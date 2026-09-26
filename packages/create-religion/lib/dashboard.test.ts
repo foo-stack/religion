@@ -1,7 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { isOwnHost } from "./dashboard.js";
+import fs from "node:fs/promises";
+import http from "node:http";
+import os from "node:os";
+import path from "node:path";
+
+import { isOwnHost, startDashboard } from "./dashboard.js";
 
 test("isOwnHost accepts the loopback address and localhost on its own port", () => {
   assert.equal(isOwnHost("127.0.0.1:4321", 4321), true);
@@ -24,3 +29,32 @@ test("isOwnHost refuses the wrong port, a missing port, and IPv6 loopback", () =
   assert.equal(isOwnHost("localhost", 4321), false);
   assert.equal(isOwnHost("[::1]:4321", 4321), false);
 });
+
+function get(url: string, host: string): Promise<{ status: number; headers: http.IncomingHttpHeaders }> {
+  return new Promise((resolve, reject) => {
+    const request = http.get(url, { headers: { host } }, (response) => {
+      response.resume();
+      resolve({ status: response.statusCode ?? 0, headers: response.headers });
+    });
+    request.on("error", reject);
+  });
+}
+
+test("the dashboard binds loopback, refuses a foreign host, and confines its page", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-dashboard-"));
+  const dashboard = await startDashboard(root);
+  t.after(async () => {
+    await dashboard.close();
+    await fs.rm(root, { recursive: true, force: true });
+  });
+  const own = new URL(dashboard.url).host;
+
+  assert.equal(dashboard.address, "127.0.0.1");
+  assert.equal((await get(`${dashboard.url}/state.json`, "evil.example")).status, 403);
+  assert.equal((await get(`${dashboard.url}/state.json`, own)).status, 200);
+
+  const page = await get(`${dashboard.url}/`, own);
+  assert.equal(page.status, 200);
+  assert.match(String(page.headers["content-security-policy"]), /default-src 'none'.*connect-src 'self'/);
+});
+

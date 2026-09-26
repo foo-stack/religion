@@ -107,7 +107,7 @@ large, so split it.
   handoff unwritten when `religion`, `religion/context` or `handoff.md` is a symbolic link.
   *Done when:* a test running the hook against each link leaves the outside target intact,
   and a normal project still gets its handoff.
-- [ ] **Repair F-81 - a network check that holds** - each shipped file may import only a
+- [x] **Repair F-81 - a network check that holds** - each shipped file may import only a
   fixed allowlist, dynamic imports must be literal, the escape hatches are refused, every
   shipped extension is walked recursively, the dashboard's only allowed request is its own
   `/state.json`, and the dashboard page carries a content security policy. Also a test that

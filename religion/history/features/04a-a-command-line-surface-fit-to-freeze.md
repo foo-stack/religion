@@ -266,3 +266,17 @@ before any result was read as evidence.
 **Why it matters:** `flag.slice(2) in ADAPTERS` walks the prototype chain, so `--toString`, `--constructor`, `--__proto__` and `--hasOwnProperty` parse as adapters. The grammar promises exit 2 for any unknown option; instead `religion install --toString --dry-run --yes` crashes with `ADAPTERS[adapter].trees is not iterable` and exits 1 (reproduced in a scratch directory; nothing was written). This is the surface a stable release will freeze.
 **Suggested fix:** `Object.hasOwn(ADAPTERS, name)`, with refusal cases for `--toString` and `--__proto__` in `lib/args.test.ts`.
 **Resolution:** Repaired 2026-09-26: adapter names are checked with `Object.hasOwn(ADAPTERS, name)`, and `lib/args.test.ts` asserts `--toString`, `--__proto__` and `--constructor` are refused. A real run of `religion install --toString --dry-run --yes` now exits 2. Re-reviewed 2026-09-26 in a fresh-context audit of the whole of `lib/args.ts` and its tests: 90 probe cases over every `Object.prototype` name and each command were all refused as unknown options, the four real adapters are still accepted with install and update and refused elsewhere, real runs exit 2, and `Object.hasOwn` is available on every supported Node and TypeScript target. Closed.
+
+## Landed
+
+**Base:** a29e76714274da6466009fa0e4fbc8625bf3db86
+**Commits:** 70fcef2674c73b8ce6701e15511636671f9aed5d, 7b6399886e943642cbbf75f4320083380526ffb2, 1dc7ffb9bb5e9b21349f425863cdfef24ba48431, a1b0ab13661d9652fe3f904dbcb1a36e1d5ed197, a079eb6189ef33bb107fb34dcad5554ba1ca54bc, d175f26e3e4c6f75f31111dce93c987393772559, f3865b74a30cf19f42299f30a43a14047191cc58, a3e77d2ceab591dab6b5eb245ede359a716b0a4b, 8dc9991ee296d4c37b0b01699d12ec3bb06af684
+**Product paths:** packages/create-religion/lib/args.ts, packages/create-religion/lib/args.test.ts,
+packages/create-religion/bin/religion.ts, packages/create-religion/lib/doctor.ts,
+packages/create-religion/lib/doctor.test.ts, packages/create-religion/lib/dashboard.ts,
+packages/create-religion/lib/dashboard.test.ts, packages/create-religion/README.md
+
+The first commit also carries the plan edits that settled the stability promises and split
+the item, which a reversal of this item should leave in place. The changeset at
+`.changeset/cli-surface.md` travels with this item and is consumed by the next release
+rather than being part of what it delivers.

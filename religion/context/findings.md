@@ -302,21 +302,21 @@
 **Suggested fix:** Require every managed file to match the current template afterwards, each template heading once in the entry files, and doctor's install checks to pass.
 **Resolution:** Repaired 2026-09-26: after the update the check requires every managed file to match the current template, each template heading exactly once in both entry files with the edits kept, and doctor's required-files, configuration, adapters and entry-file checks to pass. A no-op update now fails with the stale managed files named. Re-reviewed 2026-09-26: not closed, since the check could only notice files that differed between the release and the current template, which after a capture is none. Repaired again 2026-09-26: the update now runs against a copy of the current tool whose template changes every managed file, adds a skill and retires one, and the check asserts managed files, leftovers, entry sections and imports taken from the template text, the owner's title, sections and edits, backups, every owned file (each carrying an edit), doctor checks by name, and the manifest's version and hashes. Thirteen regressions each failed it in a scratch copy, a correct update passed, and with the skill trees made identical to the release a no-op update still failed. 
 
-### F-52 [P1] fixed - A shipped skill can be removed without failing the surface check
+### F-52 [P1] closed - A shipped skill can be removed without failing the surface check
 
 **File:** scripts/surface-current.ts:33
 **Found:** 2026-09-26 by audit (scope: current; lens: quality)
 **Why it matters:** Skills are read from `PLANNED_SKILLS`, a hand-kept roster, and the only related check requires authored skills to be a subset of it. Removing `src/skills/try` and its routing cases passed the whole suite; so does a rename that leaves the old name listed.
 **Suggested fix:** Derive skill names from the authored sources.
-**Resolution:** Repaired 2026-09-26: skill names are read from the authored sources with `readSkills`, so moving `src/skills/try` aside failed the check as `breaking: skills no longer includes try`. 
+**Resolution:** Repaired 2026-09-26: skill names are read from the authored sources with `readSkills`, so moving `src/skills/try` aside failed the check as `breaking: skills no longer includes try`. Re-reviewed 2026-09-26 in a fresh-context adversarial pass on a scratch copy: removing, renaming or hiding the `try` skill source, or removing it from the roster or rendered trees, each failed the suite. Closed; dropping a skill at render or pack time is F-69.
 
-### F-53 [P2] fixed - The executed fixture has no integrity pin
+### F-53 [P2] closed - The executed fixture has no integrity pin
 
 **File:** scripts/upgrade.ts:24
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** The upgrade check runs the tarball's code in every `npm test`, including the release job, which holds OIDC and write permissions. A replaced tarball shows only as a binary diff, and nothing records or checks what npm published.
 **Suggested fix:** Record the registry integrity with the version and refuse to extract a fixture that does not match it.
-**Resolution:** Repaired 2026-09-26: `lastReleaseIntegrity` records the registry integrity and the check refuses to extract a fixture whose sha512 differs; a tampered fixture was refused. The release notes tell the reviewer how to confirm the recorded value.
+**Resolution:** Repaired 2026-09-26: `lastReleaseIntegrity` records the registry integrity and the check refuses to extract a fixture whose sha512 differs; a tampered fixture was refused. The release notes tell the reviewer how to confirm the recorded value. Re-reviewed 2026-09-26 in a fresh-context adversarial pass on a scratch copy: a repacked, appended-to or swapped tarball, and a missing, empty, sha1, array or padded integrity, were each refused before extraction. Closed; the integrity sits in the same reviewable file by design, and the release notes say how to confirm it.
 
 ### F-54 [P2] open - The surface comparison compares array items as strings
 
@@ -326,13 +326,13 @@
 **Suggested fix:** Compare items by their JSON.
 **Resolution:**
 
-### F-55 [P2] fixed - The upgrade check makes only some of setup's edits
+### F-55 [P2] closed - The upgrade check makes only some of setup's edits
 
 **File:** scripts/upgrade.ts:83
 **Found:** 2026-09-26 by audit (scope: current; lens: tests)
 **Why it matters:** It never edits `religion/context/coding-standards.md` or `religion/config.json`, which setup does, so an update that overwrote either would pass. Current behaviour keeps both.
 **Suggested fix:** Edit and assert both.
-**Resolution:** Repaired 2026-09-26: the check also edits the coding standards and the configuration and requires both unchanged after the update.
+**Resolution:** Repaired 2026-09-26: the check also edits the coding standards and the configuration and requires both unchanged after the update. Re-reviewed 2026-09-26 in a fresh-context adversarial pass on a scratch copy: overwriting the coding standards or the configuration during the update failed the check. Closed.
 
 ### F-56 [P2] open - A setting is recorded by its default's type
 
@@ -350,29 +350,29 @@
 **Suggested fix:** Pass a minimal environment and a timeout.
 **Resolution:** Repaired 2026-09-26: every spawned command gets only `PATH`, a scratch `HOME` and `TMPDIR`, and a sixty-second limit. Re-reviewed 2026-09-26: the environment half held, but a fixture ignoring SIGTERM hung the suite. Repaired again 2026-09-26: the time limit now kills with SIGKILL; a process ignoring SIGTERM returned after two seconds with SIGKILL. The parent's environment remains readable through the process table, which only an isolated runner would close.
 
-### F-58 [P3] fixed - The last release's version is used in a path unchecked
+### F-58 [P3] closed - The last release's version is used in a path unchecked
 
 **File:** scripts/upgrade.ts:24
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** A value like `../../x` would name another tarball, which would then be run.
 **Suggested fix:** Validate it as a version first.
-**Resolution:** Repaired 2026-09-26: `lastRelease` must match a strict version pattern before it names a file.
+**Resolution:** Repaired 2026-09-26: `lastRelease` must match a strict version pattern before it names a file. Re-reviewed 2026-09-26 in a fresh-context adversarial pass on a scratch copy: `../../x`, `latest`, `0.5`, padded, empty and missing values were rejected. Closed.
 
-### F-59 [P3] fixed - The capture script accepts tag-shaped versions and can delete the tarball it fetched
+### F-59 [P3] closed - The capture script accepts tag-shaped versions and can delete the tarball it fetched
 
 **File:** scripts/capture-release.ts:16
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** `\w` admits `_`, which npm reads as a tag, so the packed file can be named differently from the one kept and is then deleted.
 **Suggested fix:** Take the file name and integrity from `npm pack --json` and use a strict version pattern.
-**Resolution:** Repaired 2026-09-26: the capture script takes the file name, version and integrity from `npm pack --json`, refuses a mismatched version, and uses the strict pattern, which rejects tag-shaped input.
+**Resolution:** Repaired 2026-09-26: the capture script takes the file name, version and integrity from `npm pack --json`, refuses a mismatched version, and uses the strict pattern, which rejects tag-shaped input. Re-reviewed 2026-09-26 in a fresh-context adversarial pass on a scratch copy: thirteen malformed or tag-shaped arguments exited 2 before any npm call, and a version mismatch left the record alone. Closed; its leftovers are F-70.
 
-### F-60 [P3] fixed - The upgrade check throws instead of failing
+### F-60 [P3] closed - The upgrade check throws instead of failing
 
 **File:** scripts/upgrade.ts:40
 **Found:** 2026-09-26 by audit (scope: current; lens: tests, quality)
 **Why it matters:** Missing `tar`, an installer that writes no entry file, or a missing `tsx` throw, stopping the suite with a message that names no check.
 **Suggested fix:** Return a problem line.
-**Resolution:** Repaired 2026-09-26: spawn failures and any thrown error become a problem line naming the check.
+**Resolution:** Repaired 2026-09-26: spawn failures and any thrown error become a problem line naming the check. Re-reviewed 2026-09-26 in a fresh-context adversarial pass on a scratch copy: missing `tar`, missing `tsx` and an installer that writes nothing each produced a problem line. Closed.
 
 ### F-61 [P3] open - The shape language cannot pin literal values
 

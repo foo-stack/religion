@@ -227,12 +227,12 @@ async function runInstall(options: Options): Promise<void> {
       process.exitCode = 1;
       console.log(
         "\n.claude/settings.json is a symbolic link and was left alone." +
-          `\nTo enable the hooks, merge ${path.join(STATE_DIR, ".state", "settings-template.json")} into the file it points to.`
+          "\nIf a hook is missing, compare the file it points to with a fresh install's .claude/settings.json."
       );
     } else if (wired === "exists") {
       console.log(
         "\n.claude/settings.json already exists and was left alone." +
-          `\nTo enable the hooks, merge ${path.join(STATE_DIR, ".state", "settings-template.json")} into it.`
+          "\nIf a hook is missing, compare it with a fresh install's .claude/settings.json."
       );
     }
   }
@@ -318,8 +318,8 @@ Options
 Exit codes
   0   the command did what it was asked
   1   it ran and reports failure: no project found, a failing doctor check,
-      conflicts left by install or update, a project installed by a newer
-      version, or an unexpected error
+      conflicts, declined merges or linked files left by install or update,
+      a project installed by a newer version, or an unexpected error
   2   usage error: nothing was written
 `);
 }

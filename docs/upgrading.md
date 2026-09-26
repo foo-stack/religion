@@ -12,7 +12,8 @@ npx create-religion@latest update
 ```
 
 or `religion update` when the package is installed globally. The examples below use the
-second form. Every command here was run, and every line of output is quoted from that run.
+second form. Every command here was run, and every line of output shown is quoted from that
+run, though some are left out where they add nothing.
 
 ## Look before it writes
 
@@ -153,7 +154,8 @@ Left 1 file(s) this version no longer ships, because you edited them. They are y
 
 Only files in Religion's own skill and hook folders are ever removed, and only when they
 still match what was installed. A released file is yours from then on: later updates do not
-report it again.
+report it again. If a removed file was a hook, `.claude/settings.json` may still run it;
+remove that entry by hand, since `update` never rewires the settings file.
 
 ## When a file is a symbolic link
 
@@ -190,11 +192,12 @@ a newer install would quietly downgrade it.
 
   ```text
   .claude/settings.json already exists and was left alone.
-  To enable the hooks, merge religion/.state/settings-template.json into it.
+  If a hook is missing, compare it with a fresh install's .claude/settings.json.
   ```
 
   If you have not changed the file since Religion wrote it, the hooks that version shipped
-  are enabled. A hook added by a later version appears in the template and needs merging in
-  by hand.
+  are enabled. A hook added by a later version is not: `religion/.state/settings-template.json`
+  is seeded once like the rest of `religion/` and is never refreshed, so install into an
+  empty directory and copy the new entry from the `.claude/settings.json` there.
 - **The files of an adapter you stop choosing.** `religion update --claude` on a project that
   also has `.agents/skills` leaves that tree where it is.

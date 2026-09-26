@@ -9,7 +9,7 @@ Four changes are visible to anyone scripting against it:
 
 - **Unrecognised input is refused.** An unknown command, an unknown option, an option that
   does not apply to the command, or more than one directory now prints a usage error and
-  exits 2 before anything is read or written. Previously an unknown option was ignored, so
+  exits 2 before anything is written. Previously an unknown option was ignored, so
   `religion update --dryrun` performed a real update, and an unknown word became the target,
   so `religion stauts` installed into a new `./stauts`. A bare directory that already exists
   is still accepted, so `npx create-religion ./app` installs into it as before.

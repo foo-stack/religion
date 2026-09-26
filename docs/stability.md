@@ -27,7 +27,7 @@ Run as `npx create-religion <command>`, or `religion <command>` when installed g
 no command it installs into the current directory, and a first word that names an existing
 directory installs into it. Anything else it does not understand, an unknown command or
 option, an option the command does not take, or a second directory, is refused before
-anything is read or written. `help`, `--help` or `-h` anywhere shows the help and nothing
+anything is written. `help`, `--help` or `-h` anywhere shows the help and nothing
 else.
 
 **Held by:** the surface check, "the public surface matches its record", which compares this
@@ -42,8 +42,11 @@ grammar with the option table the parser runs on; and the parser's tests in
 | `1` | it ran and reports failure: no project found, a failing `doctor` check, conflicts, declined merges or linked files left by `install` or `update`, a project installed by a newer version, or an unexpected error |
 | `2` | usage error: nothing was written |
 
-**Held by:** the help text and the package readme, which list the same three. No automated
-check runs the tool and compares its exit codes yet.
+`--dry-run` plans without writing and exits 0 even when the plan holds conflicts, so a
+script that needs to know runs the update itself.
+
+**Held by:** the help text and the package readme, which list the three codes with the same
+meanings. No automated check runs the tool and compares its exit codes yet.
 
 ### JSON output
 
@@ -120,25 +123,28 @@ Every key in `religion/config.json`, and the values it accepts:
 What each one changes is in the [configuration reference](architecture/config.md). A setting
 is never removed, and a value it accepts is never withdrawn, within 1.x.
 
-**Held by:** the surface check, which records every key with its enumerated values; and
-`doctor`, which fails on an enumerated setting holding a value outside its list.
+**Held by:** the surface check, which records every key, with its values for the enumerated
+settings and the type of its default for the rest; and `doctor`, which fails on an
+enumerated setting holding a value outside its list. Ranges, formats and booleans are not
+checked; see [Known limitations](#known-limitations).
 
 ### Where state lives, and who owns it
 
 | Path | Owner | What 1.x promises |
 | --- | --- | --- |
-| `religion/` | you | written once at install, never rewritten by `update` |
-| `religion/.state/` | the tool | machine state: the install manifest, the activity record, backups |
+| `religion/` | you | a missing file is created; one that exists is never rewritten by `update`. The handoff, `religion/context/handoff.md`, is rewritten by a hook each turn |
+| `religion/.state/` | the tool | machine state it rewrites: the install manifest, the activity record, backups. Its `settings-template.json` is seeded once and never refreshed |
 | `.claude/skills`, `.claude/hooks`, `.agents/skills` | the tool | replaced by `update` when you have not edited them |
-| `CLAUDE.md`, `AGENTS.md` | shared | Religion's part lives between its markers; everything outside them is yours |
+| `CLAUDE.md`, `AGENTS.md` | shared | Religion's until the first update or merge gives them markers; after that its part lives between them and everything outside is yours. That first rebuild keeps your title, your Commands and any section you added; edits inside Religion's sections, and import lines you added, survive only in the backup |
 
 The state files keep their names and locations within 1.x, and the formats the tool reads
 from them (the build plan's checkboxes, the active spec's steps, the findings ledger's
 headings, the overview's source stamp) keep parsing.
 
-**Held by:** the parser tests in `packages/create-religion/lib/state.test.ts`, the install
-tests in `packages/create-religion/lib/install.test.ts`, and the upgrade check described
-under [What an update guarantees](#what-a-1x-update-guarantees).
+**Held by:** the parser tests in `packages/create-religion/lib/state.test.ts` for the build
+plan, the spec and the ledger; the surface check's busy project for the overview's stamp; the
+install tests in `packages/create-religion/lib/install.test.ts`; and the upgrade check
+described under [What an update guarantees](#what-a-1x-update-guarantees).
 
 ### Node
 
@@ -170,10 +176,13 @@ addressed to it. Reversing any of that is a major release. What an agent does wh
 following a skill is governed by the authority tiers in your entry file, not by this
 promise.
 
-**Held by:** the check "shipped code opens no network connection"; the install tests that a
+**Held by:** the check "shipped code opens no network connection", which allows shipped code
+only a fixed set of modules and the dashboard only its own server; the install tests that a
 path reached through a symbolic link, dangling or not, is never written, and that a
-recorded path outside Religion's own trees is never removed; and the dashboard's tests that
-it answers only its own host and port.
+recorded path outside Religion's own trees is never removed; the hook test that the handoff
+is never written through a link, in `scripts/hooks.test.ts`; and the dashboard test that
+starts it and checks its loopback address, its refusal of a foreign host, and the policy
+that confines its page to its own server.
 
 **The four adapters stay.** See [Adapters](#adapters).
 
@@ -196,17 +205,20 @@ break one, which is why they are left out of the promise rather than ruled out.
 | A project the last release installed updates cleanly | the upgrade check, "a project the last release installed updates cleanly" |
 
 What `update` never does: refresh a seeded file under `religion/`, including the guidance
-files Religion wrote there at install; rewire an existing `.claude/settings.json`; or remove
-the files of an adapter you stop choosing. [Updating a project](upgrading.md) walks through
+files Religion wrote there at install and the settings template; rewire an existing
+`.claude/settings.json`; or remove the files of an adapter you stop choosing. [Updating a project](upgrading.md) walks through
 every outcome.
 
 ## What counts as a breaking change
 
 | Release | Changes |
 | --- | --- |
-| **Major** | removing, renaming or narrowing anything public above; changing what an exit code means; removing a JSON field or changing its type; changing what an update guarantees; moving where state lives; dropping an adapter; dropping a Node line that is still supported |
-| **Minor** | adding a command, option, skill, setting, value, adapter or JSON field; dropping a Node line after its end-of-life; changing what a skill says or does |
-| **Patch** | a fix that changes nothing recorded as public |
+| **Major** | removing, renaming or narrowing anything public above; changing what an exit code means; removing a JSON field or changing its type; changing what an update guarantees; moving where state lives; changing a state file's format so an existing one no longer reads; changing the entry files' marker text; dropping an adapter; dropping a Node line that is still supported |
+| **Minor** | adding a command, option, skill, setting, value, adapter or JSON field; dropping a Node line after its end-of-life |
+| **Patch** | a fix that changes nothing public |
+
+Anything internal, including what a skill says and the steps it takes, can change in a
+release of any kind.
 
 ## Known limitations
 
@@ -215,8 +227,16 @@ every outcome.
   checking whether it is a symbolic link, so a repository that links it elsewhere can have
   that file's contents copied into a new `.claude/settings.json`. It never writes through a
   link.
-- **Setting types** beyond the enumerated values are not validated: `doctor` does not reject
-  a string where a number belongs.
+- **Settings are only partly validated.** `doctor` checks the enumerated settings. Booleans,
+  numeric ranges and branch prefix formats are not checked, so it accepts `"parallelSteps":
+  "yes"`, and the record holds the other settings only by the type of their default.
+- **The settings template is never refreshed.** `religion/.state/settings-template.json` is
+  seeded at install like everything under `religion/`, so it wires the hooks of the version
+  that installed the project. To see what the current version wires, look at a fresh
+  install's `.claude/settings.json`.
+- **A retired hook can stay wired.** When a version stops shipping a hook, `update` removes
+  the unedited script, but it never rewires `.claude/settings.json`, which can still run it
+  and then fail. Remove that entry by hand.
 - **Seeded guidance is never refreshed.** A fix to a file Religion wrote under `religion/`
   reaches new installs only.
 - **The dashboard** is readable by any process on the same machine while it runs: the

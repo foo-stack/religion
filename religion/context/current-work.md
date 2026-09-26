@@ -115,7 +115,7 @@ large, so split it.
   the audit reported fails the check, shown by temporary edits, and the new tests pass.
 - [x] **Repair F-83 - a linked settings file exits 1** - *Done when:* a scratch run with a
   linked `.claude/settings.json` exits 1.
-- [ ] **Repair F-82 - the statement and guide say only what is true** - correct the guide and
+- [x] **Repair F-82 - the statement and guide say only what is true** - correct the guide and
   the tool's hint about the settings template, and fix F-85, F-86 and F-88 in the statement,
   the guide, the changesets, the decision log and the overview, listing the settings
   template and a retired hook's wiring (F-84) as known limitations. *Done when:* each

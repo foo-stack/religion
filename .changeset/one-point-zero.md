@@ -18,5 +18,8 @@ Breaking changes since 0.5.0:
   merge, or files reached through a symbolic link, where they used to exit 0.
 - **`doctor --json` prints an object**, `{ "schemaVersion": 1, "healthy": ..., "checks": [...] }`,
   instead of a bare array. Read `.checks` where you read the array before.
+- **The dashboard answers only requests addressed to it.** A request whose `Host` is not its
+  own `127.0.0.1` or `localhost` address and port gets a 403, so a tunnel that rewrites the
+  host to another port is refused. Its page may reach nothing but its own server.
 - **`update` refuses a project a newer version installed**, and never writes through a
   symbolic link, even with `--force`.

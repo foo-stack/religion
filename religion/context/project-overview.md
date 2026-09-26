@@ -109,7 +109,7 @@ The single thing in progress, in `context/current-work.md`.
 - `src/state/` - the state files a project is seeded with, written once and never re-rendered
 - `src/hooks/` - three Claude Code hooks, copied rather than rendered
 - `src/lib/` - the token vocabulary and adapter definitions, and the skill frontmatter reader
-- `scripts/` - the renderer, the package staging step, and the ten-check verification suite
+- `scripts/` - the renderer, the package staging step, and the verification suite
 - `evals/routing/` - the routing corpus, one file per skill, positive and negative cases
 - `packages/create-religion/` - the published package: `bin/` for the command-line entry
   point, `lib/` for install, update, merge, status, doctor, and the dashboard, with each

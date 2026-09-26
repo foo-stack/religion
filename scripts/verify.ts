@@ -17,6 +17,7 @@ import { PLANNED_SKILLS, readSkills } from "../src/lib/skills.js";
 import { compareSurface, shapeProblems } from "./surface.js";
 import type { Shape, Surface } from "./surface.js";
 import { currentOutputs, currentSurface, SURFACE_RECORD } from "./surface-current.js";
+import { upgradeProblems } from "./upgrade.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -274,6 +275,10 @@ const checks: Check[] = [
       }
       return [...new Set(problems)].map((problem) => `surface.json: ${problem}`);
     }
+  },
+  {
+    name: "a project the last release installed updates cleanly",
+    run: upgradeProblems
   },
   {
     name: "the command-line tool has unit tests",

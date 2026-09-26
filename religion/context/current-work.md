@@ -84,7 +84,7 @@ large, so split it.
   active item, several findings and a failing doctor check, so nullable and array fields
   are exercised. *Done when:* the check passes, and removing a field from `Status` or
   adding one to the doctor report each makes it fail, shown by temporary edits.
-- [ ] **Step 5 - an upgrade from the last release** - commit the published tarball as
+- [x] **Step 5 - an upgrade from the last release** - commit the published tarball as
   `packages/create-religion/fixtures/create-religion-<version>.tgz`, named by a
   `lastRelease` field in the record. A verification check extracts it, runs that release's
   own installer into a scratch project, fills in the entry files' Commands and the plans as

@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 65012932dc7057f5 -->
+<!-- religion:source-hash 4a0efa2c66102c74 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -51,6 +51,16 @@ nothing to sign into.
 
 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a
    breaking change
+   - 4a. **A command-line surface fit to freeze** - unknown commands and flags refused,
+     documented exit codes, versioned JSON output, a dashboard that rejects foreign hosts
+   - 4b. **Update keeps its promises** - removes files the template dropped, refuses a
+     manifest from a newer version, backs up what it says it backs up, and cannot duplicate
+     an edited entry file
+   - 4c. **Compatibility guards** - checks that fail when the public surface changes by
+     accident: JSON shapes, skill names, flags, config keys, and an upgrade from the last
+     release
+   - 4d. **The stability statement** - what is public and what is internal, what a 1.x update
+     guarantees, the three promises, an upgrade guide, and the major changeset that makes it 1.0
 
 ## Domain model
 
@@ -127,10 +137,3 @@ The single thing in progress, in `context/current-work.md`.
   workflow serve four tools
 - **npm, Changesets, GitHub Actions** - released over OIDC trusted publishing, no token anywhere
 - **No runtime dependencies** in the published package
-
-## Open questions
-
-- **Extensibility, runtime coverage, and reaching outside the repository** (affects: roadmap
-  item 4) - the project plan records these as deliberately open rather than ruled out. A 1.0
-  stability statement has to say something about each, since each would be a breaking change
-  to make later. Resolve in the plans and regenerate.

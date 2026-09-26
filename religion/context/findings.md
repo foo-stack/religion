@@ -294,13 +294,13 @@
 **Suggested fix:** Report it as linked.
 **Resolution:**
 
-### F-51 [P1] fixed - The upgrade check passes when the update does nothing
+### F-51 [P1] closed - The upgrade check passes when the update does nothing
 
 **File:** scripts/upgrade.ts:48
 **Found:** 2026-09-26 by audit (scope: current; lens: tests, quality)
 **Why it matters:** Everything it asserts is already true before the update: the entry files hold their edits once, the plans are intact, and a second run matches the first. A stub that only rewrote the manifest's version passed, so a planner marking everything unchanged, skipped skill writes, or a dropped managed section would all go unnoticed.
 **Suggested fix:** Require every managed file to match the current template afterwards, each template heading once in the entry files, and doctor's install checks to pass.
-**Resolution:** Repaired 2026-09-26: after the update the check requires every managed file to match the current template, each template heading exactly once in both entry files with the edits kept, and doctor's required-files, configuration, adapters and entry-file checks to pass. A no-op update now fails with the stale managed files named. Re-reviewed 2026-09-26: not closed, since the check could only notice files that differed between the release and the current template, which after a capture is none. Repaired again 2026-09-26: the update now runs against a copy of the current tool whose template changes every managed file, adds a skill and retires one, and the check asserts managed files, leftovers, entry sections and imports taken from the template text, the owner's title, sections and edits, backups, every owned file (each carrying an edit), doctor checks by name, and the manifest's version and hashes. Thirteen regressions each failed it in a scratch copy, a correct update passed, and with the skill trees made identical to the release a no-op update still failed. 
+**Resolution:** Repaired 2026-09-26: after the update the check requires every managed file to match the current template, each template heading exactly once in both entry files with the edits kept, and doctor's required-files, configuration, adapters and entry-file checks to pass. A no-op update now fails with the stale managed files named. Re-reviewed 2026-09-26: not closed, since the check could only notice files that differed between the release and the current template, which after a capture is none. Repaired again 2026-09-26: the update now runs against a copy of the current tool whose template changes every managed file, adds a skill and retires one, and the check asserts managed files, leftovers, entry sections and imports taken from the template text, the owner's title, sections and edits, backups, every owned file (each carrying an edit), doctor checks by name, and the manifest's version and hashes. Thirteen regressions each failed it in a scratch copy, a correct update passed, and with the skill trees made identical to the release a no-op update still failed. Re-reviewed 2026-09-26 in a second fresh-context adversarial pass on a scratch copy: every regression from the first re-review failed the check, as did deleting files whose template is unchanged, skipping the added skill, keeping the retired one, keeping stale sections, and a self-consistent change to the hash; with the template made byte-identical to the release, a no-op update still failed with 57 stale files. Closed; the regressions that still pass are F-71 to F-78.
 
 ### F-52 [P1] closed - A shipped skill can be removed without failing the surface check
 
@@ -342,13 +342,13 @@
 **Suggested fix:** Let the config record use unions, and record the documented type.
 **Resolution:**
 
-### F-57 [P3] fixed - The old installer inherits the environment and has no timeout
+### F-57 [P3] closed - The old installer inherits the environment and has no timeout
 
 **File:** scripts/upgrade.ts:95
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** The fixture runs with the full environment, including the release job's token request variables, and a hang stalls the suite.
 **Suggested fix:** Pass a minimal environment and a timeout.
-**Resolution:** Repaired 2026-09-26: every spawned command gets only `PATH`, a scratch `HOME` and `TMPDIR`, and a sixty-second limit. Re-reviewed 2026-09-26: the environment half held, but a fixture ignoring SIGTERM hung the suite. Repaired again 2026-09-26: the time limit now kills with SIGKILL; a process ignoring SIGTERM returned after two seconds with SIGKILL. The parent's environment remains readable through the process table, which only an isolated runner would close.
+**Resolution:** Repaired 2026-09-26: every spawned command gets only `PATH`, a scratch `HOME` and `TMPDIR`, and a sixty-second limit. Re-reviewed 2026-09-26: the environment half held, but a fixture ignoring SIGTERM hung the suite. Repaired again 2026-09-26: the time limit now kills with SIGKILL; a process ignoring SIGTERM returned after two seconds with SIGKILL. The parent's environment remains readable through the process table, which only an isolated runner would close. Re-reviewed 2026-09-26 in a second fresh-context adversarial pass on a scratch copy: a child ignoring SIGTERM, a shell whose grandchild held the pipe, and a detached grandchild each returned at the limit with SIGKILL, and an update that never exits failed the check after sixty seconds with no orphan left. Closed.
 
 ### F-58 [P3] closed - The last release's version is used in a path unchecked
 
@@ -452,4 +452,68 @@
 **Found:** 2026-09-26 by audit (scope: current; lens: re-review of F-51 to F-60)
 **Why it matters:** On a version mismatch the tarball npm wrote stays in `fixtures/`, and output that is not JSON throws uncaught.
 **Suggested fix:** Remove the stray file and report the parse failure.
+**Resolution:**
+
+### F-71 [P2] open - The upgrade check never changes the entry template's imports or sections
+
+**File:** scripts/upgrade.ts:137
+**Found:** 2026-09-26 by audit (scope: current; lens: second re-review of F-51)
+**Why it matters:** Only the Workflow body is perturbed, so a rebuild that keeps the file's existing imports instead of the template's passed the whole suite, which is the loss the managed block exists to prevent.
+**Suggested fix:** Add an import, add a section and remove one in the perturbed entry templates.
+**Resolution:**
+
+### F-72 [P2] open - The project's own `.claude/settings.json` is never checked
+
+**File:** scripts/upgrade.ts:235
+**Found:** 2026-09-26 by audit (scope: current; lens: second re-review of F-51)
+**Why it matters:** It is neither edited nor asserted, and no unit test covers `wireHooks`, so an update that overwrote or corrupted it passed the whole suite.
+**Suggested fix:** Edit it as a project would and require it unchanged.
+**Resolution:**
+
+### F-73 [P3] open - The rest of `religion/.state/` is unchecked
+
+**File:** scripts/upgrade.ts:236
+**Found:** 2026-09-26 by audit (scope: current; lens: second re-review of F-51)
+**Why it matters:** An update deleting `settings-template.json` on every run passed, since each run recreates and deletes it.
+**Suggested fix:** Assert the seeded state files survive.
+**Resolution:**
+
+### F-74 [P3] open - The update never meets an unchanged managed file
+
+**File:** scripts/upgrade.ts:133
+**Found:** 2026-09-26 by audit (scope: current; lens: second re-review of F-51)
+**Why it matters:** Every managed file is perturbed, so behaviour that fires only for unchanged files across versions is invisible; a version-gated deletion of unchanged files passed.
+**Suggested fix:** Leave some managed files unperturbed.
+**Resolution:**
+
+### F-75 [P3] open - The entry perturbation can silently do nothing
+
+**File:** scripts/upgrade.ts:139
+**Found:** 2026-09-26 by audit (scope: current; lens: second re-review of F-51)
+**Why it matters:** The replace of the Workflow heading does nothing if the heading is renamed, and the check carries on without its entry perturbation.
+**Suggested fix:** Fail when the replacement changed nothing.
+**Resolution:**
+
+### F-76 [P3] open - Really retiring the `try` skill breaks the check misleadingly
+
+**File:** scripts/upgrade.ts:144
+**Found:** 2026-09-26 by audit (scope: current; lens: second re-review of F-51)
+**Why it matters:** Removing a file that no longer exists throws, reported as the upgrade not being checkable.
+**Suggested fix:** Retire whichever skill exists, or tolerate a missing one.
+**Resolution:**
+
+### F-77 [P3] open - Nothing asserts the update writes only inside the project
+
+**File:** scripts/upgrade.ts:69
+**Found:** 2026-09-26 by audit (scope: current; lens: second re-review of F-51)
+**Why it matters:** An update that appended to a file outside the project passed.
+**Suggested fix:** Run in a directory whose surroundings are snapshotted, or record writes.
+**Resolution:**
+
+### F-78 [P3] open - Expected manifest hashes use the hash function under test
+
+**File:** scripts/upgrade.ts:226
+**Found:** 2026-09-26 by audit (scope: current; lens: second re-review of F-51)
+**Why it matters:** Contrary to the principle the entry checks follow; not exploitable today because the release's own manifest pins the real function.
+**Suggested fix:** Compute the expected hash independently.
 **Resolution:**

@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 4b
-**Status:** in progress
+**Status:** verified
 
 ## Goal
 

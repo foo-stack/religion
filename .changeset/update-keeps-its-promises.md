@@ -3,7 +3,8 @@
 ---
 
 `update` no longer duplicates an edited entry file, removes what a newer version stopped
-shipping, refuses a project a newer version installed, and says truthfully what it backed up.
+shipping, refuses a project a newer version installed, never writes through a symbolic link,
+and says truthfully what it backed up.
 
 - **An entry file `setup` edited is rebuilt, not duplicated.** A fresh install writes
   `CLAUDE.md` and `AGENTS.md` without markers, and `setup` fills in their Commands section,
@@ -20,6 +21,11 @@ shipping, refuses a project a newer version installed, and says truthfully what 
 - **A project installed by a newer version is refused.** `install` and `update` exit 1
   without writing anything when the manifest's version or format is newer than the package
   running, whatever the flags. Run `npx create-religion@latest update` instead.
+- **Nothing is written through a symbolic link.** A file, entry file, manifest or
+  `.claude/settings.json` reached through a link, dangling or not, is left alone and reported
+  as linked, even with `--force`, and the run exits 1. A link anywhere on the way to the
+  manifest or a backup refuses the run before anything is written. Removals are confined to
+  Religion's own skill and hook folders, by exact case, and never follow a link.
 - **Messages match what happened.** A declined entry-file merge is reported on its own,
   rather than as a local edit with `--force` advice that would not merge it. The merge prompt
   and the getting-started walkthrough no longer claim a declined merge is backed up, and the

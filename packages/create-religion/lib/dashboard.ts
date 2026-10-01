@@ -490,7 +490,10 @@ button.chip { font-family: inherit; cursor: pointer; }
         <section class="panel stack"><header><h2>Recently shipped</h2><a href="#history">History</a></header><div class="body" id="ov-shipped"></div></section>
       </div>
     </section>
-    <section class="view" id="work"><div class="head"><h1>Work</h1></div></section>
+    <section class="view" id="work">
+      <div class="head"><h1 id="wk-title">Work</h1><div class="meta"><span>context/current-work.md</span></div></div>
+      <div id="wk-body"></div>
+    </section>
     <section class="view" id="findings"><div class="head"><h1>Findings</h1></div></section>
     <section class="view" id="history"><div class="head"><h1>Plan and history</h1></div></section>
     <section class="view" id="health"><div class="head"><h1>Activity and health</h1></div></section>
@@ -584,6 +587,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     $("next-because").textContent = data.status.next.because;
     renderRail();
     renderOverview();
+    renderWork();
   }
 
   function renderRail() {
@@ -644,6 +648,50 @@ button.chip { font-family: inherit; cursor: pointer; }
             "</span><span class='side'>" + (i === next ? "next" : esc(step.label)) + "</span></li>"
           ).join("") + "</ul>"
         : empty("The spec has no build steps yet."));
+  }
+
+  const GATES = { "pull-request": "Pull request", "branch-per-item": "Merge on completion", trunk: "On this branch" };
+  const CHECKPOINTS = { none: "One at completion", "every-step": "One per step", squash: "One per step, squashed" };
+
+  function renderWork() {
+    const work = data.work;
+    $("wk-title").textContent = work ? work.title || "Untitled" : "Work";
+    if (!work) {
+      $("wk-body").innerHTML = "<section class='panel'><div class='body'>" + empty("Nothing in progress. Next: " + data.status.next.command + ", " + data.status.next.because + ".") + "</div></section>";
+      return;
+    }
+    const repairs = work.steps.filter((step) => /^repair/i.test(step.label));
+    const done = work.steps.filter((step) => step.done).length;
+    const next = work.steps.findIndex((step) => !step.done);
+    const blocking = data.status.findings.blocking.length;
+    const list = (items) => (items.length ? "<ul class='list'>" + items.map((item) => "<li>" + md(item) + "</li>").join("") + "</ul>" : empty("None listed."));
+    $("wk-body").innerHTML = tags(work) +
+      "<div class='tiles'>" +
+      tile("Steps", done + "<small> / " + work.steps.length + "</small>", next < 0 ? "Every step is ticked" : esc(work.steps[next].label || "Step " + (next + 1)) + " is next", bar([[done, "--progress"]], work.steps.length)) +
+      tile("Repairs", String(repairs.length), repairs.length ? repairs.filter((step) => step.done).length + " done, added after an audit" : "No audit has added any") +
+      tile("Blocking", String(blocking), blocking ? "A P0 or P1 stops completion" : "Nothing stops completion", "", blocking ? "bad" : "good") +
+      tile("Status", esc(work.status || "unknown"), esc(work.type || "Work item") + (work.planItem ? ", plan item " + esc(work.planItem) : "")) +
+      "</div><div class='layout'><div class='col'>" +
+      "<section class='panel'><header><h2>Goal</h2></header><div class='body'>" + (work.goal.length ? work.goal.map((g) => "<p class='prose'>" + md(g) + "</p>").join("") : empty("The spec has no goal yet.")) + "</div></section>" +
+      "<section class='panel'><header><h2>Build steps</h2><span class='count'>" + done + " of " + work.steps.length + " done</span></header>" +
+      (work.steps.length
+        ? work.steps.map((step, i) =>
+            "<div class='step " + (step.done ? "done" : i === next ? "now" : "") + "'><span class='mark'></span><h3>" + (step.label ? "<span class='n'>" + esc(step.label) + "</span>" : "") + md(step.title) +
+            "</h3><span class='side'>" + (step.done ? "done" : i === next ? "next" : "") + "</span>" +
+            (step.what ? "<p class='what'>" + md(step.what) + "</p>" : "") +
+            (step.doneWhen ? "<p class='when'><b>Done when</b>" + md(step.doneWhen) + "</p>" : "") + "</div>"
+          ).join("")
+        : "<div class='body'>" + empty("The spec has no build steps yet.") + "</div>") +
+      "</section></div><div class='col'>" +
+      "<section class='panel'><header><h2>Scope</h2></header><div class='body'><div class='label section-label'>In</div>" + list(work.inScope) + "<div class='label section-label'>Out</div>" + list(work.outOfScope) + "</div></section>" +
+      "<section class='panel'><header><h2>Files and areas</h2><span class='count'>" + work.files.length + "</span></header><div class='body'>" + list(work.files) + "</div></section>" +
+      "<section class='panel'><header><h2>How it is built</h2></header><div class='body'><dl class='kv'>" +
+      "<dt>Review</dt><dd>" + (setting("workflow", "stepReview", "every") === "item" ? "Once, at the end" : "Every step") + "</dd>" +
+      "<dt>Commits</dt><dd>" + esc(CHECKPOINTS[setting("git", "checkpoints", "none")] || setting("git", "checkpoints", "")) + "</dd>" +
+      "<dt>Lands by</dt><dd>" + esc(GATES[setting("git", "mode", "trunk")] || setting("git", "mode", "")) + "</dd>" +
+      "<dt>Audit</dt><dd class='mono'>" + esc(setting("qualityGates", "audit", "when-sensitive")) + "</dd>" +
+      "<dt>Check</dt><dd class='mono'>" + esc(setting("qualityGates", "check", "when-behavioral")) + "</dd>" +
+      "</dl></div></section></div></div>";
   }
 
   function heat(value, max) {

@@ -106,7 +106,7 @@ large, so split it.
   matrix and oldest unresolved, the plan, activity and health, and recently shipped. *Done
   when:* a screenshot against this repository shows every panel filled from its state files,
   and one against a fresh install shows each panel's empty state rather than a blank.
-- [ ] **Step 7 - work** - the spec view: tags, tiles, goal, step cards with the next one
+- [x] **Step 7 - work** - the spec view: tags, tiles, goal, step cards with the next one
   highlighted, scope, files, and how the work is built. *Done when:* a screenshot against a
   project with this spec in progress shows every step's description and *Done when*, and
   the view says plainly when nothing is in progress.

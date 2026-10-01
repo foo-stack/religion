@@ -504,7 +504,17 @@ button.chip { font-family: inherit; cursor: pointer; }
         <aside class="panel sticky" id="fd-detail"></aside>
       </div>
     </section>
-    <section class="view" id="history"><div class="head"><h1>Plan and history</h1></div></section>
+    <section class="view" id="history">
+      <div class="head"><h1>Plan and history</h1><div class="meta"><span>build-plan.md</span><span>history/</span></div></div>
+      <div class="tiles" id="hs-tiles"></div>
+      <div class="layout">
+        <div class="col">
+          <section class="panel"><header><h2>Shipped</h2><span class="count">newest first</span></header><div id="hs-table"></div></section>
+          <section class="panel"><header><h2>Build plan</h2><span class="count">build-plan.md</span></header><div class="body" id="hs-plan"></div></section>
+        </div>
+        <aside class="panel sticky" id="hs-detail"></aside>
+      </div>
+    </section>
     <section class="view" id="health"><div class="head"><h1>Activity and health</h1></div></section>
   </main>
 </div>
@@ -599,6 +609,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     renderOverview();
     renderWork();
     renderFindings();
+    renderHistory();
   }
 
   function renderRail() {
@@ -789,6 +800,54 @@ button.chip { font-family: inherit; cursor: pointer; }
         "<dt>Lens</dt><dd>" + esc(picked.lens || "none") + "</dd></dl>" +
         section("Why it matters", picked.why) + section("Suggested fix", picked.fix) + section("Resolution", picked.resolution) + "</div>"
       : "<header><h2>Detail</h2></header><div class='body'>" + empty("Select a finding to read it in full.") + "</div>";
+  }
+
+  function renderHistory() {
+    const shipped = data.history;
+    const closedOf = (a) => a.findings.filter((f) => f.status === "closed");
+    const closed = shipped.flatMap(closedOf);
+    const commits = sum(shipped, (a) => a.commits.length);
+    const kinds = {};
+    shipped.forEach((a) => (kinds[a.kind] = (kinds[a.kind] || 0) + 1));
+    const s = data.status;
+    $("hs-tiles").innerHTML =
+      tile("Plan", s.plan.done + "<small> / " + s.plan.total + " items</small>", s.plan.nextItem ? "Next: " + esc(short(s.plan.nextItem)) : s.plan.total ? "Complete" : "No items yet", bar([[s.plan.done, "--ok"]], s.plan.total)) +
+      tile("Shipped", String(shipped.length), shipped.length ? Object.keys(kinds).map((k) => kinds[k] + " " + esc(k)).join(", ") : "Nothing archived yet") +
+      tile("Commits", String(commits), shipped.length ? Math.round(commits / shipped.length) + " per item on average" : "None recorded") +
+      tile("Repairs", String(sum(shipped, (a) => a.repairs)), "Steps added after an audit") +
+      tile("Findings closed", String(closed.length), closed.length ? esc(severitySummary(closed).replace(", none above", "")) : "None yet");
+
+    const max = Math.max(1, ...shipped.map((a) => closedOf(a).length));
+    const key = (a) => a.kind + "/" + a.file;
+    const picked = shipped.find((a) => key(a) === ui.archive) || shipped[0] || null;
+    $("hs-table").innerHTML = shipped.length
+      ? "<table class='rows'><tr><th></th><th>Item</th><th>Kind</th><th class='num'>Steps</th><th class='num'>Repairs</th><th class='num'>Commits</th><th>Findings closed</th></tr>" +
+        shipped.map((a) =>
+          "<tr tabindex='0' data-pick='archive' data-value='" + esc(key(a)) + "'" + (picked && key(a) === key(picked) ? " class='sel'" : "") + "><td class='id'>" + esc(a.number || "") +
+          "</td><td>" + esc(a.title || a.file) + "</td><td class='dim'>" + esc(a.type || a.kind) + "</td><td class='num'>" + a.steps + "</td><td class='num'>" + a.repairs +
+          "</td><td class='num'>" + a.commits.length + "</td><td>" + stacked(bySeverity(closedOf(a)), max) + "</td></tr>"
+        ).join("") + "</table>"
+      : "<div class='body'>" + empty("Nothing has shipped yet. Completing a work item archives it here.") + "</div>";
+    $("hs-plan").innerHTML = planList();
+
+    if (!picked) {
+      $("hs-detail").innerHTML = "<header><h2>Detail</h2></header><div class='body'>" + empty("Select a shipped item to read what it taught.") + "</div>";
+      return;
+    }
+    const range = picked.commits.length ? picked.commits[0].slice(0, 7) + (picked.commits.length > 1 ? ".." + picked.commits[picked.commits.length - 1].slice(0, 7) : "") : "none recorded";
+    const paragraphs = (items, none) => (items.length ? items.map((p) => "<p class='prose'>" + md(p) + "</p>").join("") : empty(none));
+    $("hs-detail").innerHTML =
+      "<header><h2>" + esc((picked.number ? picked.number + " " : "") + (picked.title || picked.file)) + "</h2>" +
+      (picked.status ? "<span class='status " + (/verified|done|complete/i.test(picked.status) ? "closed" : "unverified") + "'>" + esc(picked.status) + "</span>" : "") +
+      "</header><div class='body'><dl class='kv spaced'><dt>Kind</dt><dd>" + esc(picked.type || picked.kind) + "</dd><dt>Commits</dt><dd class='mono'>" + picked.commits.length + ", " + esc(range) +
+      "</dd><dt>Archive</dt><dd class='mono'>" + esc(picked.file) + "</dd></dl>" +
+      "<div class='label section-label'>What went wrong</div>" + paragraphs(picked.wentWrong, "Nothing recorded.") +
+      "<div class='label section-label'>Deferred</div>" + (picked.deferred.length ? "<ul class='list'>" + picked.deferred.map((d) => "<li>" + md(d) + "</li>").join("") + "</ul>" : empty("Nothing deferred.")) +
+      "<div class='label section-label'>Findings closed</div>" +
+      (closedOf(picked).length
+        ? "<ul class='steps'>" + closedOf(picked).map((f) => "<li><span class='sev " + f.severity.toLowerCase() + "'></span><span class='name'>" + md(f.title) + "</span><span class='side'>" + esc(f.id) + "</span></li>").join("") + "</ul>"
+        : empty("None.")) +
+      "</div>";
   }
 
   function heat(value, max) {

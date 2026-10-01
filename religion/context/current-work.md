@@ -114,7 +114,7 @@ large, so split it.
   status and severity filters, and the selected finding's detail. *Done when:* screenshots
   show the analytics against this repository's ledger, a filter narrowing the table, and a
   clicked row filling the detail panel.
-- [ ] **Step 9 - history** - tiles, the shipped table, the build plan, and the selected
+- [x] **Step 9 - history** - tiles, the shipped table, the build plan, and the selected
   item's detail. *Done when:* a screenshot shows the seven archives and a clicked item's
   lessons and deferrals.
 - [ ] **Step 10 - health** - the update notice when the install is older than the tool,

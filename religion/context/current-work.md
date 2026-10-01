@@ -110,7 +110,7 @@ large, so split it.
   highlighted, scope, files, and how the work is built. *Done when:* a screenshot against a
   project with this spec in progress shows every step's description and *Done when*, and
   the view says plainly when nothing is in progress.
-- [ ] **Step 8 - findings** - tiles, the lens, file and per-item analytics, the ledger with
+- [x] **Step 8 - findings** - tiles, the lens, file and per-item analytics, the ledger with
   status and severity filters, and the selected finding's detail. *Done when:* screenshots
   show the analytics against this repository's ledger, a filter narrowing the table, and a
   clicked row filling the detail panel.

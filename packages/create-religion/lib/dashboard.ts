@@ -454,6 +454,7 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .empty { margin: 0; color: var(--text-3); font-size: var(--text-sm); }
 button.chip { font-family: inherit; cursor: pointer; }
 [data-pick] { cursor: pointer; }
+.nowrap { white-space: nowrap; }
 :focus-visible { outline: var(--mark-ring) solid var(--accent); outline-offset: var(--space-1); }
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
@@ -494,7 +495,15 @@ button.chip { font-family: inherit; cursor: pointer; }
       <div class="head"><h1 id="wk-title">Work</h1><div class="meta"><span>context/current-work.md</span></div></div>
       <div id="wk-body"></div>
     </section>
-    <section class="view" id="findings"><div class="head"><h1>Findings</h1></div></section>
+    <section class="view" id="findings">
+      <div class="head"><h1>Findings</h1><div class="meta"><span>context/findings.md</span><span id="fd-meta"></span></div></div>
+      <div class="tiles" id="fd-tiles"></div>
+      <div class="grid thirds" id="fd-charts"></div>
+      <div class="layout">
+        <section class="panel"><div class="toolbar"><div class="chips" id="fd-status"></div><div class="chips" id="fd-severity"></div></div><div id="fd-table"></div></section>
+        <aside class="panel sticky" id="fd-detail"></aside>
+      </div>
+    </section>
     <section class="view" id="history"><div class="head"><h1>Plan and history</h1></div></section>
     <section class="view" id="health"><div class="head"><h1>Activity and health</h1></div></section>
   </main>
@@ -505,6 +514,7 @@ button.chip { font-family: inherit; cursor: pointer; }
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   let last = "";
   let data = null;
+  const ui = { status: "unresolved", severity: null, finding: null, archive: null };
 
   function setLive(ok, text) {
     $("live").className = ok ? "live" : "live off";
@@ -588,6 +598,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     renderRail();
     renderOverview();
     renderWork();
+    renderFindings();
   }
 
   function renderRail() {
@@ -694,6 +705,92 @@ button.chip { font-family: inherit; cursor: pointer; }
       "</dl></div></section></div></div>";
   }
 
+  const STATUS_ORDER = ["open", "fixed", "unverified", "accepted", "closed", "invalid"];
+  const idNumber = (f) => Number(String(f.id).slice(2)) || 0;
+  const pill = (status) => "<span class='status " + (["open", "fixed", "closed"].indexOf(status) >= 0 ? status : "unverified") + "'>" + esc(status) + "</span>";
+  const stacked = (parts, max) => "<span class='track'>" + parts.map((p) => "<i style='width:" + share(p[0], max) + "%;background:var(--sev-" + p[1].toLowerCase() + ")'></i>").join("") + "</span>";
+
+  function hbars(rows, max, mono) {
+    if (!rows.length) return empty("Nothing to chart yet.");
+    return rows.map((r) => "<div class='hbar'><span class='k" + (mono ? " mono" : "") + "' title='" + esc(r.key) + "'>" + esc(r.key) + "</span>" + r.track + "<span class='v'>" + r.count + "</span></div>").join("");
+  }
+
+  function lenses(f) {
+    if (!f.lens) return [f.found ? "while building" : "none"];
+    if (/re-review|confirmation/i.test(f.lens)) return ["re-review"];
+    return f.lens.split(",").map((l) => l.trim()).filter(Boolean);
+  }
+
+  function renderFindings() {
+    const all = data.findings;
+    const pending = unresolved();
+    const closed = data.history.flatMap((a) => a.findings.filter((f) => f.status === "closed"));
+    const blocking = data.status.findings.blocking.length;
+    const count = (status) => all.filter((f) => f.status === status).length;
+    const live = all.filter((f) => f.status === "open");
+    $("fd-meta").textContent = all.length + " in the ledger, " + closed.length + " archived";
+    $("fd-tiles").innerHTML =
+      tile("Blocking", String(blocking), blocking ? "A P0 or P1 is open or fixed" : "No P0 or P1 open or fixed", "", blocking ? "bad" : "good") +
+      tile("Open", String(live.length), esc(severitySummary(live)), bar(bySeverity(live).map((p) => [p[0], "--sev-" + p[1].toLowerCase()]), live.length)) +
+      tile("Awaiting re-review", String(count("fixed")), "Repaired, not yet looked at again") +
+      tile("Unverified", String(count("unverified")), "Plausible, not reproduced") +
+      tile("Closed", String(closed.length), closed.length ? esc(severitySummary(closed).replace(", none above", "")) + ", archived with their items" : "None archived yet");
+
+    const lensCounts = {};
+    pending.forEach((f) => lenses(f).forEach((l) => (lensCounts[l] = (lensCounts[l] || 0) + 1)));
+    const lensRows = Object.keys(lensCounts).sort((a, b) => lensCounts[b] - lensCounts[a]).slice(0, 6);
+    const lensMax = Math.max(1, ...lensRows.map((l) => lensCounts[l]));
+    const files = {};
+    pending.forEach((f) => {
+      const file = String(f.file || "no file").split(":")[0].split("/").pop();
+      (files[file] = files[file] || []).push(f);
+    });
+    const fileRows = Object.keys(files).sort((a, b) => files[b].length - files[a].length).slice(0, 6);
+    const fileMax = Math.max(1, ...fileRows.map((k) => files[k].length));
+    const items = data.history.filter((a) => a.findings.some((f) => f.status === "closed")).slice(0, 5);
+    const itemMax = Math.max(1, ...items.map((a) => a.findings.filter((f) => f.status === "closed").length));
+    $("fd-charts").innerHTML =
+      "<section class='panel'><header><h2>By lens</h2><span class='count'>unresolved, a finding can carry two</span></header><div class='body hbars'>" +
+      hbars(lensRows.map((l) => ({ key: l, count: lensCounts[l], track: "<span class='track'><i style='width:" + share(lensCounts[l], lensMax) + "%;background:var(--accent)'></i></span>" })), lensMax) + "</div></section>" +
+      "<section class='panel'><header><h2>Where they cluster</h2><span class='count'>unresolved, by file</span></header><div class='body hbars'>" +
+      hbars(fileRows.map((k) => ({ key: k, count: files[k].length, track: stacked(bySeverity(files[k]), fileMax) })), fileMax, true) + "</div></section>" +
+      "<section class='panel'><header><h2>Closed with each item</h2><span class='count'>by severity</span></header><div class='body hbars'>" +
+      hbars(items.map((a) => {
+        const done = a.findings.filter((f) => f.status === "closed");
+        return { key: (a.number ? a.number + " " : "") + short(a.title || a.file), count: done.length, track: stacked(bySeverity(done), itemMax) };
+      }), itemMax) +
+      "<div class='chips legend'>" + SEVERITIES.map((s) => "<span class='sev " + s.toLowerCase() + "'>" + s + "</span>").join("") + "</div></div></section>";
+
+    const statuses = [["unresolved", "Unresolved", pending.length], ["open", "Open", count("open")], ["fixed", "Fixed", count("fixed")], ["unverified", "Unverified", count("unverified")], ["all", "All", all.length]];
+    $("fd-status").innerHTML = statuses.map((s) => "<button class='chip" + (ui.status === s[0] ? " on" : "") + "' data-filter='status' data-value='" + s[0] + "'>" + s[1] + " <span class='count'>" + s[2] + "</span></button>").join("");
+    $("fd-severity").innerHTML = SEVERITIES.filter((s) => all.some((f) => f.severity === s)).map((s) =>
+      "<button class='chip" + (ui.severity === s ? " on" : "") + "' data-filter='severity' data-value='" + s + "'>" + s + " <span class='count'>" + all.filter((f) => f.severity === s).length + "</span></button>"
+    ).join("");
+
+    const shown = all
+      .filter((f) => (ui.status === "all" ? true : ui.status === "unresolved" ? UNRESOLVED.indexOf(f.status) >= 0 : f.status === ui.status))
+      .filter((f) => !ui.severity || f.severity === ui.severity)
+      .sort((a, b) => a.severity.localeCompare(b.severity) || STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || idNumber(a) - idNumber(b));
+    const picked = shown.find((f) => f.id === ui.finding) || shown[0] || null;
+    $("fd-table").innerHTML = shown.length
+      ? "<table class='rows'><tr><th>ID</th><th>Sev</th><th>Finding</th><th>Status</th><th>File</th><th>Lens</th></tr>" +
+        shown.map((f) =>
+          "<tr tabindex='0' data-pick='finding' data-value='" + esc(f.id) + "'" + (picked && f.id === picked.id ? " class='sel'" : "") + "><td class='id'>" + esc(f.id) +
+          "</td><td><span class='sev " + f.severity.toLowerCase() + "'>" + f.severity + "</span></td><td>" + md(f.title) + "</td><td>" + pill(f.status) +
+          "</td><td class='file' title='" + esc(f.file || "") + "'>" + esc(String(f.file || "").split("/").pop()) + "</td><td class='dim nowrap'>" + esc(lenses(f).join(", ")) + "</td></tr>"
+        ).join("") + "</table><div class='more'>Showing " + shown.length + " of " + all.length + ", most severe first</div>"
+      : "<div class='body'>" + empty(all.length ? "No finding matches these filters." : "The ledger is empty. An audit records what it finds here.") + "</div>";
+
+    const section = (label, text) => "<div class='label section-label'>" + label + "</div>" + (text ? "<p class='prose'>" + md(text) + "</p>" : "<p class='prose faint'>None yet</p>");
+    $("fd-detail").innerHTML = picked
+      ? "<header><h2 class='mono'>" + esc(picked.id) + "</h2>" + pill(picked.status) + "</header><div class='body'><div class='work-title'>" + md(picked.title) + "</div>" +
+        "<dl class='kv spaced'><dt>Severity</dt><dd><span class='sev " + picked.severity.toLowerCase() + "'>" + picked.severity + "</span></dd>" +
+        "<dt>File</dt><dd class='mono'>" + esc(picked.file || "none") + "</dd><dt>Found</dt><dd>" + esc(picked.found || "unknown") + "</dd>" +
+        "<dt>Lens</dt><dd>" + esc(picked.lens || "none") + "</dd></dl>" +
+        section("Why it matters", picked.why) + section("Suggested fix", picked.fix) + section("Resolution", picked.resolution) + "</div>"
+      : "<header><h2>Detail</h2></header><div class='body'>" + empty("Select a finding to read it in full.") + "</div>";
+  }
+
   function heat(value, max) {
     if (!value) return "h0";
     return value * 3 <= max ? "h1" : value * 3 <= max * 2 ? "h2" : "h3";
@@ -743,6 +840,23 @@ button.chip { font-family: inherit; cursor: pointer; }
       "<div class='divider'></div><dl class='kv'><dt>Questions</dt><dd class='" + (h.questions.length ? "" : "dim") + "'>" + (h.questions.length ? esc(h.questions.join(", ")) : "None open") + "</dd>" +
       "<dt>Inbox</dt><dd>" + (h.inbox.length ? h.inbox.length + " note" + (h.inbox.length > 1 ? "s" : "") : "<span class='dim'>Empty</span>") + "</dd></dl>";
   }
+
+  document.addEventListener("click", (event) => {
+    const target = event.target.closest("[data-filter], [data-pick]");
+    if (!target || !data) return;
+    const value = target.dataset.value;
+    if (target.dataset.filter === "status") ui.status = value;
+    else if (target.dataset.filter === "severity") ui.severity = ui.severity === value ? null : value;
+    else if (target.dataset.pick === "finding") ui.finding = value;
+    else if (target.dataset.pick === "archive") ui.archive = value;
+    render();
+  });
+  document.addEventListener("keydown", (event) => {
+    if ((event.key === "Enter" || event.key === " ") && event.target.dataset && event.target.dataset.pick) {
+      event.preventDefault();
+      event.target.click();
+    }
+  });
 
   load(); setInterval(load, 3000);
 })();

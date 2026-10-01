@@ -552,7 +552,8 @@ button.chip { font-family: inherit; cursor: pointer; }
     if (busy) return;
     busy = true;
     try {
-      await refresh();
+      // A request that never answers releases the next poll after ten seconds instead of freezing it.
+      await Promise.race([refresh(), new Promise((resolve) => setTimeout(resolve, 10000))]);
     } finally {
       busy = false;
     }

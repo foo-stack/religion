@@ -94,8 +94,10 @@ test("parseWork counts ticked steps and names the next one", () => {
   assert.equal(work.nextStep, "Step 3 - client", "resumption starts at the first unticked step");
 });
 
-test("parseWork names an unbolded step up to its first separator", () => {
+test("parseWork names an unbolded step up to its first separator, and counts each on its own line", () => {
   assert.equal(parseWork("# X\n\n- [ ] wire the button - so it downloads").nextStep, "wire the button");
+  const plain = parseWork("# X\n\n- [ ] Plain one\n- [ ] Plain two");
+  assert.deepEqual([plain.stepsTotal, plain.nextStep], [2, "Plain one"]);
 });
 
 test("parseSpec reads a spec in the template's shape", () => {
@@ -349,6 +351,8 @@ test("the ledger and spec parsers stay linear on pathological lines", () => {
   const started = Date.now();
   parseFindings("### F-01 [P3] open - Long\n\n**Found:** a" + " ".repeat(320_000) + "x (lens: " + "(lens: x".repeat(10_000));
   parseWork("# Spec\n" + "\n".repeat(80_000) + "- [ ] **Step 1 - last**");
+  parseFindings("### F-02 [P3] open - Spaces after the lens\n\n**Found:** x (lens:" + " ".repeat(80_000) + "x");
+  parseWork("- [ ] x" + " ".repeat(80_000) + "y\n" + " ".repeat(8_000) + "\n".repeat(80_000));
   assert.ok(Date.now() - started < 1000, `took ${Date.now() - started} ms`);
 });
 

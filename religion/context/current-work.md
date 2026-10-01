@@ -133,6 +133,11 @@ large, so split it.
   and key the page's tallies on prototype-free objects. *Done when:* the overview lists
   the lowest identifiers, a keyboard pick keeps focus on the row, and a finding filed
   under `constructor` renders every view.
+- [x] **Repair F-99, F-119, F-120 - nothing can stall a poll** - match the lens without two
+  patterns competing for the same spaces, keep the step separator on its line, and release
+  the poll after ten seconds even if its request never answers. *Done when:* the timing
+  test also covers a long run after `lens:` and inside a step line, two plain steps count
+  as two, and the network check passes.
 
 ## Files and areas
 

@@ -99,8 +99,9 @@ export function parseWork(source: string | null): WorkItem {
   if (!source || /_Nothing in progress\./.test(source)) return empty;
 
   // The step's name is its bold text, which itself contains " - " in the template's shape.
-  // Spaces and tabs only: `\s` here crosses newlines, which made blank lines quadratic.
-  const steps = [...source.matchAll(/^[ \t]*- \[( |x|X)\][ \t]*(?:\*\*(.+?)\*\*|(.+?)(?:\s+-\s|$))/gim)];
+  // Spaces and tabs only: `\s` here crosses newlines, which made blank lines quadratic and
+  // joined consecutive unbolded steps into one.
+  const steps = [...source.matchAll(/^[ \t]*- \[( |x|X)\][ \t]*(?:\*\*(.+?)\*\*|(.+?)(?:[ \t]-[ \t]|$))/gim)];
   const done = steps.filter((s) => (s[1] ?? " ").toLowerCase() === "x").length;
   const next = steps.find((s) => (s[1] ?? " ").toLowerCase() !== "x");
 
@@ -293,10 +294,10 @@ export function parseFindings(source: string | null): Finding[] {
     const m = /^###\s+(F-\d+)\s+\[(P[0-3])\]\s+(\w+)\s+-\s+(.+)$/im.exec(entry);
     if (!m) return [];
     // A finding raised while building has no lens: "2026-09-26 while writing the guide".
-    // Matching from the last parenthesis keeps this linear; a whole-line pattern was quadratic.
+    // Matching from the last parenthesis, with no two parts able to take the same spaces, keeps this linear.
     const found = labelled(entry, "Found");
     const paren = found ? found.lastIndexOf("(") : -1;
-    const lensed = found && paren >= 0 ? /^\((?:scope:[^;)]*;\s*)?lens:\s*([^)]+)\)\s*$/.exec(found.slice(paren)) : null;
+    const lensed = found && paren >= 0 ? /^\((?:scope:[^;)]*;\s*)?lens:([^)]+)\)\s*$/.exec(found.slice(paren)) : null;
     return [
       {
         id: m[1] as string,

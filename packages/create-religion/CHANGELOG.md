@@ -1,5 +1,158 @@
 # create-religion
 
+## 1.0.0
+
+### Major Changes
+
+- 0794c6e: Religion 1.0. From this release the public surface is stable: a 1.x release will not remove,
+  rename or narrow anything the [stability statement](https://github.com/foo-stack/religion/blob/main/docs/stability.md)
+  names as public, and [Updating a project](https://github.com/foo-stack/religion/blob/main/docs/upgrading.md)
+  walks through what an update does.
+  
+  Breaking changes since 0.5.0:
+  
+  - **Node 22 or later is required.** Node 20 has reached its end-of-life.
+  - **Unrecognised input is refused.** An unknown command, an unknown option, an option the
+    command does not take, or a second directory now exits 2 with a usage error instead of
+    being ignored or taken as the target directory.
+  - **Exit codes are fixed**: `0` for success, `1` for a reported failure, `2` for a usage
+    error. `install` and `update` now exit 1 when they leave conflicts, a declined entry-file
+    merge, or files reached through a symbolic link, where they used to exit 0.
+  - **`doctor --json` prints an object**, `{ "schemaVersion": 1, "healthy": ..., "checks": [...] }`,
+    instead of a bare array. Read `.checks` where you read the array before.
+  - **The dashboard answers only requests addressed to it.** A request whose `Host` is not its
+    own `127.0.0.1` or `localhost` address and port gets a 403, so a tunnel that rewrites the
+    host to another port is refused. Every response carries a content security policy, and
+    the page loads nothing beyond its own data.
+  - **`update` refuses a project a newer version installed**, and never writes through a
+    symbolic link, even with `--force`.
+
+### Minor Changes
+
+- d175f26: The command-line tool refuses input it does not understand, and its exit codes and JSON
+  output are fixed.
+  
+  Four changes are visible to anyone scripting against it:
+  
+  - **Unrecognised input is refused.** An unknown command, an unknown option, an option that
+    does not apply to the command, or more than one directory now prints a usage error and
+    exits 2 before anything is written. Previously an unknown option was ignored, so
+    `religion update --dryrun` performed a real update, and an unknown word became the target,
+    so `religion stauts` installed into a new `./stauts`. A bare directory that already exists
+    is still accepted, so `npx create-religion ./app` installs into it as before.
+  - **`install` and `update` exit 1 when conflicts remain.** A file left alone because it was
+    edited locally used to exit 0, which made a partial update look complete. That includes
+    an entry-file merge that was declined, and a non-interactive run without `--yes` declines
+    it on its own. Exit codes are now `0` for success, `1` for a reported failure, and `2` for
+    a usage error, listed in `--help` and the readme.
+  - **`doctor --json` is an object, not an array.** It prints
+    `{ "schemaVersion": 1, "healthy": ..., "checks": [...] }`. Each check keeps its shape. Read
+    `.checks` where you read the array before.
+  - **The dashboard refuses requests not addressed to it.** Anything whose `Host` header is not
+    its own `127.0.0.1` or `localhost` address and port gets a 403, which closes a DNS
+    rebinding path to the project state it serves.
+- 5a7316a: A new `scout` skill proposes features to build next, grounded in what the codebase, the
+  plans and the shipped history already contain. Run it as `scout`, `scout ambitious` or
+  `scout super-ambitious`: normal suggests five low-risk extensions of what exists, ambitious
+  three new capabilities that combine existing pieces or serve a new kind of user, and
+  super-ambitious two bets that would change the product's direction, stack or deployment.
+  Each idea names the files it builds on, its size and its risks. It writes nothing; the idea
+  you pick goes to `feature`, whose intake proposes the plan line.
+- 0787693: `setup` now drafts both plans from a repository that already exists, instead of describing
+  the idea of doing so.
+  
+  Its frontmatter has always claimed an existing project "is surveyed so the plans and
+  standards are generated from what is actually there". Behind the claim, the drafting step
+  was fifteen lines of intent: derive problem, users and features from the code and the
+  history, with nothing on how, from what, in what order, or what the result had to look
+  like. The survey it ran collected stack, commands, existing checks, conventions and layout,
+  none of which answer a single required section of the project plan.
+  
+  The survey now gathers what the plans actually need. One evidence source is named per
+  required section: the README and any docs introduction for the problem, authentication and
+  entry points for users, routes and exported surface for features, schema and model
+  definitions for data, the dependency manifest for the stack, and the history for what
+  shipped and in what order. It reads to a budget rather than reading whole, states that it
+  covers a single application, and runs where it writes nothing.
+  
+  Every source can be absent, and each absence now has an answer. No README means section 1
+  stays a question rather than a problem statement assembled out of the implementation. One
+  entry point and no authentication is an answer, not a gap. A missing dependency manifest is
+  checked against the manifest the language actually uses before being called missing. A
+  shallow or imported history cannot order the build plan, and says so. **A missing source is
+  recorded as missing, never substituted, and never filled in with what a project of that
+  kind usually has.**
+  
+  Drafting is a procedure rather than a description. Evidence is sorted into found, inferred
+  and missing, with `(inferred)` carried on the claim itself, because the code says what was
+  built and never why. The build plan starts from what shipped, checked, in history order, in
+  the exact item line format the loop parses. A plan that is no longer the shipped template
+  is never overwritten without showing the exact change and waiting.
+  
+  What the survey reads is data. A README, a comment, a commit message, issue text or a
+  configuration file that addresses the agent is reported with the file named, never acted
+  on, and never quietly edited away.
+  
+  A new reference under the skill states the shape both drafted plans are judged against,
+  including the acceptance rules `overview` applies, so a draft is checked before it is shown
+  rather than one stage later.
+- cc640a6: `update` no longer duplicates an edited entry file, removes what a newer version stopped
+  shipping, refuses a project a newer version installed, never writes through a symbolic link,
+  and says truthfully what it backed up.
+  
+  - **An entry file `setup` edited is rebuilt, not duplicated.** A fresh install writes
+    `CLAUDE.md` and `AGENTS.md` without markers, and `setup` fills in their Commands section,
+    so the next `update` used to treat the file as your own and append a second copy of every
+    Religion section. It now backs the file up and rebuilds it around the sections you wrote:
+    your title, your Commands, and any section of your own stay outside the markers, and
+    Religion's sections are replaced by the current block. Later updates replace only what is
+    between the markers. If this already happened to your file, the duplicates are still
+    there; remove the older copies by hand.
+  - **Files a newer version no longer ships are removed.** When a file the previous install
+    recorded is gone from the template, `update` removes it if you never edited it, along with
+    any directory that leaves empty. If you edited it, it is left where it is and becomes
+    yours. Only files in Religion's own skill and hook folders are ever removed.
+  - **A project installed by a newer version is refused.** `install` and `update` exit 1
+    without writing anything when the manifest's version or format is newer than the package
+    running, whatever the flags. Run `npx create-religion@latest update` instead.
+  - **Nothing is written through a symbolic link.** A file, entry file, manifest or
+    `.claude/settings.json` reached through a link, dangling or not, is left alone and reported
+    as linked, even with `--force`, and the run exits 1. A link anywhere on the way to the
+    manifest or a backup refuses the run before anything is written. Removals are confined to
+    Religion's own skill and hook folders, by exact case, and never follow a link.
+  - **Messages match what happened.** A declined entry-file merge is reported on its own,
+    rather than as a local edit with `--force` advice that would not merge it. The merge prompt
+    and the getting-started walkthrough no longer claim a declined merge is backed up, and the
+    backup line says where backups went.
+
+### Patch Changes
+
+- 73226c1: Three guides for people who did not build Religion.
+  
+  Everything under `docs/` was written for someone who already knew the system: the state
+  model, the enforcement split, the configuration reference, the decision records. They
+  explain how it is built. Nothing explained how it is used, and the readme's getting-started
+  section was four lines naming four skills.
+  
+  - **Getting started** walks install through to a generated overview, covering both branches
+    `setup` takes, what the installer does when you already have a `CLAUDE.md` or `AGENTS.md`,
+    what happens when a codebase's readme explains nothing, and the choice between committing
+    the workflow files and keeping them local.
+  - **What the loop actually feels like** walks one finished work item from spec to commit:
+    the spec arriving before any code, the diff and evidence under each step, what the review
+    options do, how progress survives a cleared context, what the findings ledger blocks, and
+    what completion archives. Every artifact in it is quoted from a real file.
+  - **What to do when doctor complains** covers every check, what each failure means, and the
+    fix. Every failure was triggered deliberately and every fix was run and shown to clear it,
+    which caught two that were wrong: `update` alone does not restore a working entry file,
+    and deleting `config.json` makes the project invisible to the command-line tool rather
+    than falling back to defaults.
+  
+  The readmes now point at these rather than half-repeating them, and the package readme's
+  skill count is correct again.
+- 195db9f: A repeated adapter option, such as `--claude --claude`, is recorded once. It used to be
+  listed twice in the install summary and written twice into the manifest.
+
 ## 0.5.0
 
 ### Minor Changes

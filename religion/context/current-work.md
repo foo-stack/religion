@@ -128,7 +128,7 @@ large, so split it.
   and schedule the page's next poll when the current one finishes. *Done when:* a test
   parses a 320,000-character `Found` line and a spec of 80,000 blank lines in well under a
   second each, and the page never has two requests in flight.
-- [ ] **Repair F-101, F-102, F-107 - the page says what it shows** - order "Oldest
+- [x] **Repair F-101, F-102, F-107 - the page says what it shows** - order "Oldest
   unresolved" by identifier, return focus to the picked row or filter after it re-renders,
   and key the page's tallies on prototype-free objects. *Done when:* the overview lists
   the lowest identifiers, a keyboard pick keeps focus on the row, and a finding filed

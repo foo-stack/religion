@@ -566,21 +566,21 @@
 **Suggested fix:** Take every step number on the page from `data.work.steps`, keep `status.work` for `status --json`, and read `current-work.md` once in `readState`.
 **Resolution:**
 
-### F-101 [P2] open - "Oldest unresolved" lists the most severe findings, not the oldest
+### F-101 [P2] fixed - "Oldest unresolved" lists the most severe findings, not the oldest
 
 **File:** packages/create-religion/lib/dashboard.ts:933
 **Found:** 2026-10-01 by audit (scope: current; lens: quality)
 **Why it matters:** It sorts by severity, then identifier, so a new P1 is listed before a months-old P3 under a label that says oldest.
 **Suggested fix:** Sort by identifier only, or relabel it "Most severe unresolved", and reuse `idNumber`.
-**Resolution:**
+**Resolution:** Repaired 2026-10-01: the list is ordered by identifier alone, using the page's one identifier helper; against this repository it shows F-02, F-03 and F-04.
 
-### F-102 [P2] open - Selecting a row or filter by keyboard loses focus
+### F-102 [P2] fixed - Selecting a row or filter by keyboard loses focus
 
 **File:** packages/create-religion/lib/dashboard.ts:972
 **Found:** 2026-10-01 by audit (scope: current; lens: quality)
 **Why it matters:** Enter or Space on a focusable row calls `click()`, whose handler re-renders the table and chips with `innerHTML`, destroying the focused element; focus drops to the body after every pick, which defeats the keyboard handler that exists for it.
 **Suggested fix:** After rendering, refocus the element with the same `data-pick` or `data-filter` and `data-value`.
-**Resolution:**
+**Resolution:** Repaired 2026-10-01: after a pick or filter re-renders, focus returns to the element with the same role and value. In Chrome, Tab then Enter on a row selected F-27 and left focus on its row, and Tab then Space did the same for F-28.
 
 ### F-103 [P2] open - History numbers and order are wrong for fixes, refactors and rollbacks
 
@@ -614,13 +614,13 @@
 **Suggested fix:** Put an empty `**File:**` directly above `**Found:**` in the details test and assert `file: null`.
 **Resolution:**
 
-### F-107 [P3] open - A finding's file named like an Object member breaks the page
+### F-107 [P3] fixed - A finding's file named like an Object member breaks the page
 
 **File:** packages/create-religion/lib/dashboard.ts:766
 **Found:** 2026-10-01 by audit (scope: current; lens: security)
 **Why it matters:** `files`, `lensCounts` and `kinds` are plain objects keyed by repository text, so a file named `constructor`, `toString` or `__proto__` makes `.push` throw; rendering stops before History and Health are drawn, and since the response text is remembered first, later identical polls never recover.
 **Suggested fix:** Use `Object.create(null)` or a `Map` for the three.
-**Resolution:**
+**Resolution:** Repaired 2026-10-01: the lens, file and kind tallies are prototype-free objects. A project with a finding filed under `lib/constructor:12` and lens `constructor` rendered every view, with all seven doctor checks and the history tiles drawn.
 
 ### F-108 [P3] open - The history reader follows links and reads any file type
 

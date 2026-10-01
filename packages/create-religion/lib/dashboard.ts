@@ -770,11 +770,12 @@ button.chip { font-family: inherit; cursor: pointer; }
       tile("Unverified", String(count("unverified")), "Plausible, not reproduced") +
       tile("Closed", String(closed.length), closed.length ? esc(severitySummary(closed).replace(", none above", "")) + ", archived with their items" : "None archived yet");
 
-    const lensCounts = {};
+    // Keyed by repository text, so no inherited member such as "constructor" can collide.
+    const lensCounts = Object.create(null);
     pending.forEach((f) => lenses(f).forEach((l) => (lensCounts[l] = (lensCounts[l] || 0) + 1)));
     const lensRows = Object.keys(lensCounts).sort((a, b) => lensCounts[b] - lensCounts[a]).slice(0, 6);
     const lensMax = Math.max(1, ...lensRows.map((l) => lensCounts[l]));
-    const files = {};
+    const files = Object.create(null);
     pending.forEach((f) => {
       const file = String(f.file || "no file").split(":")[0].split("/").pop();
       (files[file] = files[file] || []).push(f);
@@ -830,7 +831,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     const closedOf = (a) => a.findings.filter((f) => f.status === "closed");
     const closed = shipped.flatMap(closedOf);
     const commits = sum(shipped, (a) => a.commits.length);
-    const kinds = {};
+    const kinds = Object.create(null);
     shipped.forEach((a) => (kinds[a.kind] = (kinds[a.kind] || 0) + 1));
     const s = data.status;
     $("hs-tiles").innerHTML =
@@ -942,7 +943,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     const count = (severity, status) => data.findings.filter((f) => f.severity === severity && (!status || f.status === status)).length;
     const max = Math.max(1, ...SEVERITIES.flatMap((s) => columns.map((c) => count(s, c))));
     const blocking = data.status.findings.blocking.length;
-    const oldest = pending.slice().sort((a, b) => a.severity.localeCompare(b.severity) || Number(a.id.slice(2)) - Number(b.id.slice(2))).slice(0, 3);
+    const oldest = pending.slice().sort((a, b) => idNumber(a) - idNumber(b)).slice(0, 3);
     return "<table><tr><th>Severity</th><th>Open</th><th>Fixed</th><th>Unverified</th><th>Total</th></tr>" +
       SEVERITIES.map((s) =>
         "<tr><td><span class='sev " + s.toLowerCase() + "'>" + s + "</span></td>" + columns.map((c) => "<td class='" + heat(count(s, c), max) + "'>" + count(s, c) + "</td>").join("") +
@@ -989,7 +990,12 @@ button.chip { font-family: inherit; cursor: pointer; }
     else if (target.dataset.filter === "severity") ui.severity = ui.severity === value ? null : value;
     else if (target.dataset.pick === "finding") ui.finding = value;
     else if (target.dataset.pick === "archive") ui.archive = value;
+    const focused = document.activeElement === target;
+    const role = target.dataset.pick || target.dataset.filter;
     render();
+    // Rendering replaced the element; put focus back on its replacement so a keyboard user keeps their place.
+    const again = Array.from(document.querySelectorAll("[data-pick], [data-filter]")).find((el) => el.dataset.value === value && (el.dataset.pick || el.dataset.filter) === role);
+    if (focused && again) again.focus();
   });
   document.addEventListener("keydown", (event) => {
     if ((event.key === "Enter" || event.key === " ") && event.target.dataset && event.target.dataset.pick) {

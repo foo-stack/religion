@@ -74,6 +74,7 @@ and follow directly.
 - `refactor`      - simplify existing code in one behaviour-preserving campaign at a time
 - `release`       - prepare deployment readiness for Railway, Render, or Vercel
 - `rollback`      - plan a guarded reversal of completed work, preserving its history
+- `scout`         - propose new features grounded in what the codebase already has
 - `setup`         - tune the installation to this project, greenfield or existing
 - `spike`         - answer one feasibility question with throwaway code, then delete it
 - `status`        - say where the work stands and what to do next

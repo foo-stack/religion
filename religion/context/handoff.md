@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**The stability statement** is in progress: 12 step(s) done, 0 to go.
+Nothing in progress.
 
-Plan: 6 of 8 item(s) complete. Next up: 4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a breaking change
+Plan: 8 of 8 item(s) complete.
 
 ## Read first
 

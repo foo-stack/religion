@@ -1,0 +1,19 @@
+{
+  "skill": "scout",
+  "positive": [
+    { "prompt": "What new features could we build on top of this codebase" },
+    { "prompt": "Give me some feature ideas based on what we already have" },
+    { "prompt": "Scout for ambitious opportunities in this project" },
+    { "prompt": "Suggest a few new capabilities we could add to this code" },
+    { "prompt": "What could this project grow into if we went super ambitious" }
+  ],
+  "negative": [
+    { "prompt": "Explore how the update command decides what to overwrite" },
+    { "prompt": "Walk me through the codebase so I understand the install flow" },
+    { "prompt": "What is next on the build plan", "owner": "status" },
+    { "prompt": "Help me think the product through before I write the plans", "owner": "discovery" },
+    { "prompt": "Add CSV export to the plan and spec it", "owner": "feature" },
+    { "prompt": "Note that dark mode might be nice some day", "owner": "capture" },
+    { "prompt": "Is streaming the export even possible with our stack", "owner": "spike" }
+  ]
+}

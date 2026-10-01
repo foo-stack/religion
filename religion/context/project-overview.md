@@ -100,7 +100,7 @@ The single thing in progress, in `context/current-work.md`.
 
 ## Code map
 
-- `src/skills/` - the 25 authored skills, one directory each. The single source; never edit a
+- `src/skills/` - the 26 authored skills, one directory each. The single source; never edit a
   rendered tree
 - `src/entry/` - the entry-file sources and the partials shared between them
 - `src/state/` - the state files a project is seeded with, written once and never re-rendered

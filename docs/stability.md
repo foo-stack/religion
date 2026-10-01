@@ -67,10 +67,10 @@ project against the shapes in the record and fails on a missing field or an unre
 
 ### Skills
 
-The twenty-five skill names are public: `audit`, `auto`, `browser-tests`, `capture`, `check`,
+The twenty-six skill names are public: `audit`, `auto`, `browser-tests`, `capture`, `check`,
 `ci`, `complete`, `debug`, `discovery`, `distill`, `doctor`, `extend`, `feature`, `fix`,
-`implement`, `overview`, `prototype`, `refactor`, `release`, `rollback`, `setup`, `spike`,
-`status`, `tests`, and `try`.
+`implement`, `overview`, `prototype`, `refactor`, `release`, `rollback`, `scout`, `setup`,
+`spike`, `status`, `tests`, and `try`.
 
 So is how each is invoked: `/name` in Claude Code, and `$name` in Codex, GitHub Copilot and
 OpenCode. What a skill says, the steps it takes, and how it words its reports are not

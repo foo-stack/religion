@@ -47,7 +47,7 @@ Say "up to date" rather than inventing a warning when there is nothing wrong.
 | All steps ticked, not verified | {{cmd:check}} |
 | Verified, findings blocking | {{cmd:audit}}, or repair via {{cmd:implement}} |
 | Verified, nothing blocking | {{cmd:complete}} |
-| Plan complete | Add to the plan, or {{cmd:release}} |
+| Plan complete | Add to the plan, with {{cmd:scout}} for ideas, or {{cmd:release}} |
 
 When two apply, take the one further along: finishing beats starting.
 

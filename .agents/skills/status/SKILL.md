@@ -47,7 +47,7 @@ Say "up to date" rather than inventing a warning when there is nothing wrong.
 | All steps ticked, not verified | $check |
 | Verified, findings blocking | $audit, or repair via $implement |
 | Verified, nothing blocking | $complete |
-| Plan complete | Add to the plan, or $release |
+| Plan complete | Add to the plan, with $scout for ideas, or $release |
 
 When two apply, take the one further along: finishing beats starting.
 

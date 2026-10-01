@@ -31,6 +31,10 @@
     {
       "prompt": "Generate a build plan from what has already shipped",
       "owner": "setup"
+    },
+    {
+      "prompt": "Brainstorm new capabilities to build on what already ships",
+      "owner": "scout"
     }
   ]
 }

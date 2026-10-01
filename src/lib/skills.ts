@@ -40,6 +40,7 @@ export const PLANNED_SKILLS: readonly string[] = [
   "refactor",
   "release",
   "rollback",
+  "scout",
   "setup",
   "spike",
   "status",

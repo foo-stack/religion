@@ -65,9 +65,9 @@ Everything else is generated from those, or archived from finished work.
 
 ## Commands
 
-Twenty-five skills. The loop is `feature`, `implement`, `check`, `audit`, `complete`.
-Around it: `setup`, `discovery`, `overview`, `fix`, `debug`, `rollback`, `refactor`, `try`,
-`spike`, `capture`, `status`, `doctor`, `tests`, `browser-tests`, `ci`, `prototype`,
+Twenty-six skills. The loop is `feature`, `implement`, `check`, `audit`, `complete`.
+Around it: `setup`, `discovery`, `scout`, `overview`, `fix`, `debug`, `rollback`, `refactor`,
+`try`, `spike`, `capture`, `status`, `doctor`, `tests`, `browser-tests`, `ci`, `prototype`,
 `release`, `auto`, `distill`, `extend`.
 
 Invoke them however your tool does: `/feature` in Claude Code, `$feature` in Codex, or

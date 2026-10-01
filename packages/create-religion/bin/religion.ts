@@ -93,7 +93,7 @@ async function main(argv: readonly string[]): Promise<void> {
     return;
   }
 
-  const dashboard = await startDashboard(root);
+  const dashboard = await startDashboard(root, await version());
   console.log(`Religion dashboard: ${dashboard.url}`);
   console.log("Read-only. Press Ctrl+C to stop.");
   process.on("SIGINT", () => {

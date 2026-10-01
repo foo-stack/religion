@@ -62,22 +62,6 @@
 **Suggested fix:** Skip commands whose length differs by more than 2; the result is identical.
 **Resolution:**
 
-### F-09 [P3] open - Unused import and dead export in the dashboard
-
-**File:** packages/create-religion/lib/dashboard.ts:10
-**Found:** 2026-09-26 by audit (scope: current; lens: quality)
-**Why it matters:** `import path` is unused (`tsc --noUnusedLocals` reports TS6133) and `historyCount` is exported and used nowhere. Both predate this work, in a file it touches.
-**Suggested fix:** Delete both, after confirming nothing needs `historyCount`.
-**Resolution:**
-
-### F-10 [P3] unverified - A failed state read could crash the dashboard
-
-**File:** packages/create-religion/lib/dashboard.ts:24
-**Found:** 2026-09-26 by audit (scope: current; lens: security)
-**Why it matters:** `void handle(...)` has no rejection handler, so a throw from `readProjectState` would be unhandled. Not reproduced. Predates this work.
-**Suggested fix:** Catch in the request callback and answer 500.
-**Resolution:**
-
 ### F-11 [P3] unverified - The package root is found before arguments are parsed
 
 **File:** packages/create-religion/bin/religion.ts:58
@@ -548,4 +532,140 @@
 **Found:** 2026-09-26 by audit (scope: current; lens: confirmation of F-81)
 **Why it matters:** The bin, files, main or exports, and tsconfig include rules are each tripped only alongside another by the recorded probes, so removing any one alone leaves the corpus green.
 **Suggested fix:** Add a probe that trips each on its own.
+**Resolution:**
+
+### F-100 [P2] open - The page counts the active spec's steps two ways
+
+**File:** packages/create-religion/lib/dashboard.ts:630
+**Found:** 2026-10-01 by audit (scope: current; lens: quality)
+**Why it matters:** The rail and the overview tile use `status.work` from `parseWork`, which counts every checkbox in the file at any indent; the Active work panel and the Work view use `parseSpec`, which counts only top-level steps under `## Build steps`. A spec with a nested sub-task and a Testing checkbox shows 0/3 in the rail and 0 of 2 in the Work view, and the banner's "step N" and the Work tile's next label can name different steps when ticks are out of order.
+**Suggested fix:** Take every step number on the page from `data.work.steps`, keep `status.work` for `status --json`, and read `current-work.md` once in `readState`.
+**Resolution:**
+
+### F-103 [P2] open - History numbers and order are wrong for fixes, refactors and rollbacks
+
+**File:** packages/create-religion/lib/state.ts:225
+**Found:** 2026-10-01 by audit (scope: current; lens: quality)
+**Why it matters:** `parseArchive` assumes `NN-slug.md`, but rollbacks are named `YYYY-MM-DD-NN-name.md`, so a rollback's number reads as its year, and `readHistory` lists every feature before any fix and sorts the other kinds reverse-alphabetically, while the page says "newest first" and "Recently shipped".
+**Suggested fix:** Take the number only where the kind's naming carries one, and drop the ordering claims or order on something the archive records.
+**Resolution:**
+
+### F-104 [P2] open - The same view logic is repeated across render functions
+
+**File:** packages/create-religion/lib/dashboard.ts:646
+**Found:** 2026-10-01 by audit (scope: current; lens: quality)
+**Why it matters:** The plan and blocking tiles, the nothing-in-progress empty state, the closed-findings filter (seven times), the passing-checks count, the severity bar mapping, the finding list markup and two identifier comparators are each written more than once, and the step counts have already drifted between views.
+**Suggested fix:** Hoist small helpers to the top of the page script and use them in every view.
+**Resolution:**
+
+### F-105 [P2] open - The manifest sanitising has no test
+
+**File:** packages/create-religion/lib/dashboard.ts:114
+**Found:** 2026-10-01 by audit (scope: current; lens: tests)
+**Why it matters:** Every dashboard test uses an empty project, so `readInstall`'s handling of a hand-edited manifest never runs; returning the raw manifest, dropping the string filter on adapters, or counting an array as `managed` each passed the suite, and a non-array `adapters` would throw in the Health view.
+**Suggested fix:** Write a malformed manifest in a dashboard test and assert the sanitised `health.install`, and that unparseable JSON gives `null`.
+**Resolution:**
+
+### F-106 [P2] open - An empty label crossing into the next line is unpinned
+
+**File:** packages/create-religion/lib/state.ts:316
+**Found:** 2026-10-01 by audit (scope: current; lens: tests)
+**Why it matters:** The only empty label in the test fixture is the last line of its entry, so changing `[ \t]*` to `\s*` in `labelled()` passes the suite while an empty `**File:**` above `**Found:**` would then capture the next line.
+**Suggested fix:** Put an empty `**File:**` directly above `**Found:**` in the details test and assert `file: null`.
+**Resolution:**
+
+### F-108 [P3] open - The history reader follows links and reads any file type
+
+**File:** packages/create-religion/lib/state.ts:249
+**Found:** 2026-10-01 by audit (scope: current; lens: security)
+**Why it matters:** `readdir` and `readFile` follow symbolic links, so a cloned repository can link a history folder or archive outside the project and have its headings served on the loopback port, or link a FIFO or `/dev/zero` to hang every poll. The fixed state files share this class; this adds reads a directory listing controls. Not reproduced.
+**Suggested fix:** Skip entries that are not regular files and refuse a linked history folder, as `install.ts` does.
+**Resolution:**
+
+### F-109 [P3] open - The findings view is rendered by one long function
+
+**File:** packages/create-religion/lib/dashboard.ts:746
+**Found:** 2026-10-01 by audit (scope: current; lens: quality)
+**Why it matters:** `renderFindings` builds tiles, three charts, two chip bars, the table and the detail in about 70 lines of concatenation, against the short-functions standard; `renderWork` and `renderHistory` are similar.
+**Suggested fix:** Split it the way the overview already is.
+**Resolution:**
+
+### F-110 [P3] open - An unused parameter and leftover CSS from the mockups
+
+**File:** packages/create-religion/lib/dashboard.ts:735
+**Found:** 2026-10-01 by audit (scope: current; lens: quality)
+**Why it matters:** `hbars` never reads `max`; `--heat-0` and `.steps.flat li` match nothing the page writes; and the check-list dot rules are redefined further down instead of merged.
+**Suggested fix:** Drop the parameter and the unused rules, and merge the overrides.
+**Resolution:**
+
+### F-111 [P3] open - Spikes are counted as shipped
+
+**File:** packages/create-religion/lib/state.ts:215
+**Found:** 2026-10-01 by audit (scope: current; lens: quality)
+**Why it matters:** `HISTORY_KINDS` includes spikes, which never ship, so each spike raises the Shipped tile and the History count and lowers the commits-per-item average.
+**Suggested fix:** Count spikes separately from shipped work.
+**Resolution:**
+
+### F-112 [P3] open - A wave marker lands in the step's description
+
+**File:** packages/create-religion/lib/state.ts:186
+**Found:** 2026-10-01 by audit (scope: current; lens: quality)
+**Why it matters:** A step marked `**Step 3 - x** (with 2) - ...` keeps `(with 2) -` at the start of its description, as archives 01 and 04a show.
+**Suggested fix:** Strip the marker from the description, or expose it as its own field.
+**Resolution:**
+
+### F-113 [P3] open - The health contract in the spec omits questions
+
+**File:** packages/create-religion/lib/dashboard.ts:108
+**Found:** 2026-10-01 by audit (scope: current; lens: quality)
+**Why it matters:** The spec's contract lists `checks`, `config`, `install`, `tool` and `inbox`; the code and its test also carry `questions`.
+**Suggested fix:** Name it in the contract line.
+**Resolution:**
+
+### F-114 [P3] open - Several parser tolerance branches are unpinned
+
+**File:** packages/create-religion/lib/state.ts:177
+**Found:** 2026-10-01 by audit (scope: current; lens: tests)
+**Why it matters:** Mutations survived for list termination after a stray paragraph, an unbolded step in a spec, short commit hashes, unprefixed archive finding headings, a lens without a scope, the `.md` filter in `readHistory`, and the repair label match.
+**Suggested fix:** Add one fixture line per branch.
+**Resolution:**
+
+### F-115 [P3] open - The 500 test relies on doctor throwing and on its message
+
+**File:** packages/create-religion/lib/dashboard.test.ts:91
+**Found:** 2026-10-01 by audit (scope: current; lens: tests)
+**Why it matters:** Its only trigger is `runDoctor` failing on a skill tree that is a file, and it asserts `ENOTDIR`; hardening doctor to report that case would break the test and leave the guard untriggered.
+**Suggested fix:** Assert only the 500 and a non-empty error, and say in the test why doctor throws there.
+**Resolution:**
+
+### F-118 [P3] open - Every poll re-reads and re-sends the whole history
+
+**File:** packages/create-religion/lib/state.ts:244
+**Found:** 2026-10-01 by audit (scope: current; lens: performance)
+**Why it matters:** Archives never change, but each poll reads and parses all of them one at a time and sends their lessons and deferrals, which the page shows only for the selected one: 2.8 ms and 67 KB at 7 archives, 114 ms and 3.1 MB at 1007.
+**Suggested fix:** Cache parsed archives by name and modification time, read independent files concurrently, and send lessons only when needed.
+**Resolution:**
+
+### F-121 [P3] open - Three lookup tables show inherited members as text
+
+**File:** packages/create-religion/lib/dashboard.ts:698
+**Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-99 to F-117)
+**Why it matters:** `GATES`, `CHECKPOINTS` and `ADAPTER_NAMES` are indexed by configuration and manifest text, so a value of `constructor` or `toString` shows native function source or `[object Object]` instead of the value. Nothing throws.
+**Suggested fix:** Make them prototype-free, or check own properties before indexing.
+**Resolution:**
+
+### F-122 [P3] open - A poll that re-renders drops keyboard focus
+
+**File:** packages/create-religion/lib/dashboard.ts:993
+**Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-99 to F-117)
+**Why it matters:** Focus is restored only after a click; a poll that brings changed state re-renders every view and focus falls to the body, which happens whenever the activity record changes during a run.
+**Suggested fix:** Remember and restore focus around `render()` itself.
+**Resolution:**
+
+### F-124 [P3] open - An older browser without AbortSignal.timeout never loads the page's state
+
+**File:** packages/create-religion/lib/dashboard.ts:566
+**Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-123)
+**Why it matters:** `AbortSignal.timeout` needs Safari 16, Chrome 103 or Firefox 100. On an older browser the call throws inside the request's `try`, so every poll reports "Disconnected, retrying" and nothing renders. A local dashboard is unlikely to meet one.
+**Suggested fix:** Pass the signal only when `AbortSignal.timeout` exists.
 **Resolution:**

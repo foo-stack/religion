@@ -5,7 +5,18 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { overviewHash, parseFindings, parseOpenQuestions, parsePlan, parseWork, readProjectState } from "./state.js";
+import {
+  overviewHash,
+  parseArchive,
+  parseFindings,
+  parseInbox,
+  parseOpenQuestions,
+  parsePlan,
+  parseSpec,
+  parseWork,
+  readHistory,
+  readProjectState
+} from "./state.js";
 
 test("parsePlan reads numbers, titles and tick state", () => {
   const plan = parsePlan(
@@ -79,11 +90,83 @@ test("parseWork counts ticked steps and names the next one", () => {
   assert.equal(work.status, "in progress");
   assert.equal(work.stepsDone, 2);
   assert.equal(work.stepsTotal, 3);
-  // Pinning current behaviour, not endorsing it: nextStep truncates at the first " - ",
-  // which is the separator the spec template uses inside the bold title, so the second half
-  // of the step name is lost. Latent today because nothing reads the field. Noted in the
-  // inbox rather than repaired here.
-  assert.equal(work.nextStep, "Step 3", "resumption starts at the first unticked step");
+  // The bold name contains the template's own " - " separator, so it is taken whole.
+  assert.equal(work.nextStep, "Step 3 - client", "resumption starts at the first unticked step");
+});
+
+test("parseWork names an unbolded step up to its first separator, and counts each on its own line", () => {
+  assert.equal(parseWork("# X\n\n- [ ] wire the button - so it downloads").nextStep, "wire the button");
+  const plain = parseWork("# X\n\n- [ ] Plain one\n- [ ] Plain two");
+  assert.deepEqual([plain.stepsTotal, plain.nextStep], [2, "Plain one"]);
+});
+
+test("parseSpec reads a spec in the template's shape", () => {
+  const spec = parseSpec(
+    [
+      "# Export reports",
+      "",
+      "**Type:** Feature",
+      "**From build plan:** item 4b",
+      "**Status:** in progress",
+      "",
+      "## Goal",
+      "",
+      "Users can download a report",
+      "as a file.",
+      "",
+      "**Done when** it downloads.",
+      "",
+      "## In scope",
+      "",
+      "- The download button",
+      "- A CSV writer that quotes",
+      "  embedded commas",
+      "",
+      "## Out of scope",
+      "",
+      "- **PDF.** A later item.",
+      "",
+      "## Build steps",
+      "",
+      "- [x] **Step 1 - schema** - added the table. *Done when:* it migrates.",
+      "- [ ] **Step 2 - client - with retries** - wires the button,",
+      "  and retries. *Done when:* the file downloads.",
+      "- [ ] **Repair F-04 - quoting** - quote commas.",
+      "",
+      "## Files and areas",
+      "",
+      "- `src/report.ts` - the writer"
+    ].join("\n")
+  );
+
+  assert.ok(spec);
+  assert.deepEqual([spec.title, spec.type, spec.planItem, spec.status], ["Export reports", "Feature", "4b", "in progress"]);
+  assert.deepEqual(spec.goal, ["Users can download a report as a file.", "**Done when** it downloads."]);
+  assert.deepEqual(spec.inScope, ["The download button", "A CSV writer that quotes embedded commas"]);
+  assert.deepEqual(spec.outOfScope, ["**PDF.** A later item."]);
+  assert.deepEqual(spec.files, ["`src/report.ts` - the writer"]);
+  assert.deepEqual(spec.steps, [
+    { label: "Step 1", title: "schema", what: "added the table.", doneWhen: "it migrates.", done: true },
+    {
+      label: "Step 2",
+      title: "client - with retries",
+      what: "wires the button, and retries.",
+      doneWhen: "the file downloads.",
+      done: false
+    },
+    { label: "Repair F-04", title: "quoting", what: "quote commas.", doneWhen: null, done: false }
+  ]);
+});
+
+test("parseSpec returns null for the stub and degrades on a mangled spec", () => {
+  assert.equal(parseSpec("# Current Work\n\n_Nothing in progress. Run `feature` to start._"), null);
+  assert.equal(parseSpec(null), null);
+
+  const mangled = parseSpec("no title\n\n## Build steps\n\n- [x] just words\nstray paragraph\n- not a step");
+  assert.ok(mangled);
+  assert.equal(mangled.title, null);
+  assert.deepEqual(mangled.goal, []);
+  assert.deepEqual(mangled.steps, [{ label: "", title: "just words", what: "", doneWhen: null, done: true }]);
 });
 
 test("parseFindings reads identifier, severity and status", () => {
@@ -115,6 +198,174 @@ test("parseFindings reads identifier, severity and status", () => {
     (f) => (f.severity === "P0" || f.severity === "P1") && (f.status === "open" || f.status === "fixed")
   );
   assert.deepEqual(blocking.map((f) => f.id), ["F-01", "F-03"]);
+});
+
+test("parseFindings reads each finding's details, and tolerates a bare heading and a finding without a lens", () => {
+  const ledger = [
+    "### F-02 [P2] open - The upper edge is not pinned",
+    "",
+    "**File:** lib/args.test.ts:46",
+    "**Found:** 2026-09-26 by audit (scope: current; lens: tests, quality)",
+    "**Why it matters:** `stauts` pins distance 2.",
+    "**Suggested fix:** Assert `sta`.",
+    "**Resolution:**",
+    "",
+    "### F-03 [P3] fixed - Bare",
+    "",
+    "### F-79 [P3] open - Raised while building",
+    "",
+    "**File:** bin/religion.ts:217",
+    "**Found:** 2026-09-26 while writing the upgrade guide from runs",
+    "**Resolution:** Repaired 2026-09-26: the hint is gone."
+  ].join("\n");
+
+  const [full, bare, building] = parseFindings(ledger);
+  assert.deepEqual(full, {
+    id: "F-02",
+    severity: "P2",
+    status: "open",
+    title: "The upper edge is not pinned",
+    file: "lib/args.test.ts:46",
+    found: "2026-09-26 by audit",
+    lens: "tests, quality",
+    why: "`stauts` pins distance 2.",
+    fix: "Assert `sta`.",
+    resolution: null
+  });
+  assert.deepEqual([bare?.id, bare?.file, bare?.found, bare?.why], ["F-03", null, null, null]);
+  assert.deepEqual(
+    [building?.found, building?.lens, building?.resolution],
+    ["2026-09-26 while writing the upgrade guide from runs", null, "Repaired 2026-09-26: the hint is gone."]
+  );
+});
+
+test("parseArchive reads what an item cost and what it taught", () => {
+  const archive = parseArchive(
+    "features",
+    "04d-the-statement.md",
+    [
+      "# The statement",
+      "",
+      "**Type:** Feature",
+      "**Status:** verified",
+      "",
+      "## Build steps",
+      "",
+      "- [x] **Step 1 - write it** - the document.",
+      "- [x] **Step 2 - check it** - the check.",
+      "- [x] **Repair F-80 - links** - leave it unwritten.",
+      "",
+      "## Outcome",
+      "",
+      "### What went wrong on the way",
+      "",
+      "**The check took six rounds.** A denylist",
+      "was evaded.",
+      "",
+      "- A harness truncated files.",
+      "",
+      "### Deferred",
+      "",
+      "- **F-97 (P2):** a symlinked directory.",
+      "",
+      "## Landed",
+      "",
+      "**Base:** fd5fbbe3b031b1bf4006049b6d718aa5c9bb5075",
+      "**Commits:** a4744a4bf0058c7674395a4b74a75bb5d7def639, 72177e746f7697ee1a934bba3642e4066d9cd59e",
+      "",
+      "## Findings",
+      "",
+      "### 4d/F-80 [P1] closed - The hook writes through links",
+      "",
+      "**File:** src/hooks/write-handoff.mjs:82"
+    ].join("\n")
+  );
+
+  assert.deepEqual(archive, {
+    kind: "features",
+    file: "04d-the-statement.md",
+    number: "4d",
+    title: "The statement",
+    type: "Feature",
+    status: "verified",
+    steps: 2,
+    repairs: 1,
+    commits: ["a4744a4bf0058c7674395a4b74a75bb5d7def639", "72177e746f7697ee1a934bba3642e4066d9cd59e"],
+    findings: [{ id: "F-80", severity: "P1", status: "closed", title: "The hook writes through links" }],
+    wentWrong: ["**The check took six rounds.** A denylist was evaded.", "A harness truncated files."],
+    deferred: ["**F-97 (P2):** a symlinked directory."]
+  });
+});
+
+test("parseArchive degrades on an archive with no Landed, Findings or lessons", () => {
+  const archive = parseArchive("fixes", "notes.md", "# Quick fix\n\nNo sections at all.");
+  assert.deepEqual(
+    [archive.number, archive.title, archive.steps, archive.commits, archive.findings, archive.wentWrong],
+    [null, "Quick fix", 0, [], [], []]
+  );
+});
+
+test("readHistory reads every kind's archives and skips each folder's README", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-history-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, "religion", "history", "features"), { recursive: true });
+  await fs.mkdir(path.join(root, "religion", "history", "fixes"), { recursive: true });
+  await fs.writeFile(path.join(root, "religion", "history", "features", "README.md"), "# Completed features");
+  await fs.writeFile(path.join(root, "religion", "history", "features", "01-first.md"), "# First");
+  await fs.writeFile(path.join(root, "religion", "history", "features", "02-second.md"), "# Second");
+  await fs.writeFile(path.join(root, "religion", "history", "fixes", "01-a-fix.md"), "# A fix");
+
+  const history = await readHistory(root);
+  assert.deepEqual(
+    history.map((a) => [a.kind, a.number, a.title]),
+    [
+      ["features", "2", "Second"],
+      ["features", "1", "First"],
+      ["fixes", "1", "A fix"]
+    ]
+  );
+});
+
+test("parseInbox reads dated and undated notes and ignores the guidance", () => {
+  const inbox = [
+    "# Inbox",
+    "",
+    "> **Generated file.** Notes taken with `capture`.",
+    "",
+    "`fix` and `feature` read this when choosing what to build next.",
+    "",
+    "- 2026-09-05 - `parseWork.nextStep` truncates a step title - latent.",
+    "- an undated note"
+  ].join("\n");
+
+  assert.deepEqual(parseInbox(inbox), [
+    { date: "2026-09-05", text: "`parseWork.nextStep` truncates a step title - latent." },
+    { date: null, text: "an undated note" }
+  ]);
+  assert.deepEqual(parseInbox("# Inbox\n\n_Nothing captured._"), []);
+  assert.deepEqual(parseInbox(null), []);
+});
+
+test("the ledger and spec parsers stay linear on pathological lines", () => {
+  // Both inputs took tens of seconds with the earlier whole-line patterns.
+  const started = Date.now();
+  parseFindings("### F-01 [P3] open - Long\n\n**Found:** a" + " ".repeat(320_000) + "x (lens: " + "(lens: x".repeat(10_000));
+  parseWork("# Spec\n" + "\n".repeat(80_000) + "- [ ] **Step 1 - last**");
+  parseFindings("### F-02 [P3] open - Spaces after the lens\n\n**Found:** x (lens:" + " ".repeat(80_000) + "x");
+  parseWork("- [ ] x" + " ".repeat(80_000) + "y\n" + " ".repeat(8_000) + "\n".repeat(80_000));
+  assert.ok(Date.now() - started < 1000, `took ${Date.now() - started} ms`);
+});
+
+test("parseFindings takes the lens from the last parenthesis, with or without a scope", () => {
+  const [scoped, bare] = parseFindings(
+    [
+      "### F-01 [P3] open - Scoped",
+      "**Found:** 2026-09-26 by audit (scope: current; lens: tests)",
+      "### F-02 [P3] open - Bare",
+      "**Found:** 2026-09-26 by audit (lens: quality)"
+    ].join("\n")
+  );
+  assert.deepEqual([scoped?.found, scoped?.lens, bare?.found, bare?.lens], ["2026-09-26 by audit", "tests", "2026-09-26 by audit", "quality"]);
 });
 
 test("parseFindings returns nothing for an empty ledger", () => {

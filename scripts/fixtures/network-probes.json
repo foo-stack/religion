@@ -1485,8 +1485,8 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "<h1>Religion <span id=\"root\"></span></h1>",
-    "<h1>Religion <span id=\"root\"></span></h1><button onclick=\"window.open('https://github.com/foo-stack/religion#readme')\">Docs</button>"
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div>",
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div><button onclick=\"window.open('https://github.com/foo-stack/religion#readme')\">Docs</button>"
    ]
   ],
   "expect": "caught"
@@ -1498,8 +1498,8 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "<h1>Religion <span id=\"root\"></span></h1>",
-    "<h1>Religion <span id=\"root\"></span></h1><button onclick=\"location.assign('https://github.com/foo-stack/religion/issues/new')\">Report</button>"
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div>",
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div><button onclick=\"location.assign('https://github.com/foo-stack/religion/issues/new')\">Report</button>"
    ]
   ],
   "expect": "caught"
@@ -1511,8 +1511,8 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "<h1>Religion <span id=\"root\"></span></h1>",
-    "<h1>Religion <span id=\"root\"></span></h1><div onclick=\"open('https://github.com/foo-stack/religion')\">Help</div>"
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div>",
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div><div onclick=\"open('https://github.com/foo-stack/religion')\">Help</div>"
    ]
   ],
   "expect": "caught"
@@ -1524,8 +1524,8 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "<h1>Religion <span id=\"root\"></span></h1>",
-    "<h1>Religion <span id=\"root\"></span></h1><button onclick=\"location.href='https://github.com/foo-stack/religion'\">Docs</button>"
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div>",
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div><button onclick=\"location.href='https://github.com/foo-stack/religion'\">Docs</button>"
    ]
   ],
   "expect": "caught"
@@ -1867,8 +1867,8 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "<h1>Religion <span id=\"root\"></span></h1>",
-    "<h1>Religion <span id=\"root\"></span></h1><div style=\"background:url(https://example.com/bg.png)\"></div>"
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div>",
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div><div style=\"background:url(https://example.com/bg.png)\"></div>"
    ]
   ],
   "expect": "caught"
@@ -1880,8 +1880,8 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "<h1>Religion <span id=\"root\"></span></h1>",
-    "<h1>Religion <span id=\"root\"></span></h1><svg><use href=\"https://example.com/icons.svg#x\"/></svg>"
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div>",
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div><svg><use href=\"https://example.com/icons.svg#x\"/></svg>"
    ]
   ],
   "expect": "caught"
@@ -1906,8 +1906,8 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "why.textContent = s.next.because;",
-    "why.innerHTML = s.next.because;"
+    "$(\"next-because\").textContent = data.status.next.because;",
+    "$(\"next-because\").innerHTML = data.status.next.because;"
    ]
   ],
   "expect": "clean"
@@ -1944,8 +1944,8 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "<h1>Religion <span id=\"root\"></span></h1>",
-    "<h1>Religion <span id=\"root\"></span></h1><nav><a href=\"#plan\">Plan</a></nav>"
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div>",
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div><nav><a href=\"#plan\">Plan</a></nav>"
    ]
   ],
   "expect": "clean"
@@ -1970,7 +1970,7 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "await fetch(\"/state.json\")",
+    "await fetch(\"/state.json\", { signal: AbortSignal.timeout(10000) })",
     "await fetch(\"/state.json\", { cache: \"no-store\" })"
    ]
   ],
@@ -2307,8 +2307,8 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "<h1>Religion <span id=\"root\"></span></h1>",
-    "<h1>Religion <span id=\"root\"></span></h1><SCRIPT>window.open('https://example.com')</SCRIPT>"
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div>",
+    "<div class=\"brand\"><b>Religion</b><div id=\"project\"></div></div><SCRIPT>window.open('https://example.com')</SCRIPT>"
    ]
   ],
   "expect": "caught"

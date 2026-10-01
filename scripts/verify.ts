@@ -14,6 +14,11 @@ import { fileURLToPath } from "node:url";
 
 import { SHARED, TREES } from "../src/lib/adapters.js";
 import { PLANNED_SKILLS, readSkills } from "../src/lib/skills.js";
+import { compareSurface, shapeProblems } from "./surface.js";
+import type { Shape, Surface } from "./surface.js";
+import { currentOutputs, currentSurface, SURFACE_RECORD } from "./surface-current.js";
+import { upgradeProblems } from "./upgrade.js";
+import { networkProblems, statementProblems } from "./promises.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -248,6 +253,41 @@ const checks: Check[] = [
       }
       return problems;
     }
+  },
+  {
+    name: "the public surface matches its record",
+    run: async () => {
+      // A removal here breaks someone's scripts or installs; an addition is only a problem
+      // while it is unrecorded, since the record is what a stable release promises.
+      const record = JSON.parse(await fs.readFile(SURFACE_RECORD, "utf8")) as Record<string, Surface>;
+      const current = await currentSurface();
+      const recorded = Object.fromEntries(Object.keys(current).map((key) => [key, record[key] ?? null]));
+      const problems = compareSurface(recorded, current);
+
+      const shapes = (record.json ?? {}) as Record<string, Shape>;
+      const outputs = await currentOutputs();
+      for (const [kind, values] of Object.entries(outputs)) {
+        const shape = shapes[kind];
+        if (!shape) {
+          problems.push(`unrecorded: json.${kind} has no recorded shape`);
+          continue;
+        }
+        problems.push(...values.flatMap((value) => shapeProblems(value, shape, `${kind} --json`)));
+      }
+      return [...new Set(problems)].map((problem) => `surface.json: ${problem}`);
+    }
+  },
+  {
+    name: "a project the last release installed updates cleanly",
+    run: upgradeProblems
+  },
+  {
+    name: "the stability statement names the whole recorded surface",
+    run: statementProblems
+  },
+  {
+    name: "shipped code opens no network connection",
+    run: networkProblems
   },
   {
     name: "the command-line tool has unit tests",

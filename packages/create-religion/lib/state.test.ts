@@ -1,7 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { overviewHash, parseFindings, parseOpenQuestions, parsePlan, parseWork } from "./state.js";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
+import { overviewHash, parseFindings, parseOpenQuestions, parsePlan, parseWork, readProjectState } from "./state.js";
 
 test("parsePlan reads numbers, titles and tick state", () => {
   const plan = parsePlan(
@@ -141,3 +145,23 @@ test("overviewHash changes when either plan changes", () => {
   assert.notEqual(overviewHash("project", "build edited"), base);
   assert.equal(base.length, 16, "the stamp is 16 hex characters");
 });
+
+test("readProjectState reads the overview's stamp to decide whether it is fresh", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-state-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, "religion", "context"), { recursive: true });
+  await fs.writeFile(path.join(root, "religion", "project-plan.md"), "project");
+  await fs.writeFile(path.join(root, "religion", "build-plan.md"), "build");
+  const overview = (stamp: string) =>
+    fs.writeFile(path.join(root, "religion", "context", "project-overview.md"), `# Overview\n\n${stamp}\n`);
+
+  await overview(`<!-- religion:source-hash ${overviewHash("project", "build")} -->`);
+  assert.equal((await readProjectState(root)).overviewFresh, true, "a matching stamp is fresh");
+
+  await overview(`<!-- religion:source-hash ${overviewHash("project edited", "build")} -->`);
+  assert.equal((await readProjectState(root)).overviewFresh, false, "a stamp from other plans is stale");
+
+  await overview("no stamp at all");
+  assert.equal((await readProjectState(root)).overviewFresh, null, "a missing stamp is unknown, not fresh");
+});
+

@@ -7,7 +7,7 @@
  * can produce it and the model cannot forget to. Losing it costs nothing.
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const STATE = "religion";
@@ -79,5 +79,14 @@ lines.push(
   ""
 );
 
-writeFileSync(path.join(contextDir, "handoff.md"), lines.join("\n") + "\n");
+// A cloned repository can make any part of this path a link, and writing through it would
+// overwrite whatever it points at on every turn. Losing the handoff costs nothing.
+const linked = [path.join(root, STATE), contextDir, path.join(contextDir, "handoff.md")].some((part) => {
+  try {
+    return lstatSync(part).isSymbolicLink();
+  } catch {
+    return false;
+  }
+});
+if (!linked) writeFileSync(path.join(contextDir, "handoff.md"), lines.join("\n") + "\n");
 process.exit(0);

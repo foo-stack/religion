@@ -92,6 +92,15 @@ Already settled, with the reasoning in `docs/architecture/decisions/`:
 - no independent-review mechanism
 - no parallel execution across work items, which would need a different state shape
 
-**Deliberately left open**, rather than ruled out: whether Religion becomes extensible by
-third parties, whether it supports more runtimes, and whether it ever reaches outside the
-repository.
+**Settled ahead of 1.0**, so the stability statement can make each promise:
+
+- **Third-party extensibility stays open.** Skill sources, the token vocabulary and the
+  adapter definitions are internal rather than a public API, so opening them later adds a
+  surface instead of breaking one.
+- **The four adapters are promised.** Adding a runtime is a minor release; dropping one is
+  a breaking change.
+- **Religion never reaches outside the repository.** The command-line tool, the hooks and
+  the dashboard make no outbound network connections and write nothing outside the project
+  directory; the dashboard listens on loopback only. Reversing that is a breaking change.
+  What an agent does while following a skill is governed by the authority tiers, not by
+  this promise.

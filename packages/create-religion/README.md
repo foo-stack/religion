@@ -42,11 +42,23 @@ Installing the package globally shortens these to `religion status` and the rest
 `update` will not overwrite a file you have edited. It tells you what conflicts and backs
 up the original if you choose to replace it.
 
+### Exit codes
+
+The same for every command, so a script can rely on them:
+
+| Code | Meaning |
+| --- | --- |
+| `0` | the command did what it was asked |
+| `1` | it ran and reports failure: no project found, a failing `doctor` check, conflicts, declined merges or linked files left by `install` or `update`, a project installed by a newer version, or an unexpected error |
+| `2` | usage error: nothing was written |
+
 ## Documentation
 
 - [Getting started](https://github.com/foo-stack/religion/blob/main/docs/getting-started.md)
 - [What the loop actually feels like](https://github.com/foo-stack/religion/blob/main/docs/the-loop.md)
 - [What to do when doctor complains](https://github.com/foo-stack/religion/blob/main/docs/doctor.md)
+- [Updating a project](https://github.com/foo-stack/religion/blob/main/docs/upgrading.md)
+- [Stability](https://github.com/foo-stack/religion/blob/main/docs/stability.md)
 
 [github.com/foo-stack/religion](https://github.com/foo-stack/religion)
 

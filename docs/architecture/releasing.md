@@ -41,6 +41,53 @@ When no changesets are pending, which is the state immediately after that pull r
 the same workflow publishes instead. One workflow, two behaviours, decided by what is in
 `.changeset/`.
 
+## The public surface is recorded
+
+`packages/create-religion/surface.json` records what a release promises: every command and
+the options it accepts, the skill names, each adapter with the trees and entry file it
+installs, every setting with its allowed values or the type of its default, and the shapes of
+`status --json` and `doctor --json`. The check "the public surface matches its record"
+derives the same from the code and fails on any difference:
+
+| Failure | Meaning | What to do |
+| --- | --- | --- |
+| `breaking: ...` | something recorded was removed, renamed, or narrowed | restore it, or, when it is meant, edit the record in the same pull request and release it as the [stability statement](../stability.md#what-counts-as-a-breaking-change) says |
+| `unrecorded: ...` | something new is not in the record yet | add it to the record in the same pull request |
+
+Editing the record is the deliberate act. Its diff is what a reviewer reads to see what a
+change does to the promise, so an entry is never edited to make the check pass without that
+being the point of the pull request.
+
+## An upgrade from the last release is checked
+
+`packages/create-religion/fixtures/` holds the tarball of the last published release, byte for
+byte, named by `lastRelease` in the record and pinned by `lastReleaseIntegrity`, the registry's
+own integrity for it. The check refuses to run a tarball that does not match, or one whose
+own version is not `lastRelease`. Otherwise it runs that release's own installer into a
+scratch project and edits it the way `setup` would, including every file the project owns.
+It then updates the project with a copy of the current tool whose template has been changed
+in every managed file, with one skill added and one retired, so the update always has real
+work to do however little changed since the release. It fails unless every managed file is
+the new template and nothing retired is left, each entry file holds the template's managed
+sections and imports exactly with the owner's title, sections and edits kept and backed up,
+no file the project owns has changed, doctor's install checks pass by name, the manifest
+records the new version and exactly the template's hashes, and a second update changes
+nothing. It needs the built template, so run `npm run build` before `npm test`.
+
+A failure here is a regression in `update`. Fix the code; never re-record or edit the fixture
+to make it pass.
+
+After every publish, point it at the release that just went out:
+
+```bash
+npm run capture:release -- <version just published>
+```
+
+That replaces the tarball, records its version and integrity, and belongs in a pull request
+of its own. The tarball shows only as a binary change, so the reviewer confirms the recorded
+integrity with `npm view create-religion@<version> dist.integrity`. It is the only step here
+that needs the registry.
+
 ## Publishing has no token
 
 npm trusted publishing exchanges a GitHub OIDC token for short-lived publish rights. The

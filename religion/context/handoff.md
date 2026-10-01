@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Documentation for people who did not build it** is in progress: 4 step(s) done, 0 to go.
+Nothing in progress.
 
-Plan: 2 of 4 item(s) complete. Next up: 3. **Documentation for people who did not build it** - a getting-started walkthrough, what the loop feels like in practice, and what to do when `doctor` complains
+Plan: 8 of 8 item(s) complete.
 
 ## Read first
 

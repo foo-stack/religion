@@ -13,11 +13,15 @@ import path from "node:path";
 import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
+import { parseArgs } from "../lib/args.js";
+import type { Options } from "../lib/args.js";
 import { startDashboard } from "../lib/dashboard.js";
-import { renderDoctor, runDoctor } from "../lib/doctor.js";
+import { doctorReport, renderDoctor, runDoctor } from "../lib/doctor.js";
 import {
   ADAPTERS,
   applyInstall,
+  BACKUPS,
+  manifestRefusal,
   planInstall,
   readManifest,
   wireHooks,
@@ -56,18 +60,15 @@ function findPackageRoot(from: string): string {
 const packageRoot = findPackageRoot(here);
 const templateRoot = path.join(packageRoot, "template");
 
-interface Options {
-  command: "install" | "update" | "status" | "doctor" | "dashboard" | "help";
-  adapters: Adapter[] | null;
-  json: boolean;
-  dryRun: boolean;
-  force: boolean;
-  yes: boolean;
-  target: string;
-}
-
 async function main(argv: readonly string[]): Promise<void> {
-  const options = parse(argv);
+  const parsed = parseArgs(argv, { cwd: process.cwd(), isDirectory });
+  if (!parsed.ok) {
+    console.error(parsed.error);
+    console.error("Run `religion help` for usage.");
+    process.exitCode = 2;
+    return;
+  }
+  const options = parsed.options;
 
   if (options.command === "help") return printHelp();
   if (options.command === "install" || options.command === "update") return runInstall(options);
@@ -86,9 +87,9 @@ async function main(argv: readonly string[]): Promise<void> {
   }
 
   if (options.command === "doctor") {
-    const results = await runDoctor(root);
-    console.log(options.json ? JSON.stringify(results, null, 2) : renderDoctor(results));
-    if (results.some((r) => !r.ok)) process.exitCode = 1;
+    const report = doctorReport(await runDoctor(root));
+    console.log(options.json ? JSON.stringify(report, null, 2) : renderDoctor(report.checks));
+    if (!report.healthy) process.exitCode = 1;
     return;
   }
 
@@ -104,6 +105,14 @@ async function runInstall(options: Options): Promise<void> {
   const target = path.resolve(options.target);
   const updating = options.command === "update";
   const previous = await readManifest(target);
+  const packageVersion = await version();
+
+  const refusal = manifestRefusal(previous, packageVersion);
+  if (refusal) {
+    console.error(refusal);
+    process.exitCode = 1;
+    return;
+  }
 
   if (updating && !previous) {
     console.log("No manifest found. Files matching the template will be adopted; others are conflicts.");
@@ -118,7 +127,11 @@ async function runInstall(options: Options): Promise<void> {
     conflict: plan.filter((p) => p.action === "conflict").length,
     kept: plan.filter((p) => p.action === "seed-skip").length,
     merge: plan.filter((p) => p.action === "merge").length,
-    remerge: plan.filter((p) => p.action === "remerge").length
+    remerge: plan.filter((p) => p.action === "remerge").length,
+    rebuild: plan.filter((p) => p.action === "rebuild").length,
+    remove: plan.filter((p) => p.action === "remove").length,
+    release: plan.filter((p) => p.action === "release").length,
+    linked: plan.filter((p) => p.action === "linked").length
   };
 
   console.log(`\nAdapters: ${adapters.map((a) => ADAPTERS[a].label).join(", ")}`);
@@ -126,12 +139,15 @@ async function runInstall(options: Options): Promise<void> {
   console.log(`  update   ${counts.update}`);
   console.log(`  keep     ${counts.kept}  (your files, never overwritten)`);
   console.log(`  conflict ${counts.conflict}`);
+  for (const entry of plan.filter((p) => p.action === "conflict")) console.log(`    ${entry.relative}`);
   if (counts.merge > 0) console.log(`  merge    ${counts.merge}  (your file, awaiting a decision)`);
   if (counts.remerge > 0) console.log(`  merged   ${counts.remerge}  (your sections kept)`);
-
-  for (const entry of plan.filter((p) => p.action === "conflict")) {
-    console.log(`    ${entry.relative}`);
-  }
+  if (counts.rebuild > 0) console.log(`  rebuilt  ${counts.rebuild}  (your sections kept, original backed up)`);
+  if (counts.remove > 0) console.log(`  remove   ${counts.remove}  (no longer shipped)`);
+  if (counts.release > 0) console.log(`  release  ${counts.release}  (no longer shipped, but edited by you, so left alone)`);
+  for (const entry of plan.filter((p) => p.action === "release")) console.log(`    ${entry.relative}`);
+  if (counts.linked > 0) console.log(`  linked   ${counts.linked}  (reached through a symbolic link, never written)`);
+  for (const entry of plan.filter((p) => p.action === "linked")) console.log(`    ${entry.relative}`);
 
   const mergeable = plan.filter((p) => p.action === "merge").map((p) => p.relative);
   let merge = false;
@@ -141,7 +157,7 @@ async function runInstall(options: Options): Promise<void> {
     console.log(
       "\nReligion can append its own sections to them inside markers, keeping everything" +
         "\nyou wrote exactly where it is. Later updates then replace only what is between" +
-        "\nthose markers. The originals are backed up either way."
+        "\nthose markers. The originals are backed up first."
     );
     merge = await confirmMerge(options.yes);
   }
@@ -158,14 +174,45 @@ async function runInstall(options: Options): Promise<void> {
   }
 
   const result = await applyInstall(templateRoot, target, plan, { force: options.force, merge });
-  await writeManifest(target, await version(), adapters, templateRoot, previous, result.conflicts);
+  await writeManifest(target, packageVersion, adapters, templateRoot, previous, [
+    ...result.conflicts,
+    ...result.declined,
+    ...result.linked
+  ]);
 
   console.log(`\nWrote ${result.written.length} file(s).`);
   if (result.merged.length > 0) {
     console.log(`Merged ${result.merged.length} entry file(s), keeping what you wrote.`);
   }
-  if (result.backups.length > 0) console.log(`Backed up ${result.backups.length} conflicting file(s).`);
+  if (result.rebuilt.length > 0) {
+    console.log(
+      `Rebuilt ${result.rebuilt.length} entry file(s) around the sections you wrote. The originals are in ` +
+        `${BACKUPS}.`
+    );
+  }
+  if (result.removed.length > 0) console.log(`Removed ${result.removed.length} file(s) this version no longer ships.`);
+  if (result.released.length > 0) {
+    console.log(`Left ${result.released.length} file(s) this version no longer ships, because you edited them. They are yours now.`);
+  }
+  if (result.backups.length > 0) {
+    console.log(`Backed up ${result.backups.length} file(s) to ${BACKUPS} before changing them.`);
+  }
+  if (result.linked.length > 0) {
+    process.exitCode = 1;
+    console.log(
+      `\n${result.linked.length} file(s) are reached through a symbolic link and were left alone, since writing` +
+        `\nthem would write wherever the link points. Replace the links with real files and run again.`
+    );
+  }
+  if (result.declined.length > 0) {
+    process.exitCode = 1;
+    console.log(
+      `\n${result.declined.length} file(s) of yours were not merged, so Religion's instructions are not in them.` +
+        `\nRun update again and accept the merge, or pass --yes, to add them.`
+    );
+  }
   if (result.conflicts.length > 0) {
+    process.exitCode = 1;
     console.log(
       `\n${result.conflicts.length} file(s) were changed locally and left alone.` +
         `\nReview them, then re-run with --force to replace them (originals are backed up).`
@@ -176,10 +223,16 @@ async function runInstall(options: Options): Promise<void> {
     const wired = await wireHooks(target);
     if (wired === "written") {
       console.log("Wired the enforcement hooks into .claude/settings.json.");
+    } else if (wired === "linked") {
+      process.exitCode = 1;
+      console.log(
+        "\n.claude/settings.json is a symbolic link and was left alone." +
+          "\nIf a hook is missing, compare the file it points to with a fresh install's .claude/settings.json."
+      );
     } else if (wired === "exists") {
       console.log(
         "\n.claude/settings.json already exists and was left alone." +
-          `\nTo enable the hooks, merge ${path.join(STATE_DIR, ".state", "settings-template.json")} into it.`
+          "\nIf a hook is missing, compare it with a fresh install's .claude/settings.json."
       );
     }
   }
@@ -235,33 +288,12 @@ async function version(): Promise<string> {
   }
 }
 
-function parse(argv: readonly string[]): Options {
-  const options: Options = {
-    command: "install",
-    adapters: null,
-    json: false,
-    dryRun: false,
-    force: false,
-    yes: false,
-    target: process.cwd()
-  };
-
-  const commands = new Set(["install", "update", "status", "doctor", "dashboard", "help"]);
-  const adapters: Adapter[] = [];
-
-  for (const arg of argv) {
-    if (commands.has(arg)) options.command = arg as Options["command"];
-    else if (arg === "--json") options.json = true;
-    else if (arg === "--dry-run") options.dryRun = true;
-    else if (arg === "--force") options.force = true;
-    else if (arg === "--yes" || arg === "-y") options.yes = true;
-    else if (arg === "--help" || arg === "-h") options.command = "help";
-    else if (arg.startsWith("--") && arg.slice(2) in ADAPTERS) adapters.push(arg.slice(2) as Adapter);
-    else if (!arg.startsWith("-")) options.target = arg;
+function isDirectory(candidate: string): boolean {
+  try {
+    return fsSync.statSync(path.resolve(candidate)).isDirectory();
+  } catch {
+    return false;
   }
-
-  if (adapters.length > 0) options.adapters = adapters;
-  return options;
 }
 
 function printHelp(): void {
@@ -282,6 +314,13 @@ Options
   --force       replace locally-changed managed files, backing them up first
   --json        machine-readable output for status and doctor
   --yes         no prompts
+
+Exit codes
+  0   the command did what it was asked
+  1   it ran and reports failure: no project found, a failing doctor check,
+      conflicts, declined merges or linked files left by install or update,
+      a project installed by a newer version, or an unexpected error
+  2   usage error: nothing was written
 `);
 }
 

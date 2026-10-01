@@ -12,7 +12,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { exists, STATE_DIR } from "./paths.js";
-import { hasDamagedMarkers, hasMarkers, replaceManagedBlock, spliceEntry } from "./merge.js";
+import { hasDamagedMarkers, hasMarkers, rebuildEntry, replaceManagedBlock, spliceEntry } from "./merge.js";
 
 export type Adapter = "claude" | "codex" | "copilot" | "opencode";
 
@@ -32,10 +32,27 @@ export interface Manifest {
 
 export interface PlanEntry {
   relative: string;
-  action: "create" | "update" | "seed-skip" | "conflict" | "unchanged" | "merge" | "remerge";
+  action:
+    | "create"
+    | "update"
+    | "seed-skip"
+    | "conflict"
+    | "unchanged"
+    | "merge"
+    | "remerge"
+    | "rebuild"
+    | "remove"
+    | "release"
+    | "linked";
+  /** For a removal, the hash it was planned against, checked again just before deleting. */
+  recorded?: string;
 }
 
-const MANIFEST = path.join(STATE_DIR, ".state", "manifest.json");
+const MANIFEST_PATH = `${STATE_DIR}/.state/manifest.json`;
+const MANIFEST = path.join(...MANIFEST_PATH.split("/"));
+
+/** Where originals are copied before install or update changes them, relative to the project. */
+export const BACKUPS = `${STATE_DIR}/.state/backups`;
 
 export function hash(contents: Buffer | string): string {
   return crypto.createHash("sha256").update(contents).digest("hex").slice(0, 16);
@@ -63,6 +80,13 @@ export async function planInstall(
 
   for (const relative of await walk(templateRoot)) {
     if (!wanted(relative)) continue;
+
+    // Checked before anything else, since `exists` follows links: a dangling one would read as
+    // absent and be created wherever it points.
+    if (await throughLink(target, relative)) {
+      plan.push({ relative, action: "linked" });
+      continue;
+    }
 
     const destination = path.join(target, relative);
     const source = await fs.readFile(path.join(templateRoot, relative));
@@ -99,8 +123,16 @@ export async function planInstall(
     if (entries.has(relative)) {
       const text = current.toString("utf8");
       // A damaged marker pair is a conflict, never a fresh merge: splicing a second block
-      // into a file that already has one is worse than the damage.
-      const action = hasMarkers(text) ? "remerge" : hasDamagedMarkers(text) ? "conflict" : "merge";
+      // into a file that already has one is worse than the damage. An unmarked file the
+      // manifest records is one Religion wrote and setup edited, so it already holds
+      // Religion's sections and is rebuilt around the owner's rather than spliced.
+      const action = hasMarkers(text)
+        ? "remerge"
+        : hasDamagedMarkers(text)
+          ? "conflict"
+          : recorded
+            ? await rebuildOrConflict(target, relative, recorded)
+            : "merge";
       plan.push({ relative, action });
       continue;
     }
@@ -108,7 +140,57 @@ export async function planInstall(
     plan.push({ relative, action: "conflict" });
   }
 
+  return [...plan, ...(await planDropped(templateRoot, target, previous))];
+}
+
+/**
+ * Files the previous install recorded that the template no longer ships, for any adapter.
+ *
+ * Unedited ones are removed, which is what lets a skill or a hook be retired at all. Edited
+ * ones are released: left where they are and dropped from the manifest, since the edit makes
+ * them the owner's. The manifest is a file in someone's repository, so it must not be able to
+ * steer a deletion: only a plain file under one of Religion's own trees is ever a candidate.
+ */
+async function planDropped(templateRoot: string, target: string, previous: Manifest | null): Promise<PlanEntry[]> {
+  const managed = previous?.managed;
+  if (!managed || typeof managed !== "object") return [];
+  const shipped = new Set(await walk(templateRoot));
+  const plan: PlanEntry[] = [];
+
+  for (const [relative, recorded] of Object.entries(managed)) {
+    if (shipped.has(relative) || !retiringTree(relative) || !(await isPlainFile(target, relative))) continue;
+    const current = await fs.readFile(path.join(target, ...relative.split("/")));
+    plan.push({ relative, action: hash(current) === recorded ? "remove" : "release", recorded });
+  }
+
   return plan;
+}
+
+/**
+ * The tree a recorded path can be retired from, or null when it may not be touched.
+ *
+ * Exact case, forward slashes and no climbing, checked as text before the filesystem is
+ * asked anything. A case-insensitive disk would otherwise let `RELIGION/` or `.CLAUDE/`
+ * reach files the comparison was meant to exclude.
+ */
+function retiringTree(relative: string): string | null {
+  if (relative.includes("\\") || path.posix.isAbsolute(relative)) return null;
+  if (path.posix.normalize(relative) !== relative || relative.split("/").includes("..")) return null;
+  const trees = new Set(Object.values(ADAPTERS).flatMap((adapter) => adapter.trees));
+  return [...trees].find((tree) => relative.startsWith(`${tree}/`)) ?? null;
+}
+
+/** Every component a real directory and the last a regular file, with no symbolic link anywhere. */
+async function isPlainFile(target: string, relative: string): Promise<boolean> {
+  const parts = relative.split("/");
+  let current = target;
+  for (const [index, part] of parts.entries()) {
+    current = path.join(current, part);
+    const stat = await fs.lstat(current).catch(() => null);
+    const last = index === parts.length - 1;
+    if (!stat || stat.isSymbolicLink() || (last ? !stat.isFile() : !stat.isDirectory())) return false;
+  }
+  return true;
 }
 
 export async function applyInstall(
@@ -116,14 +198,53 @@ export async function applyInstall(
   target: string,
   plan: readonly PlanEntry[],
   options: { force: boolean; merge?: boolean }
-): Promise<{ written: string[]; conflicts: string[]; backups: string[]; merged: string[] }> {
+): Promise<{
+  written: string[];
+  conflicts: string[];
+  backups: string[];
+  merged: string[];
+  rebuilt: string[];
+  removed: string[];
+  released: string[];
+  declined: string[];
+  linked: string[];
+}> {
   const written: string[] = [];
   const conflicts: string[] = [];
   const backups: string[] = [];
   const merged: string[] = [];
+  const rebuilt: string[] = [];
+  const removed: string[] = [];
+  const released: string[] = [];
+  const declined: string[] = [];
+  const linked: string[] = [];
+
+  await refuseLinkedState(target, plan, options);
 
   for (const entry of plan) {
     if (entry.action === "unchanged" || entry.action === "seed-skip") continue;
+
+    if (entry.action === "release") {
+      released.push(entry.relative);
+      continue;
+    }
+
+    if (entry.action === "remove") {
+      // Checked again here because a prompt may have waited between planning and now, and a
+      // file edited in that time is the owner's.
+      const tree = retiringTree(entry.relative);
+      const file = path.join(target, ...entry.relative.split("/"));
+      const unchanged =
+        tree !== null && (await isPlainFile(target, entry.relative)) && hash(await fs.readFile(file)) === entry.recorded;
+      if (!unchanged) {
+        released.push(entry.relative);
+        continue;
+      }
+      await fs.rm(file);
+      await pruneEmptyParents(path.join(target, tree), path.dirname(file));
+      removed.push(entry.relative);
+      continue;
+    }
 
     if (entry.action === "conflict" && !options.force) {
       conflicts.push(entry.relative);
@@ -132,15 +253,20 @@ export async function applyInstall(
 
     // Replacing only what is between the markers is the whole point of having merged: the
     // user's own prose sits outside them and is never read, let alone rewritten.
+    // Checked again at the write, because a prompt may have waited since planning and a link
+    // swapped in meanwhile would carry the write outside the project.
+    if (entry.action === "linked" || (await throughLink(target, entry.relative))) {
+      linked.push(entry.relative);
+      continue;
+    }
+
     if (entry.action === "remerge" || (entry.action === "merge" && options.merge)) {
       const destination = path.join(target, entry.relative);
       const template = await fs.readFile(path.join(templateRoot, entry.relative), "utf8");
       const current = await fs.readFile(destination, "utf8");
 
       if (entry.action === "merge") {
-        const backup = path.join(target, STATE_DIR, ".state", "backups", entry.relative);
-        await fs.mkdir(path.dirname(backup), { recursive: true });
-        await fs.copyFile(destination, backup);
+        await backUp(target, entry.relative);
         backups.push(entry.relative);
       }
 
@@ -158,15 +284,29 @@ export async function applyInstall(
     }
 
     if (entry.action === "merge") {
-      conflicts.push(entry.relative);
+      declined.push(entry.relative);
+      continue;
+    }
+
+    if (entry.action === "rebuild") {
+      // A prompt may have waited since planning; a link swapped in meanwhile is not rewritten.
+      if (!(await isPlainFile(target, entry.relative))) {
+        conflicts.push(entry.relative);
+        continue;
+      }
+      const destination = path.join(target, entry.relative);
+      const template = await fs.readFile(path.join(templateRoot, entry.relative), "utf8");
+      const current = await fs.readFile(destination, "utf8");
+      await backUp(target, entry.relative);
+      backups.push(entry.relative);
+      await fs.writeFile(destination, rebuildEntry(current, template), "utf8");
+      rebuilt.push(entry.relative);
       continue;
     }
 
     const destination = path.join(target, entry.relative);
     if (entry.action === "conflict") {
-      const backup = path.join(target, STATE_DIR, ".state", "backups", entry.relative);
-      await fs.mkdir(path.dirname(backup), { recursive: true });
-      await fs.copyFile(destination, backup);
+      await backUp(target, entry.relative);
       backups.push(entry.relative);
     }
 
@@ -175,7 +315,79 @@ export async function applyInstall(
     written.push(entry.relative);
   }
 
-  return { written, conflicts, backups, merged };
+  return { written, conflicts, backups, merged, rebuilt, removed, released, declined, linked };
+}
+
+/**
+ * Rebuild only a file the manifest genuinely recorded, and only a plain one.
+ *
+ * A rebuild rewrites without asking, so it must not be reachable by a forged manifest value
+ * standing in for a hash, or by an entry file that is a link to somewhere else. Either is a
+ * conflict instead, which leaves the file alone and says so.
+ */
+async function rebuildOrConflict(target: string, relative: string, recorded: unknown): Promise<"rebuild" | "conflict"> {
+  const genuine = typeof recorded === "string" && /^[0-9a-f]{16}$/.test(recorded);
+  return genuine && (await isPlainFile(target, relative)) ? "rebuild" : "conflict";
+}
+
+async function backUp(target: string, relative: string): Promise<void> {
+  const backup = path.join(target, ...`${BACKUPS}/${relative}`.split("/"));
+  await fs.mkdir(path.dirname(backup), { recursive: true });
+  await fs.copyFile(path.join(target, relative), backup);
+}
+
+/** Whether any existing component of a project path is a symbolic link. Missing ones are not. */
+async function throughLink(target: string, relative: string): Promise<boolean> {
+  let current = target;
+  for (const part of relative.split("/")) {
+    current = path.join(current, part);
+    const stat = await fs.lstat(current).catch(() => null);
+    if (!stat) return false;
+    if (stat.isSymbolicLink()) return true;
+  }
+  return false;
+}
+
+/**
+ * Refuse, before anything is written, a run whose manifest or backups would pass through a link.
+ *
+ * The state directory is part of someone's repository, and a link at any point on the way
+ * would put the manifest, or a copy of their file, wherever the link points.
+ */
+async function refuseLinkedState(
+  target: string,
+  plan: readonly PlanEntry[],
+  options: { force: boolean; merge?: boolean }
+): Promise<void> {
+  const backedUp = plan.filter(
+    (entry) =>
+      entry.action === "rebuild" ||
+      (entry.action === "merge" && options.merge) ||
+      (entry.action === "conflict" && options.force)
+  );
+  const paths = [MANIFEST_PATH, ...backedUp.map((entry) => `${BACKUPS}/${entry.relative}`)];
+
+  for (const relative of paths) {
+    if (await throughLink(target, relative)) {
+      throw new Error(
+        `Refusing to write ${relative} because part of that path is a symbolic link. Replace the link with a real directory or file and run again.`
+      );
+    }
+  }
+}
+
+/** Remove directories a removal left empty, walking up and stopping at the tree it came from. */
+async function pruneEmptyParents(tree: string, dir: string): Promise<void> {
+  const root = path.resolve(tree);
+  let current = path.resolve(dir);
+  while (current.startsWith(root + path.sep)) {
+    try {
+      await fs.rmdir(current);
+    } catch {
+      return;
+    }
+    current = path.dirname(current);
+  }
 }
 
 /**
@@ -213,6 +425,9 @@ export async function writeManifest(
     managed[relative] = hash(await fs.readFile(path.join(templateRoot, relative)));
   }
 
+  if (await throughLink(target, MANIFEST_PATH)) {
+    throw new Error(`Refusing to write ${MANIFEST_PATH} because part of that path is a symbolic link.`);
+  }
   const manifest: Manifest = { schemaVersion: 1, version, adapters: [...adapters], managed };
   const file = path.join(target, MANIFEST);
   await fs.mkdir(path.dirname(file), { recursive: true });
@@ -226,16 +441,52 @@ export async function writeManifest(
  * merging into them blind is how a tool destroys configuration it did not write. When they
  * exist, the caller is told to wire it manually and shown where the template is.
  */
-export async function wireHooks(target: string): Promise<"written" | "exists" | "no-template"> {
+export async function wireHooks(target: string): Promise<"written" | "exists" | "no-template" | "linked"> {
   const template = path.join(target, STATE_DIR, ".state", "settings-template.json");
   const settings = path.join(target, ".claude", "settings.json");
 
   if (!(await exists(template))) return "no-template";
+  if (await throughLink(target, ".claude/settings.json")) return "linked";
   if (await exists(settings)) return "exists";
 
   await fs.mkdir(path.dirname(settings), { recursive: true });
   await fs.copyFile(template, settings);
   return "written";
+}
+
+/**
+ * Why this package must not act on a project, or null when it may.
+ *
+ * An older package applying its template over a newer install is a silent downgrade: it
+ * rewrites managed files to older versions and records them as installed. A version that
+ * cannot be parsed never refuses, since a hand-edited manifest is no evidence of a newer one.
+ */
+export function manifestRefusal(manifest: Manifest | null, packageVersion: string): string | null {
+  if (!manifest) return null;
+  const schema = manifest.schemaVersion as number;
+  if (typeof schema === "number" && schema > 1) {
+    return `This project's manifest uses format ${schema}, which create-religion ${packageVersion} does not understand. Run \`npx create-religion@latest update\` instead.`;
+  }
+  if (isNewer(manifest.version, packageVersion)) {
+    return `This project was installed by create-religion ${manifest.version}, newer than this ${packageVersion}. Run \`npx create-religion@latest update\` instead.`;
+  }
+  return null;
+}
+
+function isNewer(candidate: unknown, than: string): boolean {
+  const a = parseVersion(candidate);
+  const b = parseVersion(than);
+  if (!a || !b) return false;
+  for (let i = 0; i < 3; i += 1) {
+    if (a[i]! !== b[i]!) return a[i]! > b[i]!;
+  }
+  return false;
+}
+
+function parseVersion(version: unknown): number[] | null {
+  if (typeof version !== "string") return null;
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-.*)?$/.exec(version.trim());
+  return match ? match.slice(1, 4).map(Number) : null;
 }
 
 export async function readManifest(target: string): Promise<Manifest | null> {

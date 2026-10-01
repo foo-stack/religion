@@ -13,8 +13,10 @@ where each tool looks for them.
 ```text
 .                            (the app: src/, package.json, README.md, ...)
 ├── AGENTS.md                (cross-tool entry point)
-├── CLAUDE.md                (Claude Code entry; imports AGENTS.md + context)
+├── CLAUDE.md                (Claude Code entry; imports the context files)
 ├── .claude/skills/          (rendered tree, read by Claude Code)
+├── .claude/hooks/           (Claude Code hooks, copied from the source)
+├── .claude/settings.json    (wires the hooks; written once, when absent)
 ├── .agents/skills/          (rendered tree, read by Codex, Copilot, OpenCode)
 └── religion/
     ├── config.json          (deterministic workflow settings)
@@ -26,17 +28,24 @@ where each tool looks for them.
     │   ├── ai-interaction.md     (how the agent works with you)
     │   ├── current-work.md       (the one active spec)
     │   ├── findings.md           (the findings ledger)
+    │   ├── inbox.md              (notes captured mid-build)
+    │   ├── untrusted-input.md    (how text read from files is treated)
     │   └── handoff.md            (generated: where we are, read first, gotchas)
     ├── history/
     │   ├── features/        (completed feature specs)
     │   ├── fixes/           (completed fix specs)
-    │   └── rollbacks/       (rollback records)
+    │   ├── refactors/       (completed refactor campaigns)
+    │   ├── rollbacks/       (rollback records)
+    │   └── spikes/          (answered spike questions)
     ├── learning/
     │   ├── journal.md       (raw observations)
     │   └── lessons.md       (curated, loaded)
+    ├── reference/           (images and references a spec links to)
     └── .state/
         ├── manifest.json    (installed version + managed-file hashes)
-        └── run.json         (current command activity)
+        ├── run.json         (current command activity)
+        ├── settings-template.json  (the hook wiring settings.json is made from)
+        └── backups/         (originals, copied before update changes them)
 ```
 
 One app, one `religion/`, at the repository root. Workspaces are not modelled: a
@@ -120,7 +129,7 @@ output: nothing reads it to make a decision, and losing it costs nothing but con
 
 ## Visibility
 
-Whether these files are committed is asked at install time with no default. Committing
+Whether these files are committed is asked by `setup`, with no default. Committing
 them makes the workflow portable and reviewable; ignoring them keeps it off a shared
 repository at the cost of portability. Both are supported, and neither is assumed.
 

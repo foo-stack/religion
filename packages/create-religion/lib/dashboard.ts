@@ -15,35 +15,65 @@ import { computeStatus } from "./status.js";
 
 export interface Dashboard {
   url: string;
+  /** The address the server is bound to, which must be loopback. */
+  address: string;
   close: () => Promise<void>;
 }
 
 export async function startDashboard(root: string): Promise<Dashboard> {
+  let port = 0;
   const server = http.createServer((request, response) => {
-    void handle(root, request, response);
+    void handle(root, port, request, response);
   });
 
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  const port = typeof address === "object" && address ? address.port : 0;
+  port = typeof address === "object" && address ? address.port : 0;
 
   return {
     url: `http://127.0.0.1:${port}`,
+    address: typeof address === "object" && address ? address.address : "",
     close: () => new Promise((resolve) => server.close(() => resolve()))
   };
 }
 
-async function handle(root: string, request: http.IncomingMessage, response: http.ServerResponse) {
-  if (request.url === "/state.json") {
-    const state = await readProjectState(root);
-    const activity = await readActivity(root);
-    response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ status: computeStatus(state), plan: state.plan, findings: state.findings, activity }));
+/**
+ * Whether a request was addressed to this server by name, not only by socket.
+ *
+ * Binding to loopback keeps other machines out, but not a page elsewhere whose domain has
+ * been rebound to 127.0.0.1: the browser connects here and sends that domain as the Host.
+ * Answering only our own name refuses it.
+ */
+export function isOwnHost(host: string | undefined, port: number): boolean {
+  const name = host?.toLowerCase();
+  return name === `127.0.0.1:${port}` || name === `localhost:${port}`;
+}
+
+/** What every response allows a browser to load: inline script and style, and its own server. */
+export const CONTENT_SECURITY_POLICY =
+  "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'";
+
+async function handle(root: string, port: number, request: http.IncomingMessage, response: http.ServerResponse) {
+  if (!isOwnHost(request.headers.host, port)) {
+    send(response, 403, "text/plain; charset=utf-8", "Forbidden: this dashboard only answers requests addressed to itself.");
     return;
   }
 
-  response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-  response.end(PAGE);
+  if (request.url === "/state.json") {
+    const state = await readProjectState(root);
+    const activity = await readActivity(root);
+    const body = JSON.stringify({ status: computeStatus(state), plan: state.plan, findings: state.findings, activity });
+    send(response, 200, "application/json", body);
+    return;
+  }
+
+  send(response, 200, "text/html; charset=utf-8", PAGE);
+}
+
+/** The only way this server answers, so no response can leave out the policy. */
+function send(response: http.ServerResponse, status: number, type: string, body: string): void {
+  response.writeHead(status, { "content-type": type, "content-security-policy": CONTENT_SECURITY_POLICY });
+  response.end(body);
 }
 
 async function readActivity(root: string): Promise<unknown> {

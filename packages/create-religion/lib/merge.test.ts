@@ -7,6 +7,7 @@ import {
   hasDamagedMarkers,
   hasMarkers,
   managedBlock,
+  rebuildEntry,
   replaceManagedBlock,
   spliceEntry
 } from "./merge.js";
@@ -96,3 +97,48 @@ test("replaceManagedBlock returns null rather than guessing at a damaged pair", 
   assert.equal(replaceManagedBlock(`${MANAGED_START}\nonly a start`, TEMPLATE), null);
   assert.equal(replaceManagedBlock(`${MANAGED_END}\nx\n${MANAGED_START}`, TEMPLATE), null);
 });
+
+/** The template as setup leaves it: a real title, filled Commands, and a section of their own. */
+const SET_UP = TEMPLATE.replace("# Project Name", "# Acme")
+  .replace("- Dev server: `<command>`", "- Dev server: `make dev`")
+  .replace("## Commands", "## Deploying\n\nShip on Fridays.\n\n## Commands");
+
+const NEWER = TEMPLATE.replace("Build one thing at a time.", "Build one thing at a time, behind review gates.");
+
+function headings(text: string): string[] {
+  return text.split("\n").filter((line) => line.startsWith("## "));
+}
+
+test("rebuildEntry keeps one copy of every section", () => {
+  const rebuilt = rebuildEntry(SET_UP, NEWER);
+  const found = headings(rebuilt);
+  assert.deepEqual([...found].sort(), [...new Set(found)].sort());
+  assert.deepEqual([...found].sort(), ["## Commands", "## Deploying", "## What this is", "## Workflow"]);
+});
+
+test("rebuildEntry keeps what the owner wrote and takes Religion's sections from the template", () => {
+  const rebuilt = rebuildEntry(SET_UP, NEWER);
+  assert.ok(rebuilt.startsWith("# Acme\n"));
+  assert.match(rebuilt, /- Dev server: `make dev`/);
+  assert.match(rebuilt, /behind review gates/);
+  assert.doesNotMatch(rebuilt, /Build one thing at a time\.\n/);
+});
+
+test("rebuildEntry puts the owner's sections outside the block and the imports inside it", () => {
+  const rebuilt = rebuildEntry(SET_UP, NEWER);
+  const start = rebuilt.indexOf(MANAGED_START);
+  const end = rebuilt.indexOf(MANAGED_END);
+  assert.ok(start > 0 && end > start);
+  assert.ok(rebuilt.indexOf("## Deploying") < start);
+  assert.ok(rebuilt.indexOf("## What this is") < start);
+  assert.ok(rebuilt.indexOf("## Commands") > end);
+  const imports = [...rebuilt.matchAll(/^@religion\/context\/coding-standards\.md$/gm)].map((m) => m.index ?? -1);
+  assert.equal(imports.length, 1);
+  assert.ok(imports[0]! > start && imports[0]! < end);
+});
+
+test("rebuildEntry changes nothing the second time", () => {
+  const once = rebuildEntry(SET_UP, NEWER);
+  assert.equal(rebuildEntry(once, NEWER), once);
+});
+

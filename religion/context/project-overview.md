@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 65012932dc7057f5 -->
+<!-- religion:source-hash a8b1ee02cf975150 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,8 +49,7 @@ nothing to sign into.
 
 ## Roadmap
 
-4. **A path to 1.0** - state what is stable, what an update guarantees, and what counts as a
-   breaking change
+Nothing queued: every item in the build plan is complete.
 
 ## Domain model
 
@@ -101,13 +100,13 @@ The single thing in progress, in `context/current-work.md`.
 
 ## Code map
 
-- `src/skills/` - the 25 authored skills, one directory each. The single source; never edit a
+- `src/skills/` - the 26 authored skills, one directory each. The single source; never edit a
   rendered tree
 - `src/entry/` - the entry-file sources and the partials shared between them
 - `src/state/` - the state files a project is seeded with, written once and never re-rendered
 - `src/hooks/` - three Claude Code hooks, copied rather than rendered
 - `src/lib/` - the token vocabulary and adapter definitions, and the skill frontmatter reader
-- `scripts/` - the renderer, the package staging step, and the ten-check verification suite
+- `scripts/` - the renderer, the package staging step, and the verification suite
 - `evals/routing/` - the routing corpus, one file per skill, positive and negative cases
 - `packages/create-religion/` - the published package: `bin/` for the command-line entry
   point, `lib/` for install, update, merge, status, doctor, and the dashboard, with each
@@ -127,10 +126,3 @@ The single thing in progress, in `context/current-work.md`.
   workflow serve four tools
 - **npm, Changesets, GitHub Actions** - released over OIDC trusted publishing, no token anywhere
 - **No runtime dependencies** in the published package
-
-## Open questions
-
-- **Extensibility, runtime coverage, and reaching outside the repository** (affects: roadmap
-  item 4) - the project plan records these as deliberately open rather than ruled out. A 1.0
-  stability statement has to say something about each, since each would be a breaking change
-  to make later. Resolve in the plans and regenerate.

@@ -31,7 +31,7 @@
     "religion": "dist/bin/religion.js"
   },
   "files": ["dist/", "template/", "README.md", "LICENSE"],
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=22" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "prepack": "npm --prefix ../.. run build && npm run build"

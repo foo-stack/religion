@@ -32,3 +32,22 @@ jobs:
       - run: npm run build
 
       - run: npm test
+
+  # The oldest Node the package promises. Kept as its own job rather than a matrix so the
+  # required check keeps the name "verify".
+  verify-node-22:
+    name: verify on Node 22
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - run: npm test

@@ -74,6 +74,7 @@ and follow directly.
 - `refactor`      - simplify existing code in one behaviour-preserving campaign at a time
 - `release`       - prepare deployment readiness for Railway, Render, or Vercel
 - `rollback`      - plan a guarded reversal of completed work, preserving its history
+- `scout`         - propose new features grounded in what the codebase already has
 - `setup`         - tune the installation to this project, greenfield or existing
 - `spike`         - answer one feasibility question with throwaway code, then delete it
 - `status`        - say where the work stands and what to do next
@@ -230,6 +231,6 @@ and ignored: reporting must never turn into a workflow failure.
 - Test: `npm test`
 - Verify: `npm test`
 
-`npm test` runs the nine verification checks and the routing corpus. `npm run build`
+`npm test` runs the verification checks, the unit tests and the routing corpus. `npm run build`
 renders the skills, entry files and state templates, then stages the package template.
 Use `npm run build:skills:link` when the rendered trees in this repository need refreshing.

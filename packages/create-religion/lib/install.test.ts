@@ -5,7 +5,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { applyInstall, hash, planInstall, writeManifest } from "./install.js";
+import { applyInstall, hash, manifestRefusal, planInstall, wireHooks, writeManifest } from "./install.js";
+import { exists } from "./paths.js";
 import type { Manifest, PlanEntry } from "./install.js";
 import { MANAGED_END, MANAGED_START } from "./merge.js";
 
@@ -103,6 +104,45 @@ test("planInstall: an existing entry file is offered as a merge, not a conflict"
 
   const plan = await planInstall(template, target, ["claude"], null);
   assert.equal(actionFor(plan, "CLAUDE.md"), "merge");
+});
+
+test("planInstall: an unmarked entry file Religion installed is rebuilt, not merged", async (t) => {
+  // setup edits the entry file in place, so it matches neither the template nor the
+  // manifest. Merging it would append a second copy of every section Religion put there.
+  const { template, target } = await fixture(t);
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(target, "CLAUDE.md", ENTRY.replace("<command>", "make dev"));
+  const previous: Manifest = { schemaVersion: 1, version: "0.0.0", adapters: ["claude"], managed: { "CLAUDE.md": hash(ENTRY) } };
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(plan, "CLAUDE.md"), "rebuild");
+});
+
+test("applyInstall: a rebuild keeps their sections once and backs the original up", async (t) => {
+  const { template, target } = await fixture(t);
+  const newer = ENTRY.replace("\nw\n", "\nw2\n");
+  const edited = ENTRY.replace("# Project Name", "# Acme").replace("<command>", "make dev");
+  await write(template, "CLAUDE.md", newer);
+  await write(target, "CLAUDE.md", edited);
+  const previous: Manifest = { schemaVersion: 1, version: "0.0.0", adapters: ["claude"], managed: { "CLAUDE.md": hash(ENTRY) } };
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  const result = await applyInstall(template, target, plan, { force: false });
+
+  assert.deepEqual(result.rebuilt, ["CLAUDE.md"]);
+  assert.deepEqual(result.conflicts, []);
+  const onDisk = await fs.readFile(path.join(target, "CLAUDE.md"), "utf8");
+  assert.equal(onDisk.match(/^## Workflow$/gm)?.length, 1);
+  assert.equal(onDisk.match(/^## Commands$/gm)?.length, 1);
+  assert.match(onDisk, /^# Acme$/m);
+  assert.match(onDisk, /make dev/);
+  assert.match(onDisk, /\nw2\n/);
+  assert.ok(onDisk.includes(MANAGED_START) && onDisk.includes(MANAGED_END));
+  const backup = await fs.readFile(path.join(target, "religion", ".state", "backups", "CLAUDE.md"), "utf8");
+  assert.equal(backup, edited);
+
+  const again = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(again, "CLAUDE.md"), "remerge", "once rebuilt, later updates only replace the block");
 });
 
 test("planInstall: an already merged entry file is remerged", async (t) => {
@@ -237,3 +277,262 @@ test("a local edit survives three consecutive updates", async (t) => {
     ) as Manifest;
   }
 });
+
+function manifest(fields: Partial<Record<keyof Manifest, unknown>>): Manifest {
+  return { schemaVersion: 1, version: "0.5.0", adapters: ["claude"], managed: {}, ...fields } as Manifest;
+}
+
+test("manifestRefusal lets an older, equal or missing manifest through", () => {
+  assert.equal(manifestRefusal(null, "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: "0.5.9" }), "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: "0.6.0" }), "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: "0.10.0" }), "1.0.0"), null);
+});
+
+test("manifestRefusal refuses a manifest written by a newer release", () => {
+  assert.match(manifestRefusal(manifest({ version: "0.6.1" }), "0.6.0") ?? "", /installed by create-religion 0\.6\.1, newer than this 0\.6\.0/);
+  assert.match(manifestRefusal(manifest({ version: "0.10.0" }), "0.9.9") ?? "", /newer than this 0\.9\.9/);
+  assert.match(manifestRefusal(manifest({ version: "2.0.0-beta.1" }), "1.9.0") ?? "", /newer/);
+});
+
+test("manifestRefusal refuses a manifest format it does not understand", () => {
+  assert.match(manifestRefusal(manifest({ schemaVersion: 2 }), "0.6.0") ?? "", /format 2/);
+});
+
+test("manifestRefusal never refuses on a version it cannot parse", () => {
+  assert.equal(manifestRefusal(manifest({ version: "latest" }), "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: undefined }), "0.6.0"), null);
+  assert.equal(manifestRefusal(manifest({ version: "9.0.0" }), "dev"), null);
+});
+
+function recording(managed: Record<string, string>): Manifest {
+  return { schemaVersion: 1, version: "0.0.0", adapters: ["claude"], managed };
+}
+
+test("planInstall: a file the template dropped is removed when unedited and released when edited", async (t) => {
+  const { template, target } = await fixture(t);
+  await write(template, ".claude/skills/kept/SKILL.md", "kept\n");
+  await write(target, ".claude/skills/kept/SKILL.md", "kept\n");
+  await write(target, ".claude/skills/retired/SKILL.md", "as shipped\n");
+  await write(target, ".claude/skills/edited/SKILL.md", "changed by hand\n");
+  const previous = recording({
+    ".claude/skills/kept/SKILL.md": hash("kept\n"),
+    ".claude/skills/retired/SKILL.md": hash("as shipped\n"),
+    ".claude/skills/edited/SKILL.md": hash("as shipped\n"),
+    ".claude/skills/gone/SKILL.md": hash("as shipped\n")
+  });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(plan, ".claude/skills/retired/SKILL.md"), "remove");
+  assert.equal(actionFor(plan, ".claude/skills/edited/SKILL.md"), "release");
+  assert.equal(actionFor(plan, ".claude/skills/gone/SKILL.md"), undefined, "an already missing file needs nothing");
+  assert.ok(await exists(path.join(target, ".claude/skills/retired/SKILL.md")), "planning alone removes nothing");
+});
+
+test("applyInstall: a removal takes its empty directories with it and keeps the tree", async (t) => {
+  // The removed file is the only thing in the project, so nothing but the boundary stops the
+  // walk up from reaching the tree or the project itself.
+  const { template, target } = await fixture(t);
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(target, ".claude/skills/retired/nested/SKILL.md", "skill\n");
+  const previous = recording({ ".claude/skills/retired/nested/SKILL.md": hash("skill\n") });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  const result = await applyInstall(template, target, plan.filter((p) => p.action === "remove"), { force: false });
+
+  assert.deepEqual(result.removed, [".claude/skills/retired/nested/SKILL.md"]);
+  assert.equal(await exists(path.join(target, ".claude/skills/retired")), false, "the emptied directories are gone");
+  assert.equal(await exists(path.join(target, ".claude/skills")), true, "the tree itself is kept");
+});
+
+test("applyInstall: a file edited between planning and applying is released, not removed", async (t) => {
+  const { template, target } = await fixture(t);
+  await write(target, ".claude/skills/retired/SKILL.md", "as shipped\n");
+  const previous = recording({ ".claude/skills/retired/SKILL.md": hash("as shipped\n") });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(plan, ".claude/skills/retired/SKILL.md"), "remove");
+  await write(target, ".claude/skills/retired/SKILL.md", "as shipped\nplus an edit made while a prompt waited\n");
+  const result = await applyInstall(template, target, plan, { force: false });
+
+  assert.deepEqual(result.removed, []);
+  assert.deepEqual(result.released, [".claude/skills/retired/SKILL.md"]);
+  assert.match(await fs.readFile(path.join(target, ".claude/skills/retired/SKILL.md"), "utf8"), /plus an edit/);
+});
+
+test("planInstall: a recorded path outside Religion's trees is never acted on", async (t) => {
+  // Each of these was shown to delete a real file before the guard was tightened.
+  const { template, target } = await fixture(t);
+  const outside = path.join(path.dirname(target), "outside");
+  await write(outside, "evil/sub/SKILL.md", "bait\n");
+  await fs.mkdir(path.join(target, ".claude/skills"), { recursive: true });
+  await fs.symlink(path.join(outside, "evil"), path.join(target, ".claude/skills/evil"));
+  await write(target, "religion/context/findings.md", "bait\n");
+  await write(target, ".git/HEAD", "bait\n");
+  await write(target, "package.json", "bait\n");
+  const previous = recording({
+    "../outside/evil/sub/SKILL.md": hash("bait\n"),
+    [path.join(outside, "evil/sub/SKILL.md")]: hash("bait\n"),
+    ".claude/skills/evil/sub/SKILL.md": hash("bait\n"),
+    ".claude/skills/../../package.json": hash("bait\n"),
+    ".claude\\skills\\x\\SKILL.md": hash("bait\n"),
+    "religion/context/findings.md": hash("bait\n"),
+    "RELIGION/context/findings.md": hash("bait\n"),
+    ".CLAUDE/skills/../../package.json": hash("bait\n"),
+    ".git/HEAD": hash("bait\n"),
+    "package.json": hash("bait\n"),
+    ".": hash("bait\n")
+  });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  const result = await applyInstall(template, target, plan, { force: false });
+
+  assert.deepEqual(plan, []);
+  assert.deepEqual(result.removed, []);
+  assert.equal(await fs.readFile(path.join(outside, "evil/sub/SKILL.md"), "utf8"), "bait\n");
+  for (const kept of ["religion/context/findings.md", ".git/HEAD", "package.json"]) {
+    assert.equal(await fs.readFile(path.join(target, kept), "utf8"), "bait\n", kept);
+  }
+});
+
+test("planInstall: a manifest without a managed record plans no removals", async (t) => {
+  const { template, target } = await fixture(t);
+  await write(template, ".claude/skills/feature/SKILL.md", "skill\n");
+  const broken = { schemaVersion: 1, version: "0.0.0", adapters: ["claude"] } as unknown as Manifest;
+
+  const plan = await planInstall(template, target, ["claude"], broken);
+  assert.deepEqual(plan, [{ relative: ".claude/skills/feature/SKILL.md", action: "create" }]);
+});
+
+test("applyInstall: a declined merge is reported as declined, untouched and not backed up", async (t) => {
+  const { template, target } = await fixture(t);
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(target, "CLAUDE.md", "# Acme\n\nmy own instructions\n");
+
+  const plan = await planInstall(template, target, ["claude"], null);
+  const result = await applyInstall(template, target, plan, { force: true, merge: false });
+
+  assert.deepEqual(result.declined, ["CLAUDE.md"]);
+  assert.deepEqual(result.conflicts, []);
+  assert.deepEqual(result.backups, [], "nothing changed, so nothing was backed up");
+  assert.equal(await fs.readFile(path.join(target, "CLAUDE.md"), "utf8"), "# Acme\n\nmy own instructions\n");
+});
+
+test("planInstall: an entry file that is a link is never written, and a forged record is a conflict, not a rebuild", async (t) => {
+  const { template, target } = await fixture(t);
+  const outside = path.join(path.dirname(target), "outside-claude.md");
+  await fs.writeFile(outside, "# Theirs\n\n## Workflow\n\nmine\n", "utf8");
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(template, "AGENTS.md", ENTRY);
+  await fs.symlink(outside, path.join(target, "CLAUDE.md"));
+  await write(target, "AGENTS.md", "# Theirs\n\nmine\n");
+  const forged = { schemaVersion: 1, version: "0.0.0", adapters: ["claude", "codex"], managed: { "CLAUDE.md": hash(ENTRY), "AGENTS.md": true } };
+
+  const plan = await planInstall(template, target, ["claude", "codex"], forged as unknown as Manifest);
+  const result = await applyInstall(template, target, plan, { force: false });
+
+  assert.equal(actionFor(plan, "CLAUDE.md"), "linked");
+  assert.equal(actionFor(plan, "AGENTS.md"), "conflict");
+  assert.deepEqual(result.rebuilt, []);
+  assert.deepEqual(result.linked, ["CLAUDE.md"]);
+  assert.equal(await fs.readFile(outside, "utf8"), "# Theirs\n\n## Workflow\n\nmine\n");
+});
+
+test("applyInstall: a run that would back up through a link refuses before writing anything", async (t) => {
+  const { template, target } = await fixture(t);
+  const elsewhere = path.join(path.dirname(target), "elsewhere");
+  await fs.mkdir(elsewhere, { recursive: true });
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(template, ".claude/skills/feature/SKILL.md", "skill\n");
+  const edited = ENTRY.replace("<command>", "make dev");
+  await write(target, "CLAUDE.md", edited);
+  await fs.mkdir(path.join(target, "religion/.state"), { recursive: true });
+  await fs.symlink(elsewhere, path.join(target, "religion/.state/backups"));
+  const previous = recording({ "CLAUDE.md": hash(ENTRY) });
+
+  const plan = await planInstall(template, target, ["claude"], previous);
+  assert.equal(actionFor(plan, "CLAUDE.md"), "rebuild");
+  await assert.rejects(applyInstall(template, target, plan, { force: false }), /religion\/\.state\/backups\/CLAUDE\.md because part of that path is a symbolic link/);
+
+  assert.equal(await fs.readFile(path.join(target, "CLAUDE.md"), "utf8"), edited);
+  assert.equal(await exists(path.join(target, ".claude/skills/feature/SKILL.md")), false, "nothing else was written first");
+  assert.deepEqual(await fs.readdir(elsewhere), []);
+});
+
+/** A directory beside the project, standing in for anywhere a link could point. */
+async function outsideOf(target: string): Promise<string> {
+  const outside = path.join(path.dirname(target), "outside");
+  await fs.mkdir(outside, { recursive: true });
+  return outside;
+}
+
+test("planInstall: a shipped or seeded path reached through a link, dangling or not, is never written", async (t) => {
+  const { template, target } = await fixture(t);
+  const outside = await outsideOf(target);
+  await write(template, ".claude/skills/audit/SKILL.md", "skill\n");
+  await write(template, "religion/build-plan.md", "plan\n");
+  await write(template, "CLAUDE.md", ENTRY);
+  await write(outside, "marked.md", `# Theirs\n\n${MANAGED_START}\nold\n${MANAGED_END}\n`);
+  await fs.mkdir(path.join(target, ".claude/skills/audit"), { recursive: true });
+  await fs.mkdir(path.join(target, "religion"), { recursive: true });
+  await fs.symlink(path.join(outside, "skill.md"), path.join(target, ".claude/skills/audit/SKILL.md"));
+  await fs.symlink(path.join(outside, "plan.md"), path.join(target, "religion/build-plan.md"));
+  await fs.symlink(path.join(outside, "marked.md"), path.join(target, "CLAUDE.md"));
+
+  const plan = await planInstall(template, target, ["claude"], null);
+  for (const relative of [".claude/skills/audit/SKILL.md", "religion/build-plan.md", "CLAUDE.md"]) {
+    assert.equal(actionFor(plan, relative), "linked", relative);
+  }
+
+  const result = await applyInstall(template, target, plan, { force: true, merge: true });
+  assert.deepEqual([...result.linked].sort(), [".claude/skills/audit/SKILL.md", "CLAUDE.md", "religion/build-plan.md"]);
+  assert.deepEqual((await fs.readdir(outside)).sort(), ["marked.md"], "no dangling link was followed");
+  assert.match(await fs.readFile(path.join(outside, "marked.md"), "utf8"), /\nold\n/, "the linked entry file was not remerged");
+});
+
+test("planInstall: everything under a linked directory is never written", async (t) => {
+  const { template, target } = await fixture(t);
+  const outside = await outsideOf(target);
+  await write(template, ".claude/skills/audit/SKILL.md", "skill\n");
+  await write(template, ".claude/hooks/scan.mjs", "hook\n");
+  await fs.symlink(outside, path.join(target, ".claude"));
+
+  const plan = await planInstall(template, target, ["claude"], null);
+  const result = await applyInstall(template, target, plan, { force: true });
+
+  assert.deepEqual(plan.map((entry) => entry.action), ["linked", "linked"]);
+  assert.deepEqual(result.written, []);
+  assert.deepEqual(await fs.readdir(outside), []);
+});
+
+test("applyInstall: a linked or dangling manifest path refuses the run before anything is written", async (t) => {
+  for (const dangling of [false, true]) {
+    const { template, target } = await fixture(t);
+    const outside = await outsideOf(target);
+    const victim = path.join(outside, "victim.json");
+    if (!dangling) await fs.writeFile(victim, "theirs\n", "utf8");
+    await write(template, ".claude/skills/audit/SKILL.md", "skill\n");
+    await fs.mkdir(path.join(target, "religion/.state"), { recursive: true });
+    await fs.symlink(victim, path.join(target, "religion/.state/manifest.json"));
+
+    const plan = await planInstall(template, target, ["claude"], null);
+    await assert.rejects(applyInstall(template, target, plan, { force: false }), /manifest\.json because part of that path is a symbolic link/);
+    await assert.rejects(writeManifest(target, "0.0.0", ["claude"], template, null, []), /symbolic link/);
+
+    assert.equal(await exists(path.join(target, ".claude/skills/audit/SKILL.md")), false, "nothing was written first");
+    assert.deepEqual(await fs.readdir(outside), dangling ? [] : ["victim.json"]);
+    if (!dangling) assert.equal(await fs.readFile(victim, "utf8"), "theirs\n");
+  }
+});
+
+test("wireHooks: a linked settings file is left alone, even a dangling one", async (t) => {
+  const { target } = await fixture(t);
+  const outside = await outsideOf(target);
+  await write(target, "religion/.state/settings-template.json", "ATTACKER CONTENT\n");
+  await fs.mkdir(path.join(target, ".claude"), { recursive: true });
+  await fs.symlink(path.join(outside, "LaunchAgent.plist"), path.join(target, ".claude/settings.json"));
+
+  assert.equal(await wireHooks(target), "linked");
+  assert.deepEqual(await fs.readdir(outside), []);
+});
+

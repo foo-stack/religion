@@ -121,6 +121,33 @@ export function spliceEntry(existing: string, templateEntry: string): string {
 }
 
 /**
+ * Rebuild an unmarked entry file Religion installed, around what its owner wrote.
+ *
+ * A fresh install writes the entry file without markers and setup then edits it in place,
+ * so on the next update it matches neither the template nor the manifest. Splicing a block
+ * into it would repeat every section Religion already put there. Instead the file keeps its
+ * leading lines and every section Religion does not manage, and Religion's own sections are
+ * replaced by the current managed block. A file that already has markers only has its block
+ * replaced, so rebuilding twice changes nothing.
+ */
+export function rebuildEntry(existing: string, templateEntry: string): string {
+  if (hasMarkers(existing)) return replaceManagedBlock(existing, templateEntry) ?? existing;
+
+  const { lead, sections } = parse(existing);
+  const managed = new Set(parse(templateEntry).sections.map((s) => s.heading).filter((h) => !USER_OWNED.has(h)));
+  const head = lead.filter((line) => !line.startsWith("@")).join("\n");
+  const kept = sections.filter((s) => !managed.has(s.heading) && s.heading !== "Commands");
+  const commands = sections.filter((s) => s.heading === "Commands");
+
+  return (
+    [head, render(kept), managedBlock(templateEntry), render(commands)]
+      .map((part) => part.replace(/\n+$/, ""))
+      .filter(Boolean)
+      .join("\n\n") + "\n"
+  );
+}
+
+/**
  * Replace the managed block in a merged file, leaving everything outside it untouched.
  *
  * Returns null when the markers are missing or out of order, which is treated as a conflict

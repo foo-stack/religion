@@ -23,6 +23,8 @@ node_modules/
 
 # npm pack output
 *.tgz
+# except the last published release, which the upgrade check installs from
+!packages/create-religion/fixtures/*.tgz
 
 # Installer output, reproducible with `religion install`. The hooks here are copies of
 # src/hooks/ that nothing keeps in sync, and religion/.state/ is machine-written state its

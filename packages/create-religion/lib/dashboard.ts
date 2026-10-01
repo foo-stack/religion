@@ -546,7 +546,19 @@ button.chip { font-family: inherit; cursor: pointer; }
     $("problem").textContent = text || "";
   }
 
+  // One request at a time, so a slow answer cannot queue more behind it or land out of order.
+  let busy = false;
   async function load() {
+    if (busy) return;
+    busy = true;
+    try {
+      await refresh();
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function refresh() {
     let response;
     let text;
     try {

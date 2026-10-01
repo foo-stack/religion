@@ -99,7 +99,8 @@ export function parseWork(source: string | null): WorkItem {
   if (!source || /_Nothing in progress\./.test(source)) return empty;
 
   // The step's name is its bold text, which itself contains " - " in the template's shape.
-  const steps = [...source.matchAll(/^\s*- \[( |x|X)\]\s*(?:\*\*(.+?)\*\*|(.+?)(?:\s+-\s|$))/gim)];
+  // Spaces and tabs only: `\s` here crosses newlines, which made blank lines quadratic.
+  const steps = [...source.matchAll(/^[ \t]*- \[( |x|X)\][ \t]*(?:\*\*(.+?)\*\*|(.+?)(?:\s+-\s|$))/gim)];
   const done = steps.filter((s) => (s[1] ?? " ").toLowerCase() === "x").length;
   const next = steps.find((s) => (s[1] ?? " ").toLowerCase() !== "x");
 
@@ -292,8 +293,10 @@ export function parseFindings(source: string | null): Finding[] {
     const m = /^###\s+(F-\d+)\s+\[(P[0-3])\]\s+(\w+)\s+-\s+(.+)$/im.exec(entry);
     if (!m) return [];
     // A finding raised while building has no lens: "2026-09-26 while writing the guide".
+    // Matching from the last parenthesis keeps this linear; a whole-line pattern was quadratic.
     const found = labelled(entry, "Found");
-    const lensed = found ? /^(.*?)\s*\((?:scope:[^;)]*;\s*)?lens:\s*([^)]+)\)\s*$/.exec(found) : null;
+    const paren = found ? found.lastIndexOf("(") : -1;
+    const lensed = found && paren >= 0 ? /^\((?:scope:[^;)]*;\s*)?lens:\s*([^)]+)\)\s*$/.exec(found.slice(paren)) : null;
     return [
       {
         id: m[1] as string,
@@ -301,8 +304,8 @@ export function parseFindings(source: string | null): Finding[] {
         status: m[3] as Finding["status"],
         title: (m[4] ?? "").trim(),
         file: labelled(entry, "File"),
-        found: lensed ? (lensed[1] ?? "").trim() : found,
-        lens: lensed ? (lensed[2] ?? "").trim() : null,
+        found: lensed && found ? found.slice(0, paren).trim() : found,
+        lens: lensed ? (lensed[1] ?? "").trim() : null,
         why: labelled(entry, "Why it matters"),
         fix: labelled(entry, "Suggested fix"),
         resolution: labelled(entry, "Resolution")

@@ -550,13 +550,13 @@
 **Suggested fix:** Add a probe that trips each on its own.
 **Resolution:**
 
-### F-99 [P2] open - The lens pattern is quadratic on a long Found line
+### F-99 [P2] fixed - The lens pattern is quadratic on a long Found line
 
 **File:** packages/create-religion/lib/state.ts:296
 **Found:** 2026-10-01 by audit (scope: current; lens: performance, security)
 **Why it matters:** The lazy `(.*?)` before `\((?:scope...)?lens:` rescans the rest of the line from every position, so one long `**Found:**` line blocks the event loop: 80,000 spaces took 3.2 s per parse and `(lens: x` repeated 40,000 times took 9.7 s. The dashboard parses the ledger twice per poll (directly and inside `runDoctor`), and `religion status` and `doctor` stall on the same input.
 **Suggested fix:** Match only from `found.lastIndexOf("(")`, which is linear, and add a timing-bounded test.
-**Resolution:**
+**Resolution:** Repaired 2026-10-01: the lens is matched only from the finding's last opening parenthesis, which is linear. A test parses a 320,000-character `Found` line within a one-second bound, and all 88 entries in this ledger parse with the same lenses as before.
 
 ### F-100 [P2] open - The page counts the active spec's steps two ways
 
@@ -686,21 +686,21 @@
 **Suggested fix:** Assert only the 500 and a non-empty error, and say in the test why doctor throws there.
 **Resolution:**
 
-### F-116 [P3] open - The step pattern in parseWork is quadratic across blank lines
+### F-116 [P3] fixed - The step pattern in parseWork is quadratic across blank lines
 
 **File:** packages/create-religion/lib/state.ts:102
 **Found:** 2026-10-01 by audit (scope: current; lens: performance)
 **Why it matters:** `^\s*` under the multiline flag runs across newlines, so every blank line rescans the whitespace after it: 80,000 blank lines took 2.8 s, run twice per poll.
 **Suggested fix:** Use `^[ \t]*`.
-**Resolution:**
+**Resolution:** Repaired 2026-10-01: the step pattern's leading and trailing whitespace is spaces and tabs only, so it no longer crosses lines. The same timing test parses a spec of 80,000 blank lines within the bound.
 
-### F-117 [P3] open - Polling starts a request every 3 seconds whether or not the last one finished
+### F-117 [P3] fixed - Polling starts a request every 3 seconds whether or not the last one finished
 
 **File:** packages/create-religion/lib/dashboard.ts:989
 **Found:** 2026-10-01 by audit (scope: current; lens: performance)
 **Why it matters:** `setInterval` fires regardless, so a slow response (as F-99 can cause) builds an unbounded queue, and responses can arrive out of order and replace newer state with older.
 **Suggested fix:** Schedule the next poll when the current one finishes.
-**Resolution:**
+**Resolution:** Repaired 2026-10-01: the page skips a poll while one is in flight. Against a server delaying every `/state.json` answer by 7 seconds, 20 seconds of polling made two requests, never more than one open at once.
 
 ### F-118 [P3] open - Every poll re-reads and re-sends the whole history
 

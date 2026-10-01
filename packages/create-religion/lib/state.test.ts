@@ -344,6 +344,26 @@ test("parseInbox reads dated and undated notes and ignores the guidance", () => 
   assert.deepEqual(parseInbox(null), []);
 });
 
+test("the ledger and spec parsers stay linear on pathological lines", () => {
+  // Both inputs took tens of seconds with the earlier whole-line patterns.
+  const started = Date.now();
+  parseFindings("### F-01 [P3] open - Long\n\n**Found:** a" + " ".repeat(320_000) + "x (lens: " + "(lens: x".repeat(10_000));
+  parseWork("# Spec\n" + "\n".repeat(80_000) + "- [ ] **Step 1 - last**");
+  assert.ok(Date.now() - started < 1000, `took ${Date.now() - started} ms`);
+});
+
+test("parseFindings takes the lens from the last parenthesis, with or without a scope", () => {
+  const [scoped, bare] = parseFindings(
+    [
+      "### F-01 [P3] open - Scoped",
+      "**Found:** 2026-09-26 by audit (scope: current; lens: tests)",
+      "### F-02 [P3] open - Bare",
+      "**Found:** 2026-09-26 by audit (lens: quality)"
+    ].join("\n")
+  );
+  assert.deepEqual([scoped?.found, scoped?.lens, bare?.found, bare?.lens], ["2026-09-26 by audit", "tests", "2026-09-26 by audit", "quality"]);
+});
+
 test("parseFindings returns nothing for an empty ledger", () => {
   assert.deepEqual(parseFindings("# Findings\n\n_No findings recorded._"), []);
   assert.deepEqual(parseFindings(null), []);

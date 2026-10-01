@@ -550,13 +550,13 @@
 **Suggested fix:** Add a probe that trips each on its own.
 **Resolution:**
 
-### F-99 [P2] fixed - The lens pattern is quadratic on a long Found line
+### F-99 [P2] closed - The lens pattern is quadratic on a long Found line
 
 **File:** packages/create-religion/lib/state.ts:296
 **Found:** 2026-10-01 by audit (scope: current; lens: performance, security)
 **Why it matters:** The lazy `(.*?)` before `\((?:scope...)?lens:` rescans the rest of the line from every position, so one long `**Found:**` line blocks the event loop: 80,000 spaces took 3.2 s per parse and `(lens: x` repeated 40,000 times took 9.7 s. The dashboard parses the ledger twice per poll (directly and inside `runDoctor`), and `religion status` and `doctor` stall on the same input.
 **Suggested fix:** Match only from `found.lastIndexOf("(")`, which is linear, and add a timing-bounded test.
-**Resolution:** Repaired 2026-10-01: the lens is matched only from the finding's last opening parenthesis, which is linear. A test parses a 320,000-character `Found` line within a one-second bound, and all 88 entries in this ledger parse with the same lenses as before. Re-reviewed 2026-10-01 in a fresh-context pass: not closed. Matching from the last parenthesis helps only when the long run comes before it; `(lens:` followed by 80,000 spaces still took 2.5 s, because `\s*` and `[^)]+` both match spaces and the engine tries every split. Repaired again 2026-10-01, the second and last attempt: the lens is captured without a leading `\s*` and trimmed, so no two parts of the pattern can take the same spaces. `x (lens:` followed by 80,000 spaces took 2,451 ms with the previous pattern and 0 ms with this one; the timing test now includes that input, and all 92 ledger entries parse with the same lenses.
+**Resolution:** Repaired 2026-10-01: the lens is matched only from the finding's last opening parenthesis, which is linear. A test parses a 320,000-character `Found` line within a one-second bound, and all 88 entries in this ledger parse with the same lenses as before. Re-reviewed 2026-10-01 in a fresh-context pass: not closed. Matching from the last parenthesis helps only when the long run comes before it; `(lens:` followed by 80,000 spaces still took 2.5 s, because `\s*` and `[^)]+` both match spaces and the engine tries every split. Repaired again 2026-10-01, the second and last attempt: the lens is captured without a leading `\s*` and trimmed, so no two parts of the pattern can take the same spaces. `x (lens:` followed by 80,000 spaces took 2,451 ms with the previous pattern and 0 ms with this one; the timing test now includes that input, and all 92 ledger entries parse with the same lenses. Re-reviewed 2026-10-01 in a fresh-context pass: 25 adversarial `Found` shapes at 80,000 and 320,000 characters, runs of spaces, tabs, semicolons, parentheses and repeated `scope:` and `lens:` on both sides of the last parenthesis, each parsed in 2 ms or less; a fuzz of 200,000 lines against the previous pattern found no difference, and all 92 ledger entries parse identically. Closed.
 
 ### F-100 [P2] open - The page counts the active spec's steps two ways
 
@@ -710,21 +710,21 @@
 **Suggested fix:** Cache parsed archives by name and modification time, read independent files concurrently, and send lessons only when needed.
 **Resolution:**
 
-### F-119 [P3] fixed - The tail of parseWork's step pattern is quadratic and joins plain steps
+### F-119 [P3] closed - The tail of parseWork's step pattern is quadratic and joins plain steps
 
 **File:** packages/create-religion/lib/state.ts:103
 **Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-99 to F-117)
 **Why it matters:** `(.+?)(?:\s+-\s|$)` lets `\s+` cross a newline, so `- [ ] Plain one` followed by `- [ ] Plain two` counts as one step, and a step line with a long run of spaces takes seconds (80,000 spaces took 3.3 s). It predates this item; the repair of F-116 kept it.
 **Suggested fix:** Use `[ \t]-[ \t]` for the separator.
-**Resolution:** Repaired 2026-10-01: the separator is a dash between spaces or tabs on the same line. A step line with 80,000 spaces took 3,239 ms before and 0 ms after, the timing test covers it, and a test counts two consecutive unbolded steps as two.
+**Resolution:** Repaired 2026-10-01: the separator is a dash between spaces or tabs on the same line. A step line with 80,000 spaces took 3,239 ms before and 0 ms after, the timing test covers it, and a test counts two consecutive unbolded steps as two. Re-reviewed 2026-10-01 in a fresh-context pass: adversarial step lines and blank runs at 320,000 characters parsed in 4 ms or less, two plain steps count as two, and the active spec, the seven archives and the history readmes give the same counts and next step as before. Closed.
 
-### F-120 [P3] fixed - A request that never answers stops polling for good
+### F-120 [P3] closed - A request that never answers stops polling for good
 
 **File:** packages/create-religion/lib/dashboard.ts:550
 **Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-99 to F-117)
 **Why it matters:** The busy flag that keeps polls from overlapping is cleared only when the request settles, so one that hangs leaves the page frozen for the rest of its life. The server always answers, so this is unlikely.
 **Suggested fix:** Give the request a timeout, for example an abort signal of ten seconds; the existing catch already handles it.
-**Resolution:** Repaired 2026-10-01: a poll releases after ten seconds even if its request never answers. Against a server that never answered, the page went on making requests every 12 to 13 seconds.
+**Resolution:** Repaired 2026-10-01: a poll releases after ten seconds even if its request never answers. Against a server that never answered, the page went on making requests every 12 to 13 seconds. Re-reviewed 2026-10-01 in a fresh-context pass: in the page script run against a fake clock, polling resumed after a hung request, and a late rejection was caught. Closed as stated; the race it used lets an abandoned request repaint older state, which is F-123.
 
 ### F-121 [P3] open - Three lookup tables show inherited members as text
 
@@ -741,3 +741,11 @@
 **Why it matters:** Focus is restored only after a click; a poll that brings changed state re-renders every view and focus falls to the body, which happens whenever the activity record changes during a run.
 **Suggested fix:** Remember and restore focus around `render()` itself.
 **Resolution:**
+
+### F-123 [P2] fixed - A late answer from an abandoned poll repaints older state
+
+**File:** packages/create-religion/lib/dashboard.ts:556
+**Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-99, F-119, F-120)
+**Why it matters:** The repair of F-120 races `refresh()` against a ten-second timer, which only stops waiting: the abandoned request keeps running and, when it answers, renders its older state over newer state, which is what F-117 closed. Reproduced in the page script with a fake clock: a hung request answering after a newer one left the older state on screen until the next poll. Abandoned requests are never cancelled, so they also pile up against the browser's per-host connection limit.
+**Suggested fix:** Drop the race and give the request an abort signal with a ten-second timeout; the existing catch handles the abort, and an aborted request cannot land late.
+**Resolution:** Repaired 2026-10-01: the race is gone and the request carries a ten-second abort signal, so a request that has not answered is cancelled rather than abandoned. Against a server that never answered, each request was cancelled 11 seconds after it started, the next poll followed a second later, and no more than one request was ever open; probe 6.03 is re-anchored on the new call with its verdict unchanged.

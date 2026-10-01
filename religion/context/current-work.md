@@ -138,6 +138,10 @@ large, so split it.
   the poll after ten seconds even if its request never answers. *Done when:* the timing
   test also covers a long run after `lens:` and inside a step line, two plain steps count
   as two, and the network check passes.
+- [x] **Repair F-123 - an abandoned poll cannot land late** - cancel a request that has not
+  answered in ten seconds rather than racing it. *Done when:* against a server that never
+  answers, polling continues with no request left open, and the network check and the
+  probe corpus pass.
 
 ## Files and areas
 

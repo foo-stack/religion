@@ -552,8 +552,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     if (busy) return;
     busy = true;
     try {
-      // A request that never answers releases the next poll after ten seconds instead of freezing it.
-      await Promise.race([refresh(), new Promise((resolve) => setTimeout(resolve, 10000))]);
+      await refresh();
     } finally {
       busy = false;
     }
@@ -563,7 +562,8 @@ button.chip { font-family: inherit; cursor: pointer; }
     let response;
     let text;
     try {
-      response = await fetch("/state.json");
+      // Cancelled after ten seconds, so a request that never answers neither freezes polling nor lands late.
+      response = await fetch("/state.json", { signal: AbortSignal.timeout(10000) });
       text = await response.text();
     } catch {
       setLive(false, "Disconnected, retrying");

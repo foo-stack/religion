@@ -1970,7 +1970,7 @@
    [
     "replace",
     "packages/create-religion/lib/dashboard.ts",
-    "await fetch(\"/state.json\")",
+    "await fetch(\"/state.json\", { signal: AbortSignal.timeout(10000) })",
     "await fetch(\"/state.json\", { cache: \"no-store\" })"
    ]
   ],

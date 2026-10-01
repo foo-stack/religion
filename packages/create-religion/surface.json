@@ -1,6 +1,6 @@
 {
-  "lastRelease": "0.5.0",
-  "lastReleaseIntegrity": "sha512-Ed0v4tE5jOnYU6/rpVdWth4+CX3cSY0kIBibqFyNrDbGNdyCY50RcyICLNm1bv7nHeg7vHXEu/mINUWIXO5o7g==",
+  "lastRelease": "1.0.0",
+  "lastReleaseIntegrity": "sha512-KL9fPyH6jy2djGT5yKhxtwbmFiSp+3/ec+aQ1aktFof1zqHjCIDi7NEnWbHqweFcJ0VrwBmvNJLR2fcznY3/Sw==",
   "node": ">=22",
   "commands": {
     "install": [

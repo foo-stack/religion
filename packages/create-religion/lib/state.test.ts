@@ -9,6 +9,7 @@ import {
   overviewHash,
   parseArchive,
   parseFindings,
+  parseInbox,
   parseOpenQuestions,
   parsePlan,
   parseSpec,
@@ -321,6 +322,26 @@ test("readHistory reads every kind's archives and skips each folder's README", a
       ["fixes", "1", "A fix"]
     ]
   );
+});
+
+test("parseInbox reads dated and undated notes and ignores the guidance", () => {
+  const inbox = [
+    "# Inbox",
+    "",
+    "> **Generated file.** Notes taken with `capture`.",
+    "",
+    "`fix` and `feature` read this when choosing what to build next.",
+    "",
+    "- 2026-09-05 - `parseWork.nextStep` truncates a step title - latent.",
+    "- an undated note"
+  ].join("\n");
+
+  assert.deepEqual(parseInbox(inbox), [
+    { date: "2026-09-05", text: "`parseWork.nextStep` truncates a step title - latent." },
+    { date: null, text: "an undated note" }
+  ]);
+  assert.deepEqual(parseInbox("# Inbox\n\n_Nothing captured._"), []);
+  assert.deepEqual(parseInbox(null), []);
 });
 
 test("parseFindings returns nothing for an empty ledger", () => {

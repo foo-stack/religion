@@ -7,8 +7,10 @@
 
 import http from "node:http";
 
+import { runDoctor } from "./doctor.js";
+import { readManifest } from "./install.js";
 import { readIfPresent, statePath } from "./paths.js";
-import { parseSpec, readHistory, readProjectState } from "./state.js";
+import { parseInbox, parseSpec, readHistory, readProjectState } from "./state.js";
 import { computeStatus } from "./status.js";
 
 export interface Dashboard {
@@ -18,10 +20,11 @@ export interface Dashboard {
   close: () => Promise<void>;
 }
 
-export async function startDashboard(root: string): Promise<Dashboard> {
+/** `version` is the running tool's, shown beside the version that installed the project. */
+export async function startDashboard(root: string, version: string | null = null): Promise<Dashboard> {
   let port = 0;
   const server = http.createServer((request, response) => {
-    void handle(root, port, request, response);
+    void handle(root, version, port, request, response);
   });
 
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -51,18 +54,27 @@ export function isOwnHost(host: string | undefined, port: number): boolean {
 export const CONTENT_SECURITY_POLICY =
   "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'";
 
-async function handle(root: string, port: number, request: http.IncomingMessage, response: http.ServerResponse) {
+async function handle(
+  root: string,
+  version: string | null,
+  port: number,
+  request: http.IncomingMessage,
+  response: http.ServerResponse
+) {
   if (!isOwnHost(request.headers.host, port)) {
     send(response, 403, "text/plain; charset=utf-8", "Forbidden: this dashboard only answers requests addressed to itself.");
     return;
   }
 
   if (request.url === "/state.json") {
-    const state = await readProjectState(root);
-    const activity = await readActivity(root);
-    const work = parseSpec(await readIfPresent(statePath(root, "context", "current-work.md")));
-    const history = await readHistory(root);
-    const body = JSON.stringify({ status: computeStatus(state), plan: state.plan, findings: state.findings, activity, work, history });
+    // An unreadable project must answer, not take the server down with an unhandled rejection.
+    let body: string;
+    try {
+      body = JSON.stringify(await readState(root, version));
+    } catch (error) {
+      send(response, 500, "application/json", JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
+      return;
+    }
     send(response, 200, "application/json", body);
     return;
   }
@@ -74,6 +86,38 @@ async function handle(root: string, port: number, request: http.IncomingMessage,
 function send(response: http.ServerResponse, status: number, type: string, body: string): void {
   response.writeHead(status, { "content-type": type, "content-security-policy": CONTENT_SECURITY_POLICY });
   response.end(body);
+}
+
+async function readState(root: string, version: string | null) {
+  const state = await readProjectState(root);
+  return {
+    status: computeStatus(state),
+    plan: state.plan,
+    findings: state.findings,
+    activity: await readActivity(root),
+    work: parseSpec(await readIfPresent(statePath(root, "context", "current-work.md"))),
+    history: await readHistory(root),
+    health: {
+      checks: await runDoctor(root),
+      config: state.config,
+      install: await readInstall(root),
+      tool: version,
+      inbox: parseInbox(await readIfPresent(statePath(root, "context", "inbox.md"))),
+      questions: state.openQuestions
+    }
+  };
+}
+
+/** The manifest is the project's file and may be hand-edited, so only well-formed parts are shown. */
+async function readInstall(root: string) {
+  const manifest: unknown = await readManifest(root);
+  if (!manifest || typeof manifest !== "object") return null;
+  const { version, adapters, managed } = manifest as Record<string, unknown>;
+  return {
+    version: typeof version === "string" ? version : null,
+    adapters: Array.isArray(adapters) ? adapters.filter((a): a is string => typeof a === "string") : [],
+    managed: managed && typeof managed === "object" ? Object.keys(managed).length : 0
+  };
 }
 
 async function readActivity(root: string): Promise<unknown> {

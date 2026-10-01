@@ -258,6 +258,20 @@ export async function readHistory(root: string): Promise<Archive[]> {
   return archives;
 }
 
+export interface InboxNote {
+  date: string | null;
+  text: string;
+}
+
+/** The inbox's one-line notes, `- 2026-09-05 - text`, with the date when one leads. */
+export function parseInbox(source: string | null): InboxNote[] {
+  if (!source) return [];
+  return [...source.matchAll(/^- (?:(\d{4}-\d{2}-\d{2}) - )?(.+)$/gm)].map((m) => ({
+    date: m[1] ?? null,
+    text: (m[2] ?? "").trim()
+  }));
+}
+
 /** Paragraphs and list items, each as one line of text. */
 function blocks(body: string | undefined): string[] {
   if (!body) return [];

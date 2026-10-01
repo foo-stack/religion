@@ -70,13 +70,13 @@
 **Suggested fix:** Delete both, after confirming nothing needs `historyCount`.
 **Resolution:** Repaired 2026-10-01: `historyCount` is gone, replaced by `readHistory` in `state.ts`, which the dashboard uses, and the unused `path` and `fs` imports went with it; `npm run typecheck` passes.
 
-### F-10 [P3] unverified - A failed state read could crash the dashboard
+### F-10 [P3] fixed - A failed state read could crash the dashboard
 
 **File:** packages/create-religion/lib/dashboard.ts:24
 **Found:** 2026-09-26 by audit (scope: current; lens: security)
 **Why it matters:** `void handle(...)` has no rejection handler, so a throw from `readProjectState` would be unhandled. Not reproduced. Predates this work.
 **Suggested fix:** Catch in the request callback and answer 500.
-**Resolution:**
+**Resolution:** Repaired 2026-10-01: building `/state.json` is caught and answers 500 with the error as JSON, under the same policy. A dashboard test starts it on a project whose skill tree is a file, which makes doctor's read throw, and asserts the 500 and that the page is still served; with the guard removed the same test fails.
 
 ### F-11 [P3] unverified - The package root is found before arguments are parsed
 

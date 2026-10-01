@@ -89,7 +89,7 @@ large, so split it.
   `historyCount` and its unused import (F-09). *Done when:* tests cover a full archive, one
   with no `Landed` or `Findings` section, and the folder README being skipped, and this
   repository's seven archives parse with 62 commits and 30 closed findings between them.
-- [ ] **Step 4 - health, and a read that cannot crash** - `/state.json` gains doctor's
+- [x] **Step 4 - health, and a read that cannot crash** - `/state.json` gains doctor's
   checks, the configuration, the install record's version, adapters and managed count, the
   tool's version passed in by the command, and the inbox parsed into dated notes; a failure
   building the response answers 500 with a JSON error instead of an unhandled rejection

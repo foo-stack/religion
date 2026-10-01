@@ -62,13 +62,13 @@
 **Suggested fix:** Skip commands whose length differs by more than 2; the result is identical.
 **Resolution:**
 
-### F-09 [P3] open - Unused import and dead export in the dashboard
+### F-09 [P3] fixed - Unused import and dead export in the dashboard
 
 **File:** packages/create-religion/lib/dashboard.ts:10
 **Found:** 2026-09-26 by audit (scope: current; lens: quality)
 **Why it matters:** `import path` is unused (`tsc --noUnusedLocals` reports TS6133) and `historyCount` is exported and used nowhere. Both predate this work, in a file it touches.
 **Suggested fix:** Delete both, after confirming nothing needs `historyCount`.
-**Resolution:**
+**Resolution:** Repaired 2026-10-01: `historyCount` is gone, replaced by `readHistory` in `state.ts`, which the dashboard uses, and the unused `path` and `fs` imports went with it; `npm run typecheck` passes.
 
 ### F-10 [P3] unverified - A failed state read could crash the dashboard
 

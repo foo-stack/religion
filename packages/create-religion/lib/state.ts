@@ -7,6 +7,7 @@
  */
 
 import crypto from "node:crypto";
+import fs from "node:fs/promises";
 
 import { readIfPresent, statePath } from "./paths.js";
 
@@ -156,10 +157,10 @@ export function parseSpec(source: string | null): Spec | null {
   };
 }
 
-/** Each `## Heading`'s body, keyed by the lowercased heading. */
-function sections(source: string): Map<string, string> {
+/** Each heading's body, keyed by the lowercased heading; `levels` widens it to `###` too. */
+function sections(source: string, levels = "##"): Map<string, string> {
   const found = new Map<string, string>();
-  const parts = source.split(/^##\s+(.+)$/m);
+  const parts = source.split(new RegExp(`^(?:${levels})\\s+(.+)$`, "m"));
   for (let index = 1; index < parts.length; index += 2) {
     found.set((parts[index] ?? "").trim().toLowerCase(), parts[index + 1] ?? "");
   }
@@ -194,6 +195,76 @@ function parseStep(item: string): SpecStep {
     doneWhen: doneWhen?.trim() ?? null,
     done
   };
+}
+
+export interface Archive {
+  kind: string;
+  file: string;
+  number: string | null;
+  title: string | null;
+  type: string | null;
+  status: string | null;
+  steps: number;
+  repairs: number;
+  commits: string[];
+  findings: Pick<Finding, "id" | "severity" | "status" | "title">[];
+  wentWrong: string[];
+  deferred: string[];
+}
+
+export const HISTORY_KINDS = ["features", "fixes", "rollbacks", "refactors", "spikes"] as const;
+
+/** One archive under `history/<kind>/`, named `NN-slug.md`. */
+export function parseArchive(kind: string, file: string, source: string): Archive {
+  const spec = parseSpec(source);
+  const section = sections(source, "#{2,3}");
+  const repairs = spec?.steps.filter((step) => /^repair\b/i.test(step.label)).length ?? 0;
+  return {
+    kind,
+    file,
+    number: /^0*(\d+[a-z]?)-/i.exec(file)?.[1] ?? null,
+    title: spec?.title ?? null,
+    type: spec?.type ?? null,
+    status: spec?.status ?? null,
+    steps: (spec?.steps.length ?? 0) - repairs,
+    repairs,
+    commits: (labelled(source, "Commits") ?? "").split(/[\s,]+/).filter((sha) => /^[0-9a-f]{7,40}$/.test(sha)),
+    findings: [...source.matchAll(/^###\s+(?:[\w-]+\/)?(F-\d+)\s+\[(P[0-3])\]\s+(\w+)\s+-\s+(.+)$/gm)].map((m) => ({
+      id: m[1] as string,
+      severity: m[2] as Finding["severity"],
+      status: m[3] as Finding["status"],
+      title: (m[4] ?? "").trim()
+    })),
+    wentWrong: blocks(section.get("what went wrong on the way")),
+    deferred: blocks(section.get("deferred"))
+  };
+}
+
+/** Every archive, newest first within each kind; an absent folder contributes nothing. */
+export async function readHistory(root: string): Promise<Archive[]> {
+  const archives: Archive[] = [];
+  for (const kind of HISTORY_KINDS) {
+    let names: string[];
+    try {
+      names = await fs.readdir(statePath(root, "history", kind));
+    } catch {
+      continue;
+    }
+    for (const name of names.filter((n) => n.endsWith(".md") && n !== "README.md").sort().reverse()) {
+      const source = await readIfPresent(statePath(root, "history", kind, name));
+      if (source !== null) archives.push(parseArchive(kind, name, source));
+    }
+  }
+  return archives;
+}
+
+/** Paragraphs and list items, each as one line of text. */
+function blocks(body: string | undefined): string[] {
+  if (!body) return [];
+  return body
+    .split(/\n\s*\n/)
+    .flatMap((paragraph) => (/^\s*- /.test(paragraph) ? bullets(paragraph) : [join(paragraph)]))
+    .filter(Boolean);
 }
 
 function join(paragraph: string): string {

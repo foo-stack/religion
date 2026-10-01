@@ -5,7 +5,17 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { overviewHash, parseFindings, parseOpenQuestions, parsePlan, parseSpec, parseWork, readProjectState } from "./state.js";
+import {
+  overviewHash,
+  parseArchive,
+  parseFindings,
+  parseOpenQuestions,
+  parsePlan,
+  parseSpec,
+  parseWork,
+  readHistory,
+  readProjectState
+} from "./state.js";
 
 test("parsePlan reads numbers, titles and tick state", () => {
   const plan = parsePlan(
@@ -223,6 +233,93 @@ test("parseFindings reads each finding's details, and tolerates a bare heading a
   assert.deepEqual(
     [building?.found, building?.lens, building?.resolution],
     ["2026-09-26 while writing the upgrade guide from runs", null, "Repaired 2026-09-26: the hint is gone."]
+  );
+});
+
+test("parseArchive reads what an item cost and what it taught", () => {
+  const archive = parseArchive(
+    "features",
+    "04d-the-statement.md",
+    [
+      "# The statement",
+      "",
+      "**Type:** Feature",
+      "**Status:** verified",
+      "",
+      "## Build steps",
+      "",
+      "- [x] **Step 1 - write it** - the document.",
+      "- [x] **Step 2 - check it** - the check.",
+      "- [x] **Repair F-80 - links** - leave it unwritten.",
+      "",
+      "## Outcome",
+      "",
+      "### What went wrong on the way",
+      "",
+      "**The check took six rounds.** A denylist",
+      "was evaded.",
+      "",
+      "- A harness truncated files.",
+      "",
+      "### Deferred",
+      "",
+      "- **F-97 (P2):** a symlinked directory.",
+      "",
+      "## Landed",
+      "",
+      "**Base:** fd5fbbe3b031b1bf4006049b6d718aa5c9bb5075",
+      "**Commits:** a4744a4bf0058c7674395a4b74a75bb5d7def639, 72177e746f7697ee1a934bba3642e4066d9cd59e",
+      "",
+      "## Findings",
+      "",
+      "### 4d/F-80 [P1] closed - The hook writes through links",
+      "",
+      "**File:** src/hooks/write-handoff.mjs:82"
+    ].join("\n")
+  );
+
+  assert.deepEqual(archive, {
+    kind: "features",
+    file: "04d-the-statement.md",
+    number: "4d",
+    title: "The statement",
+    type: "Feature",
+    status: "verified",
+    steps: 2,
+    repairs: 1,
+    commits: ["a4744a4bf0058c7674395a4b74a75bb5d7def639", "72177e746f7697ee1a934bba3642e4066d9cd59e"],
+    findings: [{ id: "F-80", severity: "P1", status: "closed", title: "The hook writes through links" }],
+    wentWrong: ["**The check took six rounds.** A denylist was evaded.", "A harness truncated files."],
+    deferred: ["**F-97 (P2):** a symlinked directory."]
+  });
+});
+
+test("parseArchive degrades on an archive with no Landed, Findings or lessons", () => {
+  const archive = parseArchive("fixes", "notes.md", "# Quick fix\n\nNo sections at all.");
+  assert.deepEqual(
+    [archive.number, archive.title, archive.steps, archive.commits, archive.findings, archive.wentWrong],
+    [null, "Quick fix", 0, [], [], []]
+  );
+});
+
+test("readHistory reads every kind's archives and skips each folder's README", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-history-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, "religion", "history", "features"), { recursive: true });
+  await fs.mkdir(path.join(root, "religion", "history", "fixes"), { recursive: true });
+  await fs.writeFile(path.join(root, "religion", "history", "features", "README.md"), "# Completed features");
+  await fs.writeFile(path.join(root, "religion", "history", "features", "01-first.md"), "# First");
+  await fs.writeFile(path.join(root, "religion", "history", "features", "02-second.md"), "# Second");
+  await fs.writeFile(path.join(root, "religion", "history", "fixes", "01-a-fix.md"), "# A fix");
+
+  const history = await readHistory(root);
+  assert.deepEqual(
+    history.map((a) => [a.kind, a.number, a.title]),
+    [
+      ["features", "2", "Second"],
+      ["features", "1", "First"],
+      ["fixes", "1", "A fix"]
+    ]
   );
 });
 

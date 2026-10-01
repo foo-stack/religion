@@ -83,7 +83,7 @@ large, so split it.
   tolerating the variant `Found` line a finding raised while building carries. *Done when:*
   tests cover a full entry, a bare heading, and the variant line, and the 68 entries in this
   repository's ledger each parse with a file.
-- [ ] **Step 3 - history** - `parseArchive` reads one archive's number, title, kind, status,
+- [x] **Step 3 - history** - `parseArchive` reads one archive's number, title, kind, status,
   step and repair counts, commits, closed findings, what went wrong and what was deferred;
   the dashboard reads every archive under the five history folders, replacing
   `historyCount` and its unused import (F-09). *Done when:* tests cover a full archive, one

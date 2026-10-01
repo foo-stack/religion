@@ -6,11 +6,9 @@
  */
 
 import http from "node:http";
-import fs from "node:fs/promises";
-import path from "node:path";
 
 import { readIfPresent, statePath } from "./paths.js";
-import { parseSpec, readProjectState } from "./state.js";
+import { parseSpec, readHistory, readProjectState } from "./state.js";
 import { computeStatus } from "./status.js";
 
 export interface Dashboard {
@@ -63,7 +61,8 @@ async function handle(root: string, port: number, request: http.IncomingMessage,
     const state = await readProjectState(root);
     const activity = await readActivity(root);
     const work = parseSpec(await readIfPresent(statePath(root, "context", "current-work.md")));
-    const body = JSON.stringify({ status: computeStatus(state), plan: state.plan, findings: state.findings, activity, work });
+    const history = await readHistory(root);
+    const body = JSON.stringify({ status: computeStatus(state), plan: state.plan, findings: state.findings, activity, work, history });
     send(response, 200, "application/json", body);
     return;
   }
@@ -85,19 +84,6 @@ async function readActivity(root: string): Promise<unknown> {
   } catch {
     return null;
   }
-}
-
-export async function historyCount(root: string): Promise<number> {
-  let total = 0;
-  for (const kind of ["features", "fixes", "rollbacks"]) {
-    try {
-      const entries = await fs.readdir(statePath(root, "history", kind));
-      total += entries.filter((e) => e.endsWith(".md") && e !== "README.md").length;
-    } catch {
-      // absent directory contributes nothing
-    }
-  }
-  return total;
 }
 
 const PAGE = `<!doctype html>

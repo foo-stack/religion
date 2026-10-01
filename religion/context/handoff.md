@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-Nothing in progress.
+**A dashboard worth opening** is in progress: 15 step(s) done, 0 to go.
 
-Plan: 8 of 8 item(s) complete.
+Plan: 8 of 9 item(s) complete. Next up: 5. **A dashboard worth opening** - the active work as its spec defines it, analytics over findings, the plan and its history, and live activity, in a page designed rather than defaulted
 
 ## Read first
 

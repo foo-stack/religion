@@ -261,6 +261,17 @@ rules for this run's branches.
 - **Which managed files changed since install,** and descriptions of each setting.
 - **The rest of the ledger**, from earlier items.
 
+## Landed
+
+**Base:** d3cd42a6bd76423bf16821c3be9732d628ec733d
+**Commits:** fb6c4cd82cd8d228e2e5cb54e06d67ae54429953, 90d6c26e6d1a01346a33d1947949917b7e07d4e9, 59a80a7eda7fdb8cf4723287952c74a6e0909a12, 8c628ea007baf86fff33dcc2e419b1a93b9bb1c8, fe059e5d79e29ee61b789f86f0ff059e7a4a7af9, a35a9d8bb2eb3db8d16bc6a41a69e2d33924b9bb, 3e06d7358b883367947d4ac3c36a8a48c44fd5ab, 88ee08860ba68f9fa3067339e0732c759601c8a1, 8ac93b30d6a518859eda8d19ed8df4ad2c2708bd, 6dd25c05db70a940ca2014e239be636f02d0faaf, 4ef6ef3cca90cb7ff58ab1e3cdbdc929f3c00e36, 86e0e8a3ca6910526cc2417c45918410e3784c32, 624001cd862c286485377f8b5683fc0e25cb3696, 4054cdabb65c94b982d3e493e5971a30baa35280, 3caed66dd8435e523d6a6cf81c118ec6bc5982f3, 4d00770b1dba364d53ebcad2187b2ee75289f896, b888c0d21671a78005b04b6ad3cd91aa4f515fbb, cb0c160996368a4813540a139da23cdf31f88c27, 67eae2b2714ce208cbb2b19a3b08e9a27df1e311
+**Product paths:** .changeset/a-dashboard-worth-opening.md, packages/create-religion/bin/religion.ts, packages/create-religion/lib/dashboard.test.ts, packages/create-religion/lib/dashboard.ts, packages/create-religion/lib/state.test.ts, packages/create-religion/lib/state.ts, scripts/fixtures/network-probes.json
+
+The base is `main` when the automated run began; the run's integration branch,
+`auto/2026-10-01`, was created from it. The changeset at
+`.changeset/a-dashboard-worth-opening.md` travels with this item and is consumed by the next
+release.
+
 ## Findings
 
 ### 5/F-09 [P3] closed - Unused import and dead export in the dashboard

@@ -16,7 +16,7 @@
   - [x] 4b. **Update keeps its promises** - removes files the template dropped, refuses a manifest from a newer version, backs up what it says it backs up, and cannot duplicate an edited entry file
   - [x] 4c. **Compatibility guards** - checks that fail when the public surface changes by accident: JSON shapes, skill names, flags, config keys, and an upgrade from the last release
   - [x] 4d. **The stability statement** - what is public and what is internal, what a 1.x update guarantees, the three promises, an upgrade guide, and the major changeset that makes it 1.0
-- [ ] 5. **A dashboard worth opening** - the active work as its spec defines it, analytics over findings, the plan and its history, and live activity, in a page designed rather than defaulted
+- [x] 5. **A dashboard worth opening** - the active work as its spec defines it, analytics over findings, the plan and its history, and live activity, in a page designed rather than defaulted
 
 ## Order
 

@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 6da3b075a0d155f0 -->
+<!-- religion:source-hash dea356d166c6fc9a -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,9 +49,7 @@ nothing to sign into.
 
 ## Roadmap
 
-5. **A dashboard worth opening** - the active work as its spec defines it, analytics over
-   findings, the plan and its history, and live activity, in a page designed rather than
-   defaulted
+Nothing queued: every item in the build plan is complete.
 
 ## Domain model
 

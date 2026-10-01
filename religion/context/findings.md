@@ -62,22 +62,6 @@
 **Suggested fix:** Skip commands whose length differs by more than 2; the result is identical.
 **Resolution:**
 
-### F-09 [P3] closed - Unused import and dead export in the dashboard
-
-**File:** packages/create-religion/lib/dashboard.ts:10
-**Found:** 2026-09-26 by audit (scope: current; lens: quality)
-**Why it matters:** `import path` is unused (`tsc --noUnusedLocals` reports TS6133) and `historyCount` is exported and used nowhere. Both predate this work, in a file it touches.
-**Suggested fix:** Delete both, after confirming nothing needs `historyCount`.
-**Resolution:** Repaired 2026-10-01: `historyCount` is gone, replaced by `readHistory` in `state.ts`, which the dashboard uses, and the unused `fs` import went with it, while `path` stayed because the dashboard now uses it for the project's name; `npm run typecheck` passes. Re-reviewed 2026-10-01 in a fresh-context audit pass over `dashboard.ts`: `historyCount` is gone, and `tsc --noUnusedLocals` reports nothing in the file. Closed.
-
-### F-10 [P3] closed - A failed state read could crash the dashboard
-
-**File:** packages/create-religion/lib/dashboard.ts:24
-**Found:** 2026-09-26 by audit (scope: current; lens: security)
-**Why it matters:** `void handle(...)` has no rejection handler, so a throw from `readProjectState` would be unhandled. Not reproduced. Predates this work.
-**Suggested fix:** Catch in the request callback and answer 500.
-**Resolution:** Repaired 2026-10-01: building `/state.json` is caught and answers 500 with the error as JSON, under the same policy. A dashboard test starts it on a project whose skill tree is a file, which makes doctor's read throw, and asserts the 500 and that the page is still served; with the guard removed the same test fails. Re-reviewed 2026-10-01 in a fresh-context audit pass: the security lens traced the guarded `/state.json` path, and the tests lens removed the guard in a scratch copy and the 500 test failed. Closed; the test's reliance on doctor throwing is F-115.
-
 ### F-11 [P3] unverified - The package root is found before arguments are parsed
 
 **File:** packages/create-religion/bin/religion.ts:58
@@ -550,14 +534,6 @@
 **Suggested fix:** Add a probe that trips each on its own.
 **Resolution:**
 
-### F-99 [P2] closed - The lens pattern is quadratic on a long Found line
-
-**File:** packages/create-religion/lib/state.ts:296
-**Found:** 2026-10-01 by audit (scope: current; lens: performance, security)
-**Why it matters:** The lazy `(.*?)` before `\((?:scope...)?lens:` rescans the rest of the line from every position, so one long `**Found:**` line blocks the event loop: 80,000 spaces took 3.2 s per parse and `(lens: x` repeated 40,000 times took 9.7 s. The dashboard parses the ledger twice per poll (directly and inside `runDoctor`), and `religion status` and `doctor` stall on the same input.
-**Suggested fix:** Match only from `found.lastIndexOf("(")`, which is linear, and add a timing-bounded test.
-**Resolution:** Repaired 2026-10-01: the lens is matched only from the finding's last opening parenthesis, which is linear. A test parses a 320,000-character `Found` line within a one-second bound, and all 88 entries in this ledger parse with the same lenses as before. Re-reviewed 2026-10-01 in a fresh-context pass: not closed. Matching from the last parenthesis helps only when the long run comes before it; `(lens:` followed by 80,000 spaces still took 2.5 s, because `\s*` and `[^)]+` both match spaces and the engine tries every split. Repaired again 2026-10-01, the second and last attempt: the lens is captured without a leading `\s*` and trimmed, so no two parts of the pattern can take the same spaces. `x (lens:` followed by 80,000 spaces took 2,451 ms with the previous pattern and 0 ms with this one; the timing test now includes that input, and all 92 ledger entries parse with the same lenses. Re-reviewed 2026-10-01 in a fresh-context pass: 25 adversarial `Found` shapes at 80,000 and 320,000 characters, runs of spaces, tabs, semicolons, parentheses and repeated `scope:` and `lens:` on both sides of the last parenthesis, each parsed in 2 ms or less; a fuzz of 200,000 lines against the previous pattern found no difference, and all 92 ledger entries parse identically. Closed.
-
 ### F-100 [P2] open - The page counts the active spec's steps two ways
 
 **File:** packages/create-religion/lib/dashboard.ts:630
@@ -565,22 +541,6 @@
 **Why it matters:** The rail and the overview tile use `status.work` from `parseWork`, which counts every checkbox in the file at any indent; the Active work panel and the Work view use `parseSpec`, which counts only top-level steps under `## Build steps`. A spec with a nested sub-task and a Testing checkbox shows 0/3 in the rail and 0 of 2 in the Work view, and the banner's "step N" and the Work tile's next label can name different steps when ticks are out of order.
 **Suggested fix:** Take every step number on the page from `data.work.steps`, keep `status.work` for `status --json`, and read `current-work.md` once in `readState`.
 **Resolution:**
-
-### F-101 [P2] closed - "Oldest unresolved" lists the most severe findings, not the oldest
-
-**File:** packages/create-religion/lib/dashboard.ts:933
-**Found:** 2026-10-01 by audit (scope: current; lens: quality)
-**Why it matters:** It sorts by severity, then identifier, so a new P1 is listed before a months-old P3 under a label that says oldest.
-**Suggested fix:** Sort by identifier only, or relabel it "Most severe unresolved", and reuse `idNumber`.
-**Resolution:** Repaired 2026-10-01: the list is ordered by identifier alone, using the page's one identifier helper; against this repository it shows F-02, F-03 and F-04. Re-reviewed 2026-10-01 in a fresh-context pass: the list sorts by identifier only, and shows F-02, F-03 and F-04 against this repository. Closed.
-
-### F-102 [P2] closed - Selecting a row or filter by keyboard loses focus
-
-**File:** packages/create-religion/lib/dashboard.ts:972
-**Found:** 2026-10-01 by audit (scope: current; lens: quality)
-**Why it matters:** Enter or Space on a focusable row calls `click()`, whose handler re-renders the table and chips with `innerHTML`, destroying the focused element; focus drops to the body after every pick, which defeats the keyboard handler that exists for it.
-**Suggested fix:** After rendering, refocus the element with the same `data-pick` or `data-filter` and `data-value`.
-**Resolution:** Repaired 2026-10-01: after a pick or filter re-renders, focus returns to the element with the same role and value. In Chrome, Tab then Enter on a row selected F-27 and left focus on its row, and Tab then Space did the same for F-28. Re-reviewed 2026-10-01 in a fresh-context pass: keyboard picks on rows and chips return focus to the replacement element, roles are compared with values so no other element can match, and mouse use shows no ring because the style is focus-visible. Closed; a poll's re-render still drops focus, which is F-122.
 
 ### F-103 [P2] open - History numbers and order are wrong for fixes, refactors and rollbacks
 
@@ -613,14 +573,6 @@
 **Why it matters:** The only empty label in the test fixture is the last line of its entry, so changing `[ \t]*` to `\s*` in `labelled()` passes the suite while an empty `**File:**` above `**Found:**` would then capture the next line.
 **Suggested fix:** Put an empty `**File:**` directly above `**Found:**` in the details test and assert `file: null`.
 **Resolution:**
-
-### F-107 [P3] closed - A finding's file named like an Object member breaks the page
-
-**File:** packages/create-religion/lib/dashboard.ts:766
-**Found:** 2026-10-01 by audit (scope: current; lens: security)
-**Why it matters:** `files`, `lensCounts` and `kinds` are plain objects keyed by repository text, so a file named `constructor`, `toString` or `__proto__` makes `.push` throw; rendering stops before History and Health are drawn, and since the response text is remembered first, later identical polls never recover.
-**Suggested fix:** Use `Object.create(null)` or a `Map` for the three.
-**Resolution:** Repaired 2026-10-01: the lens, file and kind tallies are prototype-free objects. A project with a finding filed under `lib/constructor:12` and lens `constructor` rendered every view, with all seven doctor checks and the history tiles drawn. Re-reviewed 2026-10-01 in a fresh-context pass: findings filed under `constructor` and `__proto__`, such lenses, a history kind of `constructor` and hostile adapters all rendered every view. Closed; three lookup tables still show inherited members as text, which is F-121.
 
 ### F-108 [P3] open - The history reader follows links and reads any file type
 
@@ -686,22 +638,6 @@
 **Suggested fix:** Assert only the 500 and a non-empty error, and say in the test why doctor throws there.
 **Resolution:**
 
-### F-116 [P3] closed - The step pattern in parseWork is quadratic across blank lines
-
-**File:** packages/create-religion/lib/state.ts:102
-**Found:** 2026-10-01 by audit (scope: current; lens: performance)
-**Why it matters:** `^\s*` under the multiline flag runs across newlines, so every blank line rescans the whitespace after it: 80,000 blank lines took 2.8 s, run twice per poll.
-**Suggested fix:** Use `^[ \t]*`.
-**Resolution:** Repaired 2026-10-01: the step pattern's leading and trailing whitespace is spaces and tabs only, so it no longer crosses lines. The same timing test parses a spec of 80,000 blank lines within the bound. Re-reviewed 2026-10-01 in a fresh-context pass: 80,000 blank lines parse in 0 ms and 80,000 space-only lines in 3 ms; every archive and the active spec count the same steps and next step as before. Closed; the tail of the same pattern is F-119.
-
-### F-117 [P3] closed - Polling starts a request every 3 seconds whether or not the last one finished
-
-**File:** packages/create-religion/lib/dashboard.ts:989
-**Found:** 2026-10-01 by audit (scope: current; lens: performance)
-**Why it matters:** `setInterval` fires regardless, so a slow response (as F-99 can cause) builds an unbounded queue, and responses can arrive out of order and replace newer state with older.
-**Suggested fix:** Schedule the next poll when the current one finishes.
-**Resolution:** Repaired 2026-10-01: the page skips a poll while one is in flight. Against a server delaying every `/state.json` answer by 7 seconds, 20 seconds of polling made two requests, never more than one open at once. Re-reviewed 2026-10-01 in a fresh-context pass: the page script, run in a stubbed DOM, resets the busy flag after a malformed body, a throwing render, a 500 and a network error, and polling continues. Closed; a request that never settles is F-120.
-
 ### F-118 [P3] open - Every poll re-reads and re-sends the whole history
 
 **File:** packages/create-religion/lib/state.ts:244
@@ -709,22 +645,6 @@
 **Why it matters:** Archives never change, but each poll reads and parses all of them one at a time and sends their lessons and deferrals, which the page shows only for the selected one: 2.8 ms and 67 KB at 7 archives, 114 ms and 3.1 MB at 1007.
 **Suggested fix:** Cache parsed archives by name and modification time, read independent files concurrently, and send lessons only when needed.
 **Resolution:**
-
-### F-119 [P3] closed - The tail of parseWork's step pattern is quadratic and joins plain steps
-
-**File:** packages/create-religion/lib/state.ts:103
-**Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-99 to F-117)
-**Why it matters:** `(.+?)(?:\s+-\s|$)` lets `\s+` cross a newline, so `- [ ] Plain one` followed by `- [ ] Plain two` counts as one step, and a step line with a long run of spaces takes seconds (80,000 spaces took 3.3 s). It predates this item; the repair of F-116 kept it.
-**Suggested fix:** Use `[ \t]-[ \t]` for the separator.
-**Resolution:** Repaired 2026-10-01: the separator is a dash between spaces or tabs on the same line. A step line with 80,000 spaces took 3,239 ms before and 0 ms after, the timing test covers it, and a test counts two consecutive unbolded steps as two. Re-reviewed 2026-10-01 in a fresh-context pass: adversarial step lines and blank runs at 320,000 characters parsed in 4 ms or less, two plain steps count as two, and the active spec, the seven archives and the history readmes give the same counts and next step as before. Closed.
-
-### F-120 [P3] closed - A request that never answers stops polling for good
-
-**File:** packages/create-religion/lib/dashboard.ts:550
-**Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-99 to F-117)
-**Why it matters:** The busy flag that keeps polls from overlapping is cleared only when the request settles, so one that hangs leaves the page frozen for the rest of its life. The server always answers, so this is unlikely.
-**Suggested fix:** Give the request a timeout, for example an abort signal of ten seconds; the existing catch already handles it.
-**Resolution:** Repaired 2026-10-01: a poll releases after ten seconds even if its request never answers. Against a server that never answered, the page went on making requests every 12 to 13 seconds. Re-reviewed 2026-10-01 in a fresh-context pass: in the page script run against a fake clock, polling resumed after a hung request, and a late rejection was caught. Closed as stated; the race it used lets an abandoned request repaint older state, which is F-123.
 
 ### F-121 [P3] open - Three lookup tables show inherited members as text
 
@@ -742,10 +662,10 @@
 **Suggested fix:** Remember and restore focus around `render()` itself.
 **Resolution:**
 
-### F-123 [P2] fixed - A late answer from an abandoned poll repaints older state
+### F-124 [P3] open - An older browser without AbortSignal.timeout never loads the page's state
 
-**File:** packages/create-religion/lib/dashboard.ts:556
-**Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-99, F-119, F-120)
-**Why it matters:** The repair of F-120 races `refresh()` against a ten-second timer, which only stops waiting: the abandoned request keeps running and, when it answers, renders its older state over newer state, which is what F-117 closed. Reproduced in the page script with a fake clock: a hung request answering after a newer one left the older state on screen until the next poll. Abandoned requests are never cancelled, so they also pile up against the browser's per-host connection limit.
-**Suggested fix:** Drop the race and give the request an abort signal with a ten-second timeout; the existing catch handles the abort, and an aborted request cannot land late.
-**Resolution:** Repaired 2026-10-01: the race is gone and the request carries a ten-second abort signal, so a request that has not answered is cancelled rather than abandoned. Against a server that never answered, each request was cancelled 11 seconds after it started, the next poll followed a second later, and no more than one request was ever open; probe 6.03 is re-anchored on the new call with its verdict unchanged.
+**File:** packages/create-religion/lib/dashboard.ts:566
+**Found:** 2026-10-01 by audit (scope: current; lens: re-review of F-123)
+**Why it matters:** `AbortSignal.timeout` needs Safari 16, Chrome 103 or Firefox 100. On an older browser the call throws inside the request's `try`, so every poll reports "Disconnected, retrying" and nothing renders. A local dashboard is unlikely to meet one.
+**Suggested fix:** Pass the signal only when `AbortSignal.timeout` exists.
+**Resolution:**

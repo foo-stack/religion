@@ -446,6 +446,7 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .checks span { align-items: flex-start; }
 .checks span::before { flex-shrink: 0; margin-top: calc((var(--leading-base) * 1em - var(--dot-size)) / 2); }
 .checks span.bad::before { background: var(--block); }
+.checklist .bad { width: var(--dot-size); height: var(--dot-size); border-radius: 50%; background: var(--block); }
 .callout.bad { color: var(--block); }
 .callout.bad::before { background: var(--block); }
 .live.off { color: var(--block); }
@@ -515,7 +516,16 @@ button.chip { font-family: inherit; cursor: pointer; }
         <aside class="panel sticky" id="hs-detail"></aside>
       </div>
     </section>
-    <section class="view" id="health"><div class="head"><h1>Activity and health</h1></div></section>
+    <section class="view" id="health">
+      <div class="head"><h1>Activity and health</h1><div class="meta"><span>religion/.state/</span><span>religion/config.json</span></div></div>
+      <div id="hl-notice"></div>
+      <div class="grid">
+        <section class="panel"><header><h2>Now</h2><span id="hl-run"></span></header><div class="body" id="hl-now"></div></section>
+        <section class="panel"><header><h2>Doctor</h2><span class="count" id="hl-pass"></span></header><ul class="checklist" id="hl-checks"></ul></section>
+        <section class="panel"><header><h2>Configuration</h2><span class="count">config.json</span></header><div id="hl-config"></div></section>
+        <section class="panel"><header><h2>Install</h2><span class="count">.state/manifest.json</span></header><div class="body" id="hl-install"></div></section>
+      </div>
+    </section>
   </main>
 </div>
 <script>
@@ -610,6 +620,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     renderWork();
     renderFindings();
     renderHistory();
+    renderHealth();
   }
 
   function renderRail() {
@@ -848,6 +859,64 @@ button.chip { font-family: inherit; cursor: pointer; }
         ? "<ul class='steps'>" + closedOf(picked).map((f) => "<li><span class='sev " + f.severity.toLowerCase() + "'></span><span class='name'>" + md(f.title) + "</span><span class='side'>" + esc(f.id) + "</span></li>").join("") + "</ul>"
         : empty("None.")) +
       "</div>";
+  }
+
+  const ADAPTER_NAMES = { claude: "Claude Code", codex: "Codex", copilot: "GitHub Copilot", opencode: "OpenCode" };
+  const when = (iso) => (iso && !isNaN(Date.parse(iso)) ? new Date(iso).toLocaleString() : esc(iso || ""));
+  const semver = (v) => String(v || "").split("-")[0].split(".").map(Number);
+
+  function older(installed, tool) {
+    const a = semver(installed);
+    const b = semver(tool);
+    if (a.length !== 3 || b.length !== 3 || a.concat(b).some(isNaN)) return false;
+    return a[0] - b[0] < 0 || (a[0] === b[0] && (a[1] - b[1] < 0 || (a[1] === b[1] && a[2] < b[2])));
+  }
+
+  function flatten(value, prefix, rows) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      Object.keys(value).forEach((k) => flatten(value[k], prefix ? prefix + "." + k : k, rows));
+    } else {
+      rows.push([prefix, typeof value === "string" ? value : JSON.stringify(value)]);
+    }
+    return rows;
+  }
+
+  function renderHealth() {
+    const h = data.health;
+    const a = data.activity && typeof data.activity === "object" ? data.activity : null;
+    const install = h.install;
+    $("hl-notice").innerHTML = install && h.tool && older(install.version, h.tool)
+      ? "<div class='notice'><span class='cmd'>religion update</span><p>This project was installed by " + esc(install.version) + ", and this tool is " + esc(h.tool) +
+        ". Updating refreshes the managed files and keeps any you have edited.</p></div>"
+      : "";
+    $("hl-run").innerHTML = a ? "<span class='run'>" + esc(a.status) + "</span>" : "";
+    const field = (label, value, cls) => (value === undefined || value === null || value === "" ? "" : "<dt>" + label + "</dt><dd" + (cls ? " class='" + cls + "'" : "") + ">" + value + "</dd>");
+    const progress = a && a.progress && typeof a.progress === "object" ? a.progress.current + " of " + a.progress.total + " " + (a.progress.label || "") : "";
+    const item = a && a.item && typeof a.item === "object" ? esc(a.item.id) + ", " + esc(a.item.title) : "";
+    $("hl-now").innerHTML = a
+      ? "<dl class='kv'>" + field("Command", esc(a.command), "mono") + field("Doing", esc(a.summary)) + field("Detail", esc(a.detail), "dim") + field("Item", item) +
+        field("Progress", esc(progress)) + field("Boundary", esc(a.boundary)) + field("Started", when(a.startedAt), "mono") + field("Updated", when(a.updatedAt), "mono") +
+        field("Resume", esc(a.resumeCommand), "mono") + "</dl>"
+      : empty("No run recorded. A skill that changes something records its activity in religion/.state/run.json.");
+    const passing = h.checks.filter((c) => c.ok).length;
+    $("hl-pass").textContent = passing + " of " + h.checks.length + " pass";
+    $("hl-checks").innerHTML = h.checks.map((c) =>
+      "<li><span class='" + (c.ok ? "ok" : "bad") + "'></span><span>" + esc(c.name) + "</span><span class='detail'>" + md(c.detail) + "</span><span class='blocks'>" +
+      (c.blocks === "nothing" ? "advisory" : "blocks " + esc(c.blocks)) + "</span></li>"
+    ).join("");
+    const settings = flatten(config(), "", []);
+    $("hl-config").innerHTML = settings.length
+      ? "<table class='rows'><tr><th>Setting</th><th>Value</th></tr>" + settings.map((r) => "<tr><td class='file'>" + esc(r[0]) + "</td><td class='mono'>" + esc(r[1]) + "</td></tr>").join("") + "</table>"
+      : "<div class='body'>" + empty("No configuration. The built-in defaults apply.") + "</div>";
+    $("hl-install").innerHTML =
+      (install
+        ? "<dl class='kv'>" + field("Installed by", esc(install.version || "unknown"), "mono") + field("This tool", esc(h.tool || "unknown"), "mono") +
+          field("Adapters", esc(install.adapters.map((x) => ADAPTER_NAMES[x] || x).join(", ") || "none")) + field("Managed", install.managed + " files") + "</dl>"
+        : empty("No install record. Installing or updating writes religion/.state/manifest.json.")) +
+      "<div class='divider'></div><div class='label section-label'>Inbox</div>" +
+      (h.inbox.length ? h.inbox.map((n) => "<p class='prose'>" + (n.date ? "<span class='faint mono'>" + esc(n.date) + "</span> " : "") + md(n.text) + "</p>").join("") : empty("Empty.")) +
+      "<div class='label section-label'>Open questions</div>" +
+      (h.questions.length ? "<ul class='list'>" + h.questions.map((q) => "<li>" + md(q) + "</li>").join("") + "</ul>" : empty("None."));
   }
 
   function heat(value, max) {

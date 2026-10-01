@@ -117,7 +117,7 @@ large, so split it.
 - [x] **Step 9 - history** - tiles, the shipped table, the build plan, and the selected
   item's detail. *Done when:* a screenshot shows the seven archives and a clicked item's
   lessons and deferrals.
-- [ ] **Step 10 - health** - the update notice when the install is older than the tool,
+- [x] **Step 10 - health** - the update notice when the install is older than the tool,
   the activity record, doctor's checks, the configuration, the install and the inbox. *Done
   when:* a screenshot against this repository shows the notice for its 0.5.0 install, and
   one against a fresh install shows none.

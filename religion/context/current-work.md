@@ -78,7 +78,7 @@ large, so split it.
   name; `/state.json` gains `work`. *Done when:* tests over a spec in the template's shape,
   an empty spec, and a hand-mangled one pass, `nextStep` reads `Step 3 - client`, and
   `npm test` passes.
-- [ ] **Step 2 - findings in full** - `parseFindings` also reads each finding's file, when
+- [x] **Step 2 - findings in full** - `parseFindings` also reads each finding's file, when
   and how it was found, its lens, why it matters, the suggested fix and the resolution,
   tolerating the variant `Found` line a finding raised while building carries. *Done when:*
   tests cover a full entry, a bare heading, and the variant line, and the 68 entries in this

@@ -187,6 +187,45 @@ test("parseFindings reads identifier, severity and status", () => {
   assert.deepEqual(blocking.map((f) => f.id), ["F-01", "F-03"]);
 });
 
+test("parseFindings reads each finding's details, and tolerates a bare heading and a finding without a lens", () => {
+  const ledger = [
+    "### F-02 [P2] open - The upper edge is not pinned",
+    "",
+    "**File:** lib/args.test.ts:46",
+    "**Found:** 2026-09-26 by audit (scope: current; lens: tests, quality)",
+    "**Why it matters:** `stauts` pins distance 2.",
+    "**Suggested fix:** Assert `sta`.",
+    "**Resolution:**",
+    "",
+    "### F-03 [P3] fixed - Bare",
+    "",
+    "### F-79 [P3] open - Raised while building",
+    "",
+    "**File:** bin/religion.ts:217",
+    "**Found:** 2026-09-26 while writing the upgrade guide from runs",
+    "**Resolution:** Repaired 2026-09-26: the hint is gone."
+  ].join("\n");
+
+  const [full, bare, building] = parseFindings(ledger);
+  assert.deepEqual(full, {
+    id: "F-02",
+    severity: "P2",
+    status: "open",
+    title: "The upper edge is not pinned",
+    file: "lib/args.test.ts:46",
+    found: "2026-09-26 by audit",
+    lens: "tests, quality",
+    why: "`stauts` pins distance 2.",
+    fix: "Assert `sta`.",
+    resolution: null
+  });
+  assert.deepEqual([bare?.id, bare?.file, bare?.found, bare?.why], ["F-03", null, null, null]);
+  assert.deepEqual(
+    [building?.found, building?.lens, building?.resolution],
+    ["2026-09-26 while writing the upgrade guide from runs", null, "Repaired 2026-09-26: the hint is gone."]
+  );
+});
+
 test("parseFindings returns nothing for an empty ledger", () => {
   assert.deepEqual(parseFindings("# Findings\n\n_No findings recorded._"), []);
   assert.deepEqual(parseFindings(null), []);

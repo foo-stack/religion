@@ -22,6 +22,12 @@ export interface Finding {
   severity: "P0" | "P1" | "P2" | "P3";
   status: "unverified" | "open" | "fixed" | "closed" | "accepted" | "invalid";
   title: string;
+  file?: string | null;
+  found?: string | null;
+  lens?: string | null;
+  why?: string | null;
+  fix?: string | null;
+  resolution?: string | null;
 }
 
 export interface WorkItem {
@@ -196,12 +202,34 @@ function join(paragraph: string): string {
 
 export function parseFindings(source: string | null): Finding[] {
   if (!source) return [];
-  return [...source.matchAll(/^###\s+(F-\d+)\s+\[(P[0-3])\]\s+(\w+)\s+-\s+(.+)$/gim)].map((m) => ({
-    id: m[1] as string,
-    severity: m[2] as Finding["severity"],
-    status: m[3] as Finding["status"],
-    title: (m[4] ?? "").trim()
-  }));
+  const entries = source.split(/^(?=###\s)/m);
+  return entries.flatMap((entry) => {
+    const m = /^###\s+(F-\d+)\s+\[(P[0-3])\]\s+(\w+)\s+-\s+(.+)$/im.exec(entry);
+    if (!m) return [];
+    // A finding raised while building has no lens: "2026-09-26 while writing the guide".
+    const found = labelled(entry, "Found");
+    const lensed = found ? /^(.*?)\s*\((?:scope:[^;)]*;\s*)?lens:\s*([^)]+)\)\s*$/.exec(found) : null;
+    return [
+      {
+        id: m[1] as string,
+        severity: m[2] as Finding["severity"],
+        status: m[3] as Finding["status"],
+        title: (m[4] ?? "").trim(),
+        file: labelled(entry, "File"),
+        found: lensed ? (lensed[1] ?? "").trim() : found,
+        lens: lensed ? (lensed[2] ?? "").trim() : null,
+        why: labelled(entry, "Why it matters"),
+        fix: labelled(entry, "Suggested fix"),
+        resolution: labelled(entry, "Resolution")
+      }
+    ];
+  });
+}
+
+/** The text after `**Label:**` on its line, or null when the label is absent or empty. */
+function labelled(entry: string, label: string): string | null {
+  const value = new RegExp(`^\\*\\*${label}:\\*\\*[ \\t]*(.*)$`, "m").exec(entry)?.[1]?.trim();
+  return value ? value : null;
 }
 
 export function parseOpenQuestions(overview: string | null): string[] {

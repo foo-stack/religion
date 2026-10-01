@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 5
-**Status:** not started
+**Status:** in progress
 
 ## Goal
 
@@ -72,7 +72,7 @@ large, so split it.
 
 ## Build steps
 
-- [ ] **Step 1 - the spec, in full** - `parseSpec` in `state.ts` reads the active spec's
+- [x] **Step 1 - the spec, in full** - `parseSpec` in `state.ts` reads the active spec's
   goal, in-scope and out-of-scope lists, files, and every step and repair with its label,
   title, description, *Done when* and tick; `parseWork`'s `nextStep` keeps the full bold
   name; `/state.json` gains `work`. *Done when:* tests over a spec in the template's shape,

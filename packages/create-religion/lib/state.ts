@@ -91,18 +91,107 @@ export function parseWork(source: string | null): WorkItem {
 
   if (!source || /_Nothing in progress\./.test(source)) return empty;
 
-  const steps = [...source.matchAll(/^\s*- \[( |x|X)\]\s*(?:\*\*)?(.+?)(?:\*\*)?(?:\s+-\s|$)/gim)];
+  // The step's name is its bold text, which itself contains " - " in the template's shape.
+  const steps = [...source.matchAll(/^\s*- \[( |x|X)\]\s*(?:\*\*(.+?)\*\*|(.+?)(?:\s+-\s|$))/gim)];
   const done = steps.filter((s) => (s[1] ?? " ").toLowerCase() === "x").length;
+  const next = steps.find((s) => (s[1] ?? " ").toLowerCase() !== "x");
 
   return {
     active: true,
-    title: /^#\s+(.+)$/m.exec(source)?.[1]?.trim() ?? null,
-    type: /^\*\*Type:\*\*\s*(.+)$/m.exec(source)?.[1]?.trim() ?? null,
-    status: /^\*\*Status:\*\*\s*(.+)$/m.exec(source)?.[1]?.trim() ?? null,
+    title: field(source, "#"),
+    type: field(source, "Type"),
+    status: field(source, "Status"),
     stepsDone: done,
     stepsTotal: steps.length,
-    nextStep: steps.find((s) => (s[1] ?? " ").toLowerCase() !== "x")?.[2]?.trim() ?? null
+    nextStep: (next?.[2] ?? next?.[3])?.trim() ?? null
   };
+}
+
+function field(source: string, name: string): string | null {
+  const pattern = name === "#" ? /^#\s+(.+)$/m : new RegExp(`^\\*\\*${name}:\\*\\*\\s*(.+)$`, "m");
+  return pattern.exec(source)?.[1]?.trim() ?? null;
+}
+
+export interface SpecStep {
+  label: string;
+  title: string;
+  what: string;
+  doneWhen: string | null;
+  done: boolean;
+}
+
+export interface Spec {
+  title: string | null;
+  type: string | null;
+  planItem: string | null;
+  status: string | null;
+  goal: string[];
+  inScope: string[];
+  outOfScope: string[];
+  files: string[];
+  steps: SpecStep[];
+}
+
+/** The active spec as written, for showing rather than deciding. Null when nothing is in progress. */
+export function parseSpec(source: string | null): Spec | null {
+  if (!source || /_Nothing in progress\./.test(source)) return null;
+  const section = sections(source);
+
+  return {
+    title: field(source, "#"),
+    type: field(source, "Type"),
+    planItem: field(source, "From build plan")?.replace(/^item\s+/i, "") ?? null,
+    status: field(source, "Status"),
+    goal: (section.get("goal") ?? "").split(/\n\s*\n/).map(join).filter(Boolean),
+    inScope: bullets(section.get("in scope")),
+    outOfScope: bullets(section.get("out of scope")),
+    files: bullets(section.get("files and areas")),
+    steps: bullets(section.get("build steps"), true).map(parseStep)
+  };
+}
+
+/** Each `## Heading`'s body, keyed by the lowercased heading. */
+function sections(source: string): Map<string, string> {
+  const found = new Map<string, string>();
+  const parts = source.split(/^##\s+(.+)$/m);
+  for (let index = 1; index < parts.length; index += 2) {
+    found.set((parts[index] ?? "").trim().toLowerCase(), parts[index + 1] ?? "");
+  }
+  return found;
+}
+
+/** Top-level list items with their wrapped lines joined; with `checkbox`, only `- [ ]` items, tick kept. */
+function bullets(body: string | undefined, checkbox = false): string[] {
+  if (!body) return [];
+  const items: string[] = [];
+  for (const line of body.split(/\r?\n/)) {
+    if (/^- /.test(line)) items.push(line.slice(2));
+    else if (/^\s+\S/.test(line) && items.length > 0) items[items.length - 1] += " " + line.trim();
+    else if (line.trim() !== "" && items.length > 0) items.push("");
+  }
+  const kept = items.filter(Boolean).map((item) => item.trim());
+  return checkbox ? kept.filter((item) => /^\[( |x|X)\]/.test(item)) : kept;
+}
+
+function parseStep(item: string): SpecStep {
+  const done = /^\[(x|X)\]/.test(item);
+  const text = item.replace(/^\[( |x|X)\]\s*/, "");
+  const bold = /^\*\*(.+?)\*\*\s*(?:-\s+)?([\s\S]*)$/.exec(text);
+  const name = bold?.[1] ?? text.split(" - ")[0] ?? "";
+  const rest = bold ? (bold[2] ?? "") : text.slice(name.length).replace(/^\s*-\s+/, "");
+  const [label, ...title] = name.split(" - ");
+  const [what, doneWhen] = rest.split(/\*Done when:\*\s*/);
+  return {
+    label: title.length > 0 ? (label ?? "").trim() : "",
+    title: (title.length > 0 ? title.join(" - ") : name).trim(),
+    what: (what ?? "").trim(),
+    doneWhen: doneWhen?.trim() ?? null,
+    done
+  };
+}
+
+function join(paragraph: string): string {
+  return paragraph.split(/\r?\n/).map((line) => line.trim()).join(" ").trim();
 }
 
 export function parseFindings(source: string | null): Finding[] {

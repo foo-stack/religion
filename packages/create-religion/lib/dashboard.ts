@@ -10,7 +10,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { readIfPresent, statePath } from "./paths.js";
-import { readProjectState } from "./state.js";
+import { parseSpec, readProjectState } from "./state.js";
 import { computeStatus } from "./status.js";
 
 export interface Dashboard {
@@ -62,7 +62,8 @@ async function handle(root: string, port: number, request: http.IncomingMessage,
   if (request.url === "/state.json") {
     const state = await readProjectState(root);
     const activity = await readActivity(root);
-    const body = JSON.stringify({ status: computeStatus(state), plan: state.plan, findings: state.findings, activity });
+    const work = parseSpec(await readIfPresent(statePath(root, "context", "current-work.md")));
+    const body = JSON.stringify({ status: computeStatus(state), plan: state.plan, findings: state.findings, activity, work });
     send(response, 200, "application/json", body);
     return;
   }

@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { overviewHash, parseFindings, parseOpenQuestions, parsePlan, parseWork, readProjectState } from "./state.js";
+import { overviewHash, parseFindings, parseOpenQuestions, parsePlan, parseSpec, parseWork, readProjectState } from "./state.js";
 
 test("parsePlan reads numbers, titles and tick state", () => {
   const plan = parsePlan(
@@ -79,11 +79,81 @@ test("parseWork counts ticked steps and names the next one", () => {
   assert.equal(work.status, "in progress");
   assert.equal(work.stepsDone, 2);
   assert.equal(work.stepsTotal, 3);
-  // Pinning current behaviour, not endorsing it: nextStep truncates at the first " - ",
-  // which is the separator the spec template uses inside the bold title, so the second half
-  // of the step name is lost. Latent today because nothing reads the field. Noted in the
-  // inbox rather than repaired here.
-  assert.equal(work.nextStep, "Step 3", "resumption starts at the first unticked step");
+  // The bold name contains the template's own " - " separator, so it is taken whole.
+  assert.equal(work.nextStep, "Step 3 - client", "resumption starts at the first unticked step");
+});
+
+test("parseWork names an unbolded step up to its first separator", () => {
+  assert.equal(parseWork("# X\n\n- [ ] wire the button - so it downloads").nextStep, "wire the button");
+});
+
+test("parseSpec reads a spec in the template's shape", () => {
+  const spec = parseSpec(
+    [
+      "# Export reports",
+      "",
+      "**Type:** Feature",
+      "**From build plan:** item 4b",
+      "**Status:** in progress",
+      "",
+      "## Goal",
+      "",
+      "Users can download a report",
+      "as a file.",
+      "",
+      "**Done when** it downloads.",
+      "",
+      "## In scope",
+      "",
+      "- The download button",
+      "- A CSV writer that quotes",
+      "  embedded commas",
+      "",
+      "## Out of scope",
+      "",
+      "- **PDF.** A later item.",
+      "",
+      "## Build steps",
+      "",
+      "- [x] **Step 1 - schema** - added the table. *Done when:* it migrates.",
+      "- [ ] **Step 2 - client - with retries** - wires the button,",
+      "  and retries. *Done when:* the file downloads.",
+      "- [ ] **Repair F-04 - quoting** - quote commas.",
+      "",
+      "## Files and areas",
+      "",
+      "- `src/report.ts` - the writer"
+    ].join("\n")
+  );
+
+  assert.ok(spec);
+  assert.deepEqual([spec.title, spec.type, spec.planItem, spec.status], ["Export reports", "Feature", "4b", "in progress"]);
+  assert.deepEqual(spec.goal, ["Users can download a report as a file.", "**Done when** it downloads."]);
+  assert.deepEqual(spec.inScope, ["The download button", "A CSV writer that quotes embedded commas"]);
+  assert.deepEqual(spec.outOfScope, ["**PDF.** A later item."]);
+  assert.deepEqual(spec.files, ["`src/report.ts` - the writer"]);
+  assert.deepEqual(spec.steps, [
+    { label: "Step 1", title: "schema", what: "added the table.", doneWhen: "it migrates.", done: true },
+    {
+      label: "Step 2",
+      title: "client - with retries",
+      what: "wires the button, and retries.",
+      doneWhen: "the file downloads.",
+      done: false
+    },
+    { label: "Repair F-04", title: "quoting", what: "quote commas.", doneWhen: null, done: false }
+  ]);
+});
+
+test("parseSpec returns null for the stub and degrades on a mangled spec", () => {
+  assert.equal(parseSpec("# Current Work\n\n_Nothing in progress. Run `feature` to start._"), null);
+  assert.equal(parseSpec(null), null);
+
+  const mangled = parseSpec("no title\n\n## Build steps\n\n- [x] just words\nstray paragraph\n- not a step");
+  assert.ok(mangled);
+  assert.equal(mangled.title, null);
+  assert.deepEqual(mangled.goal, []);
+  assert.deepEqual(mangled.steps, [{ label: "", title: "just words", what: "", doneWhen: null, done: true }]);
 });
 
 test("parseFindings reads identifier, severity and status", () => {

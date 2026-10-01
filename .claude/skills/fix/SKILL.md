@@ -1,7 +1,7 @@
 ---
 name: fix
 summary: spec an unplanned bug or small change, or repair a recorded finding
-description: "Write a short spec for an unplanned bug or small change into religion/context/current-work.md so it runs through the same reviewed loop as planned work, then stop. Given a finding identifier instead, specs the repair of that recorded finding. Fixes are archived under religion/history/fixes/ and never touch the build plan. Use when the user runs /fix, reports a bug, asks to fix or change something that is not a planned item, or asks to pick up a finding from the ledger."
+description: "Write a short spec for an unplanned bug or small change into religion/context/current-work.md so it runs through the same reviewed loop as planned work, then stop. Given one or more finding identifiers instead, specs the repair of those recorded findings together. Fixes are archived under religion/history/fixes/ and never touch the build plan. Use when the user runs /fix, reports a bug, asks to fix or change something that is not a planned item, or asks to pick up a finding from the ledger."
 ---
 
 # fix - spec an unplanned change
@@ -14,7 +14,9 @@ numbered, it ticks nothing, and it archives on its own.
 - **A description** - `/fix "password reset email never sends"`. A problem stated in the
   conversation already counts; this skill does not scan the project hoping to find
   something wrong.
-- **A finding identifier** - `/fix F-03` specs the repair of that ledger entry.
+- **Finding identifiers** - `/fix F-03` specs the repair of that ledger entry, and
+  `/fix F-03 F-07` repairs several together. Group findings only when they share a file
+  and a severity, as /auto's fix mode does: one fix then stays one reviewable diff.
 
 - **Nothing** - read `religion/context/inbox.md` and offer what is there. Those notes were
   taken mid-build precisely because they were not worth stopping for at the time, and this is
@@ -31,8 +33,8 @@ would mean exploring, stop and point at /debug, which isolates a failure without
 changing anything. Writing a fix spec against a guessed cause produces a fix for the wrong
 problem.
 
-**For a finding**, read its entry in `religion/context/findings.md`: the file and line, why
-it matters, the suggested fix. The finding is the problem statement.
+**For findings**, read each entry in `religion/context/findings.md`: the file and line, why
+it matters, the suggested fix. The findings are the problem statement, one repair step each.
 
 If something is already in progress in `religion/context/current-work.md`, say so and ask
 whether to set it aside. One thing at a time is the point.
@@ -57,8 +59,8 @@ Fill in:
   test that fails without it. A bug that could recur silently is exactly what the test gate
   is for.
 
-For a finding repair, name the finding identifier in the Goal so the archive and the ledger
-agree about what happened.
+For a finding repair, name every finding identifier in the Goal so the archive and the
+ledger agree about what happened.
 
 ## Step 3 - stop
 

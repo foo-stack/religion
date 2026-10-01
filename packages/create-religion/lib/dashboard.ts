@@ -503,7 +503,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     let response;
     let text;
     try {
-      response = await fetch("/state.json", { cache: "no-store" });
+      response = await fetch("/state.json");
       text = await response.text();
     } catch {
       setLive(false, "Disconnected, retrying");
@@ -531,7 +531,6 @@ button.chip { font-family: inherit; cursor: pointer; }
     $("next-because").textContent = data.status.next.because;
   }
 
-  load();
-  setInterval(load, 3000);
+  load(); setInterval(load, 3000);
 })();
 </script>`;

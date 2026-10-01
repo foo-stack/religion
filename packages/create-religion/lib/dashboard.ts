@@ -442,6 +442,12 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .view:target, main:not(:has(.view:target)) #overview { display: block; }
 .app:not(:has(.view:target)) .to-overview, .app:has(#overview:target) .to-overview, .app:has(#work:target) .to-work,
 .app:has(#findings:target) .to-findings, .app:has(#history:target) .to-history, .app:has(#health:target) .to-health { background: var(--surface-2); color: var(--text); }
+.tile.bad .big { color: var(--block); }
+.checks span { align-items: flex-start; }
+.checks span::before { flex-shrink: 0; margin-top: calc((var(--leading-base) * 1em - var(--dot-size)) / 2); }
+.checks span.bad::before { background: var(--block); }
+.callout.bad { color: var(--block); }
+.callout.bad::before { background: var(--block); }
 .live.off { color: var(--block); }
 .live.off::before { background: var(--block); }
 .problem { border: var(--border-width) solid var(--block); background: var(--block-weak); color: var(--block); border-radius: var(--radius-lg); padding: var(--space-5) var(--space-6); margin-bottom: var(--space-6); font-size: var(--text-sm); }
@@ -475,6 +481,14 @@ button.chip { font-family: inherit; cursor: pointer; }
     <section class="view" id="overview">
       <div class="head"><h1>Overview</h1><div class="meta" id="ov-meta"></div></div>
       <div class="next"><span class="label">Next</span><span class="cmd" id="next-command">...</span><p id="next-because"></p></div>
+      <div class="tiles" id="ov-tiles"></div>
+      <div class="grid">
+        <section class="panel"><header><h2>Active work</h2><a href="#work">Open spec</a></header><div class="body" id="ov-work"></div></section>
+        <section class="panel"><header><h2>Findings</h2><a href="#findings">Ledger</a></header><div class="body" id="ov-findings"></div></section>
+        <section class="panel"><header><h2>Plan</h2><a href="#history">Plan and history</a></header><div class="body" id="ov-plan"></div></section>
+        <section class="panel"><header><h2>Activity and health</h2><a href="#health">Health</a></header><div class="body" id="ov-health"></div></section>
+        <section class="panel stack"><header><h2>Recently shipped</h2><a href="#history">History</a></header><div class="body" id="ov-shipped"></div></section>
+      </div>
     </section>
     <section class="view" id="work"><div class="head"><h1>Work</h1></div></section>
     <section class="view" id="findings"><div class="head"><h1>Findings</h1></div></section>
@@ -524,11 +538,162 @@ button.chip { font-family: inherit; cursor: pointer; }
     render();
   }
 
+  const SEVERITIES = ["P0", "P1", "P2", "P3"];
+  const UNRESOLVED = ["open", "fixed", "unverified"];
+  const sum = (list, value) => list.reduce((total, item) => total + value(item), 0);
+  const share = (count, total) => (total ? Math.round((count / total) * 1000) / 10 : 0);
+  const short = (title) => String(title || "").split(" - ")[0];
+  const unresolved = () => data.findings.filter((f) => UNRESOLVED.indexOf(f.status) >= 0);
+  const config = () => (data.health.config && typeof data.health.config === "object" ? data.health.config : {});
+  const setting = (group, key, fallback) => (config()[group] && config()[group][key] !== undefined ? config()[group][key] : fallback);
+
+  // Escaped first, so the only tags are the ones added here: the repository's text never becomes markup.
+  function md(text) {
+    const tick = String.fromCharCode(96);
+    return esc(text)
+      .split(tick)
+      .map((part, i) => (i % 2 ? "<code>" + part + "</code>" : part.split("**").map((p, j) => (j % 2 ? "<b>" + p + "</b>" : p)).join("")))
+      .join("");
+  }
+
+  function bar(parts, total) {
+    return "<div class='bar'>" + parts.map((p) => "<i style='width:" + share(p[0], total) + "%;background:var(" + p[1] + ")'></i>").join("") + "</div>";
+  }
+
+  function tile(label, big, sub, extra, kind) {
+    return "<div class='tile " + (kind || "") + "'><div class='label'>" + esc(label) + "</div><div class='big'>" + big + "</div><div class='sub'>" + sub + "</div>" + (extra || "") + "</div>";
+  }
+
+  const sentence = (text) => (text.indexOf(". ") < 0 ? text : text.slice(0, text.indexOf(". ") + 1));
+  const empty = (text) => "<p class='empty'>" + esc(text) + "</p>";
+
+  function bySeverity(list) {
+    return SEVERITIES.map((s) => [list.filter((f) => f.severity === s).length, s]).filter((p) => p[0] > 0);
+  }
+
+  function severitySummary(list) {
+    const parts = bySeverity(list).map((p) => p[0] + " " + p[1]);
+    const above = list.some((f) => f.severity === "P0" || f.severity === "P1");
+    return parts.length ? parts.join(", ") + (above ? "" : ", none above") : "none";
+  }
+
   function render() {
     $("project").textContent = data.project;
     $("tool").textContent = data.health.tool ? "create-religion " + data.health.tool : "";
     $("next-command").textContent = data.status.next.command;
     $("next-because").textContent = data.status.next.because;
+    renderRail();
+    renderOverview();
+  }
+
+  function renderRail() {
+    const work = data.status.work;
+    const pending = unresolved().length;
+    const passing = data.health.checks.filter((c) => c.ok).length;
+    $("count-work").textContent = work.active ? work.stepsDone + "/" + work.stepsTotal : "";
+    $("count-findings").textContent = pending ? String(pending) : "";
+    $("count-findings").className = data.status.findings.blocking.length ? "count warn" : "count";
+    $("count-history").textContent = data.history.length ? String(data.history.length) : "";
+    $("count-health").textContent = passing + "/" + data.health.checks.length;
+    $("count-health").className = passing < data.health.checks.length ? "count warn" : "count";
+  }
+
+  function renderOverview() {
+    const s = data.status;
+    const pending = unresolved();
+    const blocking = s.findings.blocking.length;
+    const commits = sum(data.history, (a) => a.commits.length);
+    const closed = sum(data.history, (a) => a.findings.filter((f) => f.status === "closed").length);
+    $("ov-meta").innerHTML = "<span>" + esc(setting("git", "mode", "trunk")) + " mode</span><span>review " + esc(setting("workflow", "stepReview", "every")) + "</span>";
+    $("ov-tiles").innerHTML =
+      tile("Plan", s.plan.done + "<small> / " + s.plan.total + " items</small>", s.plan.nextItem ? "Next: " + esc(short(s.plan.nextItem)) : s.plan.total ? "Complete" : "No items yet", bar([[s.plan.done, "--ok"]], s.plan.total)) +
+      (s.work.active
+        ? tile("Active item", s.work.stepsDone + "<small> / " + s.work.stepsTotal + " steps</small>", esc(s.work.title || "Untitled"), bar([[s.work.stepsDone, "--progress"]], s.work.stepsTotal))
+        : tile("Active item", "None", "Nothing in progress")) +
+      tile("Blocking", String(blocking), blocking ? "A P0 or P1 stops completion" : "Nothing stops completion", "", blocking ? "bad" : "good") +
+      tile("Unresolved findings", String(pending.length), esc(severitySummary(pending)), bar(bySeverity(pending).map((p) => [p[0], "--sev-" + p[1].toLowerCase()]), pending.length)) +
+      tile("Shipped", data.history.length + "<small> items</small>", commits + " commits, " + closed + " findings closed");
+    $("ov-work").innerHTML = overviewWork();
+    $("ov-findings").innerHTML = overviewFindings(pending);
+    $("ov-plan").innerHTML = planList();
+    $("ov-health").innerHTML = overviewHealth();
+    $("ov-shipped").innerHTML = data.history.length
+      ? "<table class='hist'><tr><th></th><th style='text-align:left'>Item</th><th>Kind</th><th>Commits</th><th>Findings closed</th></tr>" +
+        data.history.slice(0, 5).map((a) =>
+          "<tr><td>" + esc(a.number || "") + "</td><td class='t'>" + esc(a.title || a.file) + "</td><td class='t'>" + esc(a.type || a.kind) + "</td><td>" + a.commits.length + "</td><td>" + a.findings.filter((f) => f.status === "closed").length + "</td></tr>"
+        ).join("") + "</table>"
+      : empty("Nothing has shipped yet. Completed work is archived here.");
+  }
+
+  function tags(work) {
+    const status = String(work.status || "");
+    return "<div class='tags'>" + (work.type ? "<span class='tag'>" + esc(work.type) + "</span>" : "") +
+      (status ? "<span class='tag" + (/progress/i.test(status) ? " progress" : "") + "'>" + esc(status) + "</span>" : "") +
+      (work.planItem ? "<span class='tag'>Plan " + esc(work.planItem) + "</span>" : "") + "</div>";
+  }
+
+  function overviewWork() {
+    const work = data.work;
+    if (!work) return empty("Nothing in progress. Next: " + data.status.next.command + ", " + data.status.next.because + ".");
+    const next = work.steps.findIndex((step) => !step.done);
+    return "<div class='work-title'>" + esc(work.title || "Untitled") + "</div>" + tags(work) +
+      (work.goal[0] ? "<p class='goal'>" + md(sentence(work.goal[0])) + "</p>" : "") +
+      (work.steps.length
+        ? "<ul class='steps'>" + work.steps.map((step, i) =>
+            "<li class='" + (step.done ? "done" : i === next ? "now" : "") + "'><span class='mark'></span><span class='name'>" + md(step.title) +
+            "</span><span class='side'>" + (i === next ? "next" : esc(step.label)) + "</span></li>"
+          ).join("") + "</ul>"
+        : empty("The spec has no build steps yet."));
+  }
+
+  function heat(value, max) {
+    if (!value) return "h0";
+    return value * 3 <= max ? "h1" : value * 3 <= max * 2 ? "h2" : "h3";
+  }
+
+  function overviewFindings(pending) {
+    if (!data.findings.length) return empty("The ledger is empty. An audit records what it finds here.");
+    const columns = ["open", "fixed", "unverified"];
+    const count = (severity, status) => data.findings.filter((f) => f.severity === severity && (!status || f.status === status)).length;
+    const max = Math.max(1, ...SEVERITIES.flatMap((s) => columns.map((c) => count(s, c))));
+    const blocking = data.status.findings.blocking.length;
+    const oldest = pending.slice().sort((a, b) => a.severity.localeCompare(b.severity) || Number(a.id.slice(2)) - Number(b.id.slice(2))).slice(0, 3);
+    return "<table><tr><th>Severity</th><th>Open</th><th>Fixed</th><th>Unverified</th><th>Total</th></tr>" +
+      SEVERITIES.map((s) =>
+        "<tr><td><span class='sev " + s.toLowerCase() + "'>" + s + "</span></td>" + columns.map((c) => "<td class='" + heat(count(s, c), max) + "'>" + count(s, c) + "</td>").join("") +
+        "<td class='" + (count(s) ? "" : "h0") + "'>" + count(s) + "</td></tr>"
+      ).join("") + "</table>" +
+      (blocking
+        ? "<div class='callout bad'>" + blocking + " blocking: a P0 or P1 is open or fixed, so completion is blocked.</div>"
+        : "<div class='callout'>No P0 or P1 is open or fixed, so completion is not blocked.</div>") +
+      (oldest.length
+        ? "<div class='divider'></div><div class='label section-label'>Oldest unresolved</div><ul class='steps'>" +
+          oldest.map((f) => "<li><span class='sev " + f.severity.toLowerCase() + "'></span><span class='name'>" + md(f.title) + "</span><span class='side'>" + esc(f.id) + "</span></li>").join("") + "</ul>"
+        : "");
+  }
+
+  function planList() {
+    if (!data.plan.length) return empty("The build plan has no items yet.");
+    return "<ul class='plan'>" + data.plan.map((item) => {
+      const next = !item.done && item.title === data.status.plan.nextItem;
+      return "<li class='" + (item.done ? "done" : next ? "next-item" : "") + (item.depth ? " sub" : "") + "'><span class='num'>" + esc(item.number || "") +
+        "</span><span class='t'>" + md(short(item.title)) + "</span>" + (item.done ? "<span class='check'>done</span>" : next ? "<span class='queued'>next</span>" : "<span></span>") + "</li>";
+    }).join("") + "</ul>";
+  }
+
+  function overviewHealth() {
+    const a = data.activity && typeof data.activity === "object" ? data.activity : null;
+    const h = data.health;
+    const run = a
+      ? "<dl class='kv'><dt>Now</dt><dd><span class='run'>" + esc(a.status) + "</span> <span class='mono dim'>" + esc(a.command) + "</span></dd>" +
+        (a.summary ? "<dt>Doing</dt><dd>" + esc(a.summary) + "</dd>" : "") +
+        (a.detail ? "<dt>Detail</dt><dd class='dim'>" + esc(a.detail) + "</dd>" : "") +
+        (a.resumeCommand ? "<dt>Resume</dt><dd class='mono'>" + esc(a.resumeCommand) + "</dd>" : "") + "</dl>"
+      : empty("No run recorded. A skill that changes something records its activity here.");
+    return run +
+      "<div class='checks'>" + h.checks.map((c) => "<span class='" + (c.ok ? "" : "bad") + "'>" + esc(c.name) + ", " + esc(c.detail) + "</span>").join("") + "</div>" +
+      "<div class='divider'></div><dl class='kv'><dt>Questions</dt><dd class='" + (h.questions.length ? "" : "dim") + "'>" + (h.questions.length ? esc(h.questions.join(", ")) : "None open") + "</dd>" +
+      "<dt>Inbox</dt><dd>" + (h.inbox.length ? h.inbox.length + " note" + (h.inbox.length > 1 ? "s" : "") : "<span class='dim'>Empty</span>") + "</dd></dl>";
   }
 
   load(); setInterval(load, 3000);

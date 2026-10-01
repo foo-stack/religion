@@ -102,7 +102,7 @@ large, so split it.
   action, as the old page did, so the page stays useful between steps. *Done when:* the page
   renders the rail and switches views against this repository in light and dark, shown by
   screenshots, a stopped server shows as disconnected, and the network check passes.
-- [ ] **Step 6 - the overview** - the next action, the five tiles, Active work, the findings
+- [x] **Step 6 - the overview** - the next action, the five tiles, Active work, the findings
   matrix and oldest unresolved, the plan, activity and health, and recently shipped. *Done
   when:* a screenshot against this repository shows every panel filled from its state files,
   and one against a fresh install shows each panel's empty state rather than a blank.

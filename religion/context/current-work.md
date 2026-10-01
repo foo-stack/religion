@@ -121,7 +121,7 @@ large, so split it.
   the activity record, doctor's checks, the configuration, the install and the inbox. *Done
   when:* a screenshot against this repository shows the notice for its 0.5.0 install, and
   one against a fresh install shows none.
-- [ ] **Step 11 - land it** - the changeset, and `prototypes/` deleted now its theme lives
+- [x] **Step 11 - land it** - the changeset, and `prototypes/` deleted now its theme lives
   in the page. *Done when:* `npm test` passes and nothing references `prototypes/`.
 
 ## Files and areas

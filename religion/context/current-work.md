@@ -95,7 +95,7 @@ large, so split it.
   building the response answers 500 with a JSON error instead of an unhandled rejection
   (F-10). *Done when:* an inbox parsing test passes, the dashboard test asserts the
   response's top-level keys and a 500 when state cannot be read, and `npm test` passes.
-- [ ] **Step 5 - the theme and the shell** - port `prototypes/theme.css` into `PAGE`; build
+- [x] **Step 5 - the theme and the shell** - port `prototypes/theme.css` into `PAGE`; build
   the rail with the five views switched by `:target`, so links, the back button and a
   reload work with no script reading the address; the live indicator, the loading and
   disconnected states, and the tool's version. Until Step 6 the overview shows the next
@@ -137,8 +137,8 @@ large, so split it.
 
 - **`/state.json` stays internal.** The statement names it as such, so its shape can grow
   freely, and nothing outside the page reads it.
-- **Its top level is `status`, `plan`, `findings`, `activity`, `work`, `history` and
-  `health`** (load-bearing for the page). `work` is the parsed spec or `null`; `history` is
+- **Its top level is `project`, `status`, `plan`, `findings`, `activity`, `work`,
+  `history` and `health`** (load-bearing for the page). `work` is the parsed spec or `null`; `history` is
   a list of archives; `health` holds `checks`, `config`, `install`, `tool` and `inbox`. A
   failure answers `{ "error": string }` with status 500.
 - **`status --json` is public and keeps its shape.** `work.nextStep` stays `string|null`;

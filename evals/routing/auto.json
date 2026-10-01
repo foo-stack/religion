@@ -9,6 +9,12 @@
     },
     {
       "prompt": "Autopilot through the build plan"
+    },
+    {
+      "prompt": "Fix every open finding in the ledger without stopping"
+    },
+    {
+      "prompt": "Work through all the P2 findings unattended"
     }
   ],
   "negative": [
@@ -27,6 +33,14 @@
     {
       "prompt": "Push this branch and raise a PR into main",
       "owner": "complete"
+    },
+    {
+      "prompt": "Repair finding F-12",
+      "owner": "fix"
+    },
+    {
+      "prompt": "Re-review the findings I just repaired",
+      "owner": "audit"
     }
   ]
 }

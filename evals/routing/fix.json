@@ -9,6 +9,9 @@
     },
     {
       "prompt": "Small change: rename the header label"
+    },
+    {
+      "prompt": "Repair F-21 and F-22 together, they are in the same file"
     }
   ],
   "negative": [
@@ -19,6 +22,10 @@
     {
       "prompt": "Find out why the build is broken first",
       "owner": "debug"
+    },
+    {
+      "prompt": "Clear the whole findings ledger in one unattended run",
+      "owner": "auto"
     }
   ]
 }

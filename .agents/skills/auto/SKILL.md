@@ -1,7 +1,7 @@
 ---
 name: auto
 summary: run the loop unattended, within explicit bounds
-description: "Run the reviewed loop without stopping between steps, within bounds you set. With no argument it takes one work item and stops before completing it; `all` runs the remaining build plan; a number runs that many items. Specs, implements, verifies, applies the configured gates, repairs confirmed high-severity findings, and completes each item. Its invocation grants committing, dependency installs, and remote reads for the run, and grants nothing else: it still stops to ask before any merge. Under git.mode pull-request it lands every item on one shared integration branch and ends by opening a single aggregate review packet it never merges, after stating that whole remote budget up front and being told yes. Use only when the user runs $auto or explicitly asks for an unattended run."
+description: "Run the reviewed loop without stopping between steps, within bounds you set. With no argument it takes one work item and stops before completing it; `all` runs the remaining build plan; a number runs that many items; `fix` works through the findings ledger instead, every class most severe first or one class such as `fix P1`, one fix per file and class, re-reviewing every repair and folding any finding a repair surfaces into the same fix. Specs, implements, verifies, applies the configured gates, repairs confirmed high-severity findings, and completes each item. Its invocation grants committing, dependency installs, and remote reads for the run, and grants nothing else: it still stops to ask before any merge. Under git.mode pull-request it lands every item on one shared integration branch and ends by opening a single aggregate review packet it never merges, after stating that whole remote budget up front and being told yes. Use only when the user runs $auto or explicitly asks for an unattended run."
 ---
 
 # auto - the same loop, without the pauses
@@ -19,6 +19,7 @@ between steps.
   a bound.
 - `$auto 3` - the next three items, completing each.
 - `$auto resume` - continue an interrupted run from the file-backed state.
+- `$auto fix` - the findings ledger instead of the plan; see Fix mode.
 
 `auto.maxItems` caps successful completions. `auto.maxRepairAttempts` caps repeated
 attempts at the same finding. `auto.finalAudit` adds one review across everything the run
@@ -65,7 +66,8 @@ Before the first item:
   starts, naming the question, since a run that stops halfway through item four is worse
   than one that never began.
 - The working tree is clean, or the only dirt belongs to work being resumed.
-- The plan has unchecked items.
+- The plan has unchecked items, or in fix mode the ledger has `open` or `fixed` findings in
+  range.
 - Under `pull-request`, the repository can host one: a remote exists and the host command
   works. A repository that cannot is a stop, not a reason to fall back to local merges. The
   mode exists to produce review gates, and silently producing a different history instead
@@ -109,6 +111,45 @@ For every item, in plan order:
 7. **Report one line** and move on.
 
 An item counts against `auto.maxItems` once it has landed, not once it is built.
+
+## Fix mode
+
+`$auto fix` works through the findings ledger instead of the build plan, under the same
+grant, gates, landing and stop rules.
+
+- `$auto fix` or `$auto fix all` - every class, P0 first, until no `open` finding is
+  left or a bound is reached.
+- `$auto fix P0` through `$auto fix P3` - only that class.
+
+**The queue.** Read `religion/context/findings.md` afresh before each fix, because every fix
+and every review changes it. Take the classes in turn, most severe first. Within a class, the
+`open` findings that name the same file form one group, oldest first, and each group is one
+work item: specced by $fix with all of its identifiers, then implemented, gated,
+completed and landed exactly as Step 2 does for a plan item. A fix confined to one file and
+one class stays a diff someone can review; a fix that sweeps several is not.
+
+`unverified` findings are not repaired. Nothing has confirmed them, and repairing a guess
+produces a change nobody can check; report them instead. `fixed` findings in range are
+re-reviewed rather than repaired again, because the repair exists and only a review can
+close it.
+
+**Every repair is re-reviewed.** Repair is the whole point of this mode, so after
+implementation the repaired findings always go to $audit in a subagent with fresh
+context, whatever `qualityGates.audit` says. Only that review closes a finding.
+
+**Folding.** When that review raises a new finding in code the fix changed, the audit records
+it under its own identifier with a `**Surfaced by:**` line naming the finding whose repair
+exposed it, and it joins the current fix as another repair step, whatever its class. The
+finding that surfaced it cannot close while it is `open` or `fixed`. A defect a repair
+introduced belongs with that repair: left for a later fix, it loses the context that
+explains it.
+
+**Bounds.** `auto.maxRepairAttempts` caps the attempts at any one finding. A fix folds in at
+most three findings; a fourth is still recorded, but left out of this fix, and the fix
+completes with what it has, its unclosed findings staying in the ledger. When completion is
+blocked because a P0 or P1 is still `open` or `fixed`, the run stops. A finding the run has
+already given up on is not queued again, and `auto.maxItems` caps completed fixes. Without
+these bounds the loop need not end: a review of a repair can always find something new.
 
 ## Step 3 - close the run
 

@@ -104,6 +104,10 @@ shape; the prose below it is for people.
     **Suggested fix:** ...
     **Resolution:**
 
+When the pass is re-reviewing a repair and finds a new problem in the code that repair
+changed, add `**Surfaced by:** F-NN` after **Found**, naming the finding whose repair exposed
+it. That link is what keeps a defect a repair introduced attached to the repair.
+
 Identifiers are sequential within the ledger, one past the highest present, never reused
 and never renumbered while their entries live there. Completion archives resolved entries
 under a work-item prefix, and that prefixed form is the permanent reference.
@@ -122,9 +126,9 @@ After reviewing:
 - Append each new confirmed finding as `open`.
 - Record a lead worth tracking as `unverified`. It never gates anything.
 - Update entries this pass re-examined, noting the evidence in **Resolution**.
-- Move `fixed` to `closed` only when all three hold: this pass covered the finding's file,
+- Move `fixed` to `closed` only when all four hold: this pass covered the finding's file,
   re-examining the repaired code confirmed the defect is gone and nothing worse replaced
-  it, and the report names it as closed. An unrelated new problem in the same file gets its
+  it, no finding it surfaced is still `open` or `fixed`, and the report names it as closed. An unrelated new problem in the same file gets its
   own entry. Never close implicitly.
 - Set `accepted` only on the user's explicit decision, with their reason. Never on their
   behalf.

@@ -46,7 +46,7 @@ large, so split it.
   names the packages from the product paths, proposes the bump by what changed in the public
   surface, writes a reader-facing summary from the Outcome, asks before writing interactively,
   writes and flags it in the packet in an automated run, and `npm test` exits 0.
-- [ ] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

@@ -92,3 +92,9 @@ Nothing.
 ### Deferred
 
 - **Release tools other than Changesets.**
+
+## Landed
+
+**Base:** 79d54081063ba014bd4072725b4e368ae1579529
+**Commits:** fd6bcf9c0578a2ea390e5f10eae5faa6ec5152c7, 02ba42a7a1a9ca6ab240033336d91d7c5dd13ab9, 3bcc9533c24bba17cc4de52f6920e2138929c0c1
+**Product paths:** .agents/skills/complete/SKILL.md, .changeset/complete-drafts-the-release-note.md, .claude/skills/complete/SKILL.md, src/skills/complete/SKILL.md

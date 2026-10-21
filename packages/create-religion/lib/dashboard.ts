@@ -445,7 +445,8 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .view { display: none; scroll-margin-top: 100vh; }
 .view:target, main:not(:has(.view:target)) #overview { display: block; }
 .app:not(:has(.view:target)) .to-overview, .app:has(#overview:target) .to-overview, .app:has(#work:target) .to-work,
-.app:has(#findings:target) .to-findings, .app:has(#history:target) .to-history, .app:has(#learning:target) .to-learning,
+.app:has(#findings:target) .to-findings, .app:has(#history:target) .to-history, .app:has(#deferred:target) .to-deferred,
+.app:has(#learning:target) .to-learning,
 .app:has(#health:target) .to-health { background: var(--surface-2); color: var(--text); }
 .tile.bad .big { color: var(--block); }
 .checks span { align-items: flex-start; }
@@ -476,6 +477,7 @@ button.chip { font-family: inherit; cursor: pointer; }
       <a class="to-work" href="#work">Work <span class="count" id="count-work"></span></a>
       <a class="to-findings" href="#findings">Findings <span class="count" id="count-findings"></span></a>
       <a class="to-history" href="#history">History <span class="count" id="count-history"></span></a>
+      <a class="to-deferred" href="#deferred">Deferred <span class="count" id="count-deferred"></span></a>
       <a class="to-learning" href="#learning">Learning <span class="count" id="count-learning"></span></a>
       <a class="to-health" href="#health">Health <span class="count" id="count-health"></span></a>
     </div>
@@ -521,6 +523,10 @@ button.chip { font-family: inherit; cursor: pointer; }
         </div>
         <aside class="panel sticky" id="hs-detail"></aside>
       </div>
+    </section>
+    <section class="view" id="deferred">
+      <div class="head"><h1>Deferred</h1><div class="meta"><span>history/</span></div></div>
+      <section class="panel"><header><h2>What each item set aside</h2><span class="count" id="df-count"></span></header><div class="body" id="df-body"></div></section>
     </section>
     <section class="view" id="learning">
       <div class="head"><h1>Learning</h1><div class="meta"><span>learning/lessons.md</span><span>learning/journal.md</span></div></div>
@@ -647,6 +653,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     renderWork();
     renderFindings();
     renderHistory();
+    renderDeferred();
     renderLearning();
     renderHealth();
   }
@@ -659,6 +666,8 @@ button.chip { font-family: inherit; cursor: pointer; }
     $("count-findings").textContent = pending ? String(pending) : "";
     $("count-findings").className = data.status.findings.blocking.length ? "count warn" : "count";
     $("count-history").textContent = data.history.length ? String(data.history.length) : "";
+    const deferred = sum(data.history, (a) => a.deferred.length);
+    $("count-deferred").textContent = deferred ? String(deferred) : "";
     $("count-learning").textContent = data.learning.undecided ? String(data.learning.undecided) : "";
     $("count-health").textContent = passing + "/" + data.health.checks.length;
     $("count-health").className = passing < data.health.checks.length ? "count warn" : "count";
@@ -909,6 +918,21 @@ button.chip { font-family: inherit; cursor: pointer; }
       rows.push([prefix, typeof value === "string" ? value : JSON.stringify(value)]);
     }
     return rows;
+  }
+
+  // A record, not a queue: archives are never edited, so nothing here says whether a note was later done.
+  function renderDeferred() {
+    const left = data.history.filter((a) => a.deferred.length);
+    const total = sum(left, (a) => a.deferred.length);
+    $("df-count").textContent = total ? total + " notes from " + left.length + " items, newest first" : "";
+    $("df-body").innerHTML = left.length
+      ? "<p class='prose dim'>What each item chose to leave, as it stood when the item closed. A note may since have been done; the archive is not changed when it is.</p>" +
+        left.map((a) =>
+          "<div class='divider'></div><div class='label section-label'><a href='#history' data-pick='archive' data-value='" + esc(a.kind + "/" + a.file) + "'>" +
+          esc((a.number ? a.number + ". " : "") + (a.title || a.file)) + "</a> <span class='faint'>" + esc(a.type || a.kind) + "</span></div>" +
+          "<ul class='list'>" + a.deferred.map((d) => "<li>" + md(d) + "</li>").join("") + "</ul>"
+        ).join("")
+      : empty("Nothing deferred yet. complete archives what each item set aside, and it gathers here.");
   }
 
   function renderLearning() {

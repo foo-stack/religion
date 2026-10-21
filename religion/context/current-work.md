@@ -44,7 +44,7 @@ large, so split it.
   and a routing case. *Done when:* the rendered skill reads archived findings, groups only those
   that recur across at least two different items, proposes a rule with the findings cited, waits
   for approval, records each decision in `journal-archive.md`, and `npm test` exits 0.
-- [ ] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

@@ -9,6 +9,9 @@
     },
     {
       "prompt": "Backfill tests for the parser"
+    },
+    {
+      "prompt": "Keep what check proved as regression tests"
     }
   ],
   "negative": [

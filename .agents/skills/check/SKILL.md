@@ -66,6 +66,10 @@ Lead with the verdict, then the evidence.
 - each outcome, with pass, fail, or could not check, and what proved it
 - what was run, exactly
 - anything observed that the spec did not ask about but that looks wrong
+- outcomes that could become regression tests: each passing outcome whose evidence is a
+  captured command with its output and exit status, or a request with its response. Where the
+  entry file declares a test command, offer $tests `evidence` to keep them, so the next
+  change cannot quietly undo what was just proved. Interface outcomes are not candidates.
 - next action: $implement when something failed, $complete when everything
   passed
 
@@ -98,6 +102,7 @@ status, or touch any other file.
 
 - Observe, never repair. A failure is reported, not fixed.
 - The spec's Evidence section is the only write, and it is replaced whole, never appended to.
+  Offering a regression test is not writing one: $tests writes tests.
 - Never install a runner, a browser, or a dependency to make a check possible. Report the
   gap.
 - Do not widen scope beyond the spec's stated outcomes, except to report something clearly

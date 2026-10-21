@@ -144,3 +144,10 @@ verification check, and both were found by hand first.
 **Surprised:** Item 17 had already done the real work: once evidence lived in the archive, the packet was a matter of reading it out.
 **Went wrong:** nothing
 **Deferred:** nothing
+
+## 2026-10-21 - Verified outcomes become regression checks
+
+**Archive:** history/features/28-verified-outcomes-become-regression-checks.md
+**Surprised:** The plan line said check would keep the capture as a test, but check may not write source; the right split was check offering and tests writing, which the one-writer rule decided before any design did.
+**Went wrong:** nothing
+**Deferred:** Turning repaired findings into tests.

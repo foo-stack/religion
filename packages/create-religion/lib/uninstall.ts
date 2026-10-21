@@ -11,9 +11,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { HOOKS, hookFile, parseHooks } from "./doctor.js";
-import { ADAPTERS, BACKUPS, backUp, hash, isPlainFile, MANIFEST_PATH, readManifest, retiringTree, throughLink } from "./install.js";
+import { ADAPTERS, BACKUPS, hash, isPlainFile, MANIFEST_PATH, readManifest, retiringTree, throughLink } from "./install.js";
 import { hasDamagedMarkers, hasMarkers, MANAGED_END, MANAGED_START } from "./merge.js";
-import { STATE_DIR } from "./paths.js";
+import { exists, STATE_DIR } from "./paths.js";
 
 export type UninstallAction =
   | "remove"
@@ -29,6 +29,17 @@ export interface UninstallEntry {
   relative: string;
   action: UninstallAction;
   why?: string;
+  /** The contents' hash a removal expects, checked again just before the file goes. */
+  expected?: string;
+}
+
+/**
+ * The project to uninstall: exactly the directory named, never one found by walking up, since
+ * a removal must not reach a parent project from inside one of its subdirectories.
+ */
+export async function uninstallRoot(target: string): Promise<string | null> {
+  const root = path.resolve(target);
+  return (await exists(path.join(root, STATE_DIR, "config.json"))) ? root : null;
 }
 
 export const SETTINGS = ".claude/settings.json";
@@ -51,9 +62,9 @@ export async function planUninstall(target: string): Promise<UninstallEntry[]> {
     }
     const contents = await fs.readFile(path.join(target, ...relative.split("/")), "utf8");
     const unedited = typeof recorded === "string" && hash(contents) === recorded;
-    if (!entry) plan.push({ relative, action: unedited ? "remove" : "keep-edited" });
+    if (!entry) plan.push(unedited ? { relative, action: "remove", expected: recorded } : { relative, action: "keep-edited" });
     else if (hasMarkers(contents) && !hasDamagedMarkers(contents)) plan.push({ relative, action: "cut-block" });
-    else if (unedited && !hasMarkers(contents)) plan.push({ relative, action: "remove" });
+    else if (unedited && !hasMarkers(contents)) plan.push({ relative, action: "remove", expected: recorded });
     else plan.push({ relative, action: "keep-entry", why: hasDamagedMarkers(contents) ? "its markers are damaged" : "edited, with no markers to cut along" });
   }
 
@@ -71,7 +82,7 @@ async function settingsEntry(target: string): Promise<UninstallEntry | null> {
   if (registered === null) return { relative: SETTINGS, action: "keep-settings", why: "it does not parse" };
 
   const template = (await isPlainFile(target, TEMPLATE)) ? await fs.readFile(path.join(target, ...TEMPLATE.split("/")), "utf8") : null;
-  if (template !== null && hash(template) === hash(contents)) return { relative: SETTINGS, action: "remove" };
+  if (template !== null && hash(template) === hash(contents)) return { relative: SETTINGS, action: "remove", expected: hash(template) };
   const ours = new Set(HOOKS.map((hook) => hookFile(hook.command)));
   return registered.some((hook) => ours.has(hookFile(hook.command))) ? { relative: SETTINGS, action: "unwire" } : null;
 }
@@ -89,7 +100,13 @@ export interface UninstallResult {
  * be minutes old, and a directory is removed only once nothing is left in it.
  */
 export async function applyUninstall(target: string, plan: readonly UninstallEntry[]): Promise<UninstallResult> {
-  for (const relative of [MANIFEST_PATH, BACKUPS]) {
+  // Every path written to is chosen and checked before anything changes: a copy follows a
+  // link at its destination, so one link anywhere under the backups would write outside.
+  const backups = new Map<string, string>();
+  for (const entry of plan.filter((e) => e.action === "cut-block" || e.action === "unwire")) {
+    backups.set(entry.relative, await freeBackupPath(target, entry.relative));
+  }
+  for (const relative of [MANIFEST_PATH, BACKUPS, ...backups.values()]) {
     if (await throughLink(target, relative)) {
       throw new Error(`${relative} is reached through a symbolic link. Nothing was removed.`);
     }
@@ -101,6 +118,10 @@ export async function applyUninstall(target: string, plan: readonly UninstallEnt
     if (entry.action === "remove" || entry.action === "remove-manifest") {
       if (!(await isPlainFile(target, entry.relative))) {
         if (entry.action === "remove") result.kept.push({ ...entry, action: "keep-linked", why: "changed since the plan was made" });
+        continue;
+      }
+      if (entry.expected !== undefined && hash(await fs.readFile(file(entry.relative))) !== entry.expected) {
+        result.kept.push({ ...entry, action: "keep-edited", why: "edited since the plan was made" });
         continue;
       }
       await fs.rm(file(entry.relative));
@@ -117,8 +138,10 @@ export async function applyUninstall(target: string, plan: readonly UninstallEnt
         result.kept.push({ ...entry, action: entry.action === "cut-block" ? "keep-entry" : "keep-settings", why: "changed since the plan was made" });
         continue;
       }
-      await backUp(target, entry.relative);
-      result.backups.push(`${BACKUPS}/${entry.relative}`);
+      const backup = backups.get(entry.relative)!;
+      await fs.mkdir(path.dirname(file(backup)), { recursive: true });
+      await fs.copyFile(file(entry.relative), file(backup), fs.constants.COPYFILE_EXCL);
+      result.backups.push(backup);
       await fs.writeFile(file(entry.relative), after, "utf8");
       (entry.action === "cut-block" ? result.cut : result.unwired).push(entry.relative);
     } else {
@@ -128,13 +151,32 @@ export async function applyUninstall(target: string, plan: readonly UninstallEnt
   return result;
 }
 
-/** The entry file without Religion's block, everything around it as it was. Null if the markers moved. */
+/**
+ * A backup path that is new, under its own folder so it never replaces the copy of the
+ * original that `install` kept when it first merged the file.
+ */
+async function freeBackupPath(target: string, relative: string): Promise<string> {
+  const base = `${BACKUPS}/uninstall/${relative}`;
+  for (let n = 1; ; n += 1) {
+    const candidate = n === 1 ? base : `${base}.${n}`;
+    if (!(await fs.lstat(path.join(target, ...candidate.split("/"))).catch(() => null))) return candidate;
+  }
+}
+
+const SETUP_REQUIRED = `<!-- ${STATE_DIR}:setup-required -->`;
+
+/**
+ * The entry file without Religion's block, everything around it as it was, and without the
+ * Commands section Religion appended if nobody ever filled it in. Null if the markers moved.
+ */
 export function cutBlock(contents: string): string | null {
   const start = contents.indexOf(MANAGED_START);
   const end = contents.indexOf(MANAGED_END);
   if (start < 0 || end < start) return null;
   const joined = contents.slice(0, start).replace(/\n+$/, "") + "\n\n" + contents.slice(end + MANAGED_END.length).replace(/^\n+/, "");
-  return joined.replace(/^\n+/, "").replace(/\n+$/, "") + "\n";
+  const unfilled = /^## Commands\n[\s\S]*?(?=^## |(?![\s\S]))/m.exec(joined);
+  const kept = unfilled && unfilled[0].includes(SETUP_REQUIRED) ? joined.replace(unfilled[0], "") : joined;
+  return kept.replace(/^\n+/, "").replace(/\n+$/, "") + "\n";
 }
 
 /** The settings with Religion's hook entries taken out, and every other setting and hook left. */

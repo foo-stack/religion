@@ -71,6 +71,7 @@ large, so split it.
   plan and removes nothing, `religion uninstall --yes` removes what it planned, and
   `npm test` exits 0.
 - [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] Repair F-147, F-148, F-149, F-150 and F-151 - every backup path checked for a link first, contents re-hashed before each removal, only the named directory uninstalled, backups that never collide, and an unfilled Commands placeholder cut with the block.
 
 ## Files and areas
 

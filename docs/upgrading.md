@@ -232,7 +232,12 @@ The install record goes last.
 
 Everything else under `religion/` stays: the plans, the history, the findings and the
 journal are the project's record, and deleting them is your decision. Any file changed rather
-than removed is backed up to `religion/.state/backups/` first.
+than removed is backed up to `religion/.state/backups/uninstall/` first, beside, never over,
+the copy of your original entry file that install kept. A file edited after the plan was
+shown is kept rather than removed.
+
+It acts only on the directory it is given, or the current one: run from inside a project's
+subdirectory, it refuses rather than walking up to the project above.
 
 Without `--yes` it shows the plan and asks, defaulting to no, and outside a terminal it
 removes nothing at all. It exits 0 when it did what it planned, edited files kept included,

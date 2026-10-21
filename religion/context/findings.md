@@ -814,3 +814,43 @@
 **Why it matters:** "Adds flags, e.g. `--yes`, to install." printed as "Adds flags, e.g."; nothing in the current changelog is affected.
 **Suggested fix:** End a sentence only at a full stop before a capital or a code span, and not after a common abbreviation.
 **Resolution:** Repaired 2026-10-21 as suggested, tested.
+
+### F-147 [P1] fixed - A link inside the backups directory makes uninstall write outside the project
+
+**File:** packages/create-religion/lib/uninstall.ts:92
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Why it matters:** Only `religion/.state/backups` itself was checked for a link, not the path under it, and the copy follows links at its destination: with `backups/.claude` linked outside, `uninstall --yes` wrote `settings.json` there, and a linked `backups/CLAUDE.md` overwrote the file it pointed at.
+**Suggested fix:** Check every backup path for a link before anything is written, as `install` does.
+**Resolution:** Repaired 2026-10-21: every backup path is chosen and checked for a link before anything is written, and copied with `COPYFILE_EXCL`; a linked `backups/uninstall/.claude` is refused with nothing written outside.
+
+### F-148 [P2] fixed - A file edited after the plan is removed anyway
+
+**File:** packages/create-religion/lib/uninstall.ts:101
+**Found:** 2026-10-21 by audit (scope: current; lens: data loss)
+**Why it matters:** Applying re-checked only that the file was still plain, not its contents, so an edit made while the prompt was open was deleted.
+**Suggested fix:** Carry the expected hash in the plan and re-hash just before removing.
+**Resolution:** Repaired 2026-10-21: each removal carries the hash it expects and is re-hashed just before it goes; a skill and an entry file edited after the plan are kept, tested.
+
+### F-149 [P2] fixed - Uninstall run from inside a project's subdirectory removes the parent project
+
+**File:** packages/create-religion/bin/religion.ts:80
+**Found:** 2026-10-21 by audit (scope: current; lens: data loss)
+**Why it matters:** The project root is found by walking up, which suits reading commands but let `uninstall pb/vendor/lib --yes` uninstall `pb`.
+**Suggested fix:** Uninstall only the directory named, refusing one with no `religion/config.json` of its own.
+**Resolution:** Repaired 2026-10-21: `uninstallRoot` takes only the directory named, which must hold `religion/config.json`; a subdirectory of a project is refused, tested.
+
+### F-150 [P3] fixed - Uninstall overwrites install's backup of the original entry file
+
+**File:** packages/create-religion/lib/uninstall.ts:120
+**Found:** 2026-10-21 by audit (scope: current; lens: data loss)
+**Why it matters:** `install` keeps the user's pre-merge entry file at `backups/CLAUDE.md`, and uninstall replaced it with the merged copy, losing the one record of the original.
+**Suggested fix:** Back up under a path that never collides with an earlier backup.
+**Resolution:** Repaired 2026-10-21: uninstall backs up under `backups/uninstall/`, numbering a second copy, so install's backup of the original stays; tested with both present.
+
+### F-151 [P3] fixed - Religion's Commands placeholder survives the cut
+
+**File:** packages/create-religion/lib/uninstall.ts:132
+**Found:** 2026-10-21 by audit (scope: current; lens: correctness)
+**Why it matters:** On a real merged entry file the cut kept the appended Commands section with its setup-required marker and placeholders, which Religion wrote and nobody filled in.
+**Suggested fix:** Drop a Commands section that still carries the setup-required marker.
+**Resolution:** Repaired 2026-10-21: a Commands section still carrying the setup-required marker is cut with the block; a real `spliceEntry` merge cuts back to exactly what the user wrote.

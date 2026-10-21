@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 import { EXIT_CODES, parseArgs } from "../lib/args.js";
 import { changesSince } from "../lib/changelog.js";
-import { applyUninstall, planUninstall } from "../lib/uninstall.js";
+import { applyUninstall, planUninstall, uninstallRoot } from "../lib/uninstall.js";
 import type { UninstallEntry } from "../lib/uninstall.js";
 import type { Options } from "../lib/args.js";
 import { startDashboard } from "../lib/dashboard.js";
@@ -76,6 +76,17 @@ async function main(argv: readonly string[]): Promise<void> {
   if (options.command === "help") return printHelp();
   if (options.command === "install" || options.command === "update") return runInstall(options);
 
+  if (options.command === "uninstall") {
+    const named = await uninstallRoot(options.target);
+    if (!named) {
+      console.error(`No Religion project in ${path.resolve(options.target)}. Uninstall acts only on the directory it is given,`);
+      console.error("never a parent found by walking up, so run it from the project root or name that directory.");
+      process.exitCode = 1;
+      return;
+    }
+    return runUninstall(named, options);
+  }
+
   const root = await findProjectRoot(options.target);
   if (!root) {
     console.error("No Religion project found here or in any parent directory.");
@@ -83,7 +94,6 @@ async function main(argv: readonly string[]): Promise<void> {
     process.exit(1);
   }
 
-  if (options.command === "uninstall") return runUninstall(root, options);
 
   if (options.command === "status") {
     const status = computeStatus(await readProjectState(root));

@@ -53,7 +53,7 @@ large, so split it.
   `docs/stability.md` carry them. *Done when:* `status --json` on this repository prints
   both fields, and `npm run verify` passes, including the surface check and the stability
   statement check.
-- [ ] **Step 3 - a blocked run becomes the next action, and the text output shows both** -
+- [x] **Step 3 - a blocked run becomes the next action, and the text output shows both** -
   `nextAction` and `renderStatus` in `lib/status.ts`. *Done when:* unit tests show a blocked
   run with a resume command chosen ahead of active work, one without a resume command
   ignored, configuration problems still winning, and `religion status` printing the run and

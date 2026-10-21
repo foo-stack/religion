@@ -1,7 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { doctorReport, managedFilesCheck } from "./doctor.js";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
+import { doctorReport, managedFilesCheck, runDoctor } from "./doctor.js";
 import type { CheckResult } from "./doctor.js";
 
 const pass: CheckResult = { name: "configuration", ok: true, detail: "valid", blocks: "work" };
@@ -26,4 +30,11 @@ test("managedFilesCheck reports, never fails, and cuts a long list short", () =>
   assert.equal(long.ok, true);
   assert.equal(long.detail, "6 edited and 1 missing of 30 since install: a, b, c, d, e, and 2 more");
   assert.equal(managedFilesCheck({ edited: [], missing: ["x"], total: 2 }).detail, "0 edited and 1 missing of 2 since install: x (missing)");
+});
+
+test("runDoctor includes the managed files check", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-doctor-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const check = (await runDoctor(root)).find((c) => c.name === "managed files");
+  assert.equal(check?.detail, "no install record to compare with");
 });

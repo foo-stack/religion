@@ -49,7 +49,11 @@ export const ALLOWED: Record<string, readonly string[]> = {
   "qualityGates.check": ["manual", "when-behavioral", "always"]
 };
 
-export async function runDoctor(root: string): Promise<CheckResult[]> {
+/** `changes` lets a caller that already compared the managed files share the result. */
+export async function runDoctor(
+  root: string,
+  changes?: Awaited<ReturnType<typeof editedSinceInstall>>
+): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
   const state = await readProjectState(root);
 
@@ -149,7 +153,7 @@ export async function runDoctor(root: string): Promise<CheckResult[]> {
     blocks: "completion"
   });
 
-  results.push(managedFilesCheck(await editedSinceInstall(root)));
+  results.push(managedFilesCheck(changes === undefined ? await editedSinceInstall(root) : changes));
 
   return results;
 }

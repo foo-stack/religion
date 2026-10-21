@@ -51,6 +51,7 @@ large, so split it.
   screenshot of the running dashboard shows the list for this repository.
 - [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in
   full.
+- [x] Repair F-137, F-138 and F-139 - a failed read and anything not a plain file count as edited, and the dashboard compares once per poll.
 
 ## Files and areas
 

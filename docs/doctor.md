@@ -243,8 +243,10 @@ installed:
 ```
 
 An edited file is yours to keep. `update` will not overwrite it; it reports the file as
-changed locally and leaves it alone, so this list is what that report will name. A missing
-file is put back by the next `update`. Entry files are not compared, because `update` merges
+changed locally and leaves it alone, so this list is what that report will name. Anything at a
+managed path that is not the plain, readable file installed, such as a link or a directory,
+counts as edited too, since `update` will not overwrite it either. A missing file is put back
+by the next `update`. Entry files are not compared, because `update` merges
 them and an edit there is expected.
 
 ## What a healthy report does not prove

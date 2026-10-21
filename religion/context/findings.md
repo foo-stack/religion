@@ -734,3 +734,27 @@
 **Why it matters:** The page and `status` could disagree about when a pass is due.
 **Suggested fix:** Send the threshold with the data.
 **Resolution:** Repaired 2026-10-21: `status.ts` exports it and `/state.json` carries it as `learning.distillAfter`.
+
+### F-137 [P2] fixed - An unreadable managed file makes doctor and the dashboard fail
+
+**File:** packages/create-religion/lib/install.ts:513
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** The read after `isPlainFile` was unguarded, so one skill with mode `000` threw EACCES through `runDoctor` and answered 500 from the dashboard, from a check documented as never failing.
+**Suggested fix:** Catch the read and count the file as edited, with a test.
+**Resolution:** Repaired 2026-10-21: a failed read counts as edited, tested with a mode `000` file.
+
+### F-138 [P3] fixed - A managed path that is not a plain file reads as unchanged
+
+**File:** packages/create-religion/lib/install.ts:513
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** A link, a directory or a FIFO at a managed path was counted but listed nowhere, while `update` reports it, so the docs' claim that the list matches `update`'s was false.
+**Suggested fix:** List anything present that is not the plain file installed.
+**Resolution:** Repaired 2026-10-21: it counts as edited, the symlink case in the test now expects that, and `docs/doctor.md` says so.
+
+### F-139 [P3] fixed - Each dashboard poll compares the managed files twice
+
+**File:** packages/create-religion/lib/dashboard.ts:104
+**Found:** 2026-10-21 by audit (scope: current; lens: performance)
+**Why it matters:** `runDoctor` and `readInstall` each hashed every managed file on every three-second poll.
+**Suggested fix:** Compare once and pass the result to both.
+**Resolution:** Repaired 2026-10-21: `readState` compares once, and `runDoctor` takes the result as an optional argument; `runDoctor` including the check is now tested.

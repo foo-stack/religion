@@ -554,10 +554,20 @@ test("editedSinceInstall lists edited and missing managed files, and nothing els
   await fs.symlink(path.join(target, "outside.md"), path.join(target, ".claude/hooks/a.mjs"));
 
   assert.deepEqual(await editedSinceInstall(target), {
-    edited: [".claude/skills/feature/SKILL.md"],
+    edited: [".claude/hooks/a.mjs", ".claude/skills/feature/SKILL.md"],
     missing: [".claude/skills/fix/SKILL.md"],
     total: 4
   });
+});
+
+test("editedSinceInstall counts an unreadable managed file as edited rather than failing", async (t) => {
+  if (process.getuid?.() === 0) return t.skip("root reads files whatever their mode");
+  const { target } = await fixture(t);
+  await write(target, ".claude/skills/a/SKILL.md", "skill\n");
+  await write(target, "religion/.state/manifest.json", JSON.stringify({ managed: { ".claude/skills/a/SKILL.md": hash("skill\n") } }));
+  await fs.chmod(path.join(target, ".claude/skills/a/SKILL.md"), 0o000);
+
+  assert.deepEqual(await editedSinceInstall(target), { edited: [".claude/skills/a/SKILL.md"], missing: [], total: 1 });
 });
 
 test("editedSinceInstall reads a missing or unreadable manifest as null", async (t) => {

@@ -91,6 +91,7 @@ function send(response: http.ServerResponse, status: number, type: string, body:
 
 async function readState(root: string, version: string | null) {
   const state = await readProjectState(root);
+  const changes = await editedSinceInstall(root);
   return {
     project: path.basename(root),
     status: computeStatus(state),
@@ -101,9 +102,9 @@ async function readState(root: string, version: string | null) {
     history: await readHistory(root),
     learning: { ...state.learning, distillAfter: DISTILL_AFTER },
     health: {
-      checks: await runDoctor(root),
+      checks: await runDoctor(root, changes),
       config: state.config,
-      install: await readInstall(root),
+      install: await readInstall(root, changes),
       tool: version,
       inbox: parseInbox(await readIfPresent(statePath(root, "context", "inbox.md"))),
       questions: state.openQuestions
@@ -112,11 +113,10 @@ async function readState(root: string, version: string | null) {
 }
 
 /** The manifest is the project's file and may be hand-edited, so only well-formed parts are shown. */
-async function readInstall(root: string) {
+async function readInstall(root: string, changes: Awaited<ReturnType<typeof editedSinceInstall>>) {
   const manifest: unknown = await readManifest(root);
   if (!manifest || typeof manifest !== "object") return null;
   const { version, adapters, managed } = manifest as Record<string, unknown>;
-  const changes = await editedSinceInstall(root);
   return {
     version: typeof version === "string" ? version : null,
     adapters: Array.isArray(adapters) ? adapters.filter((a): a is string => typeof a === "string") : [],

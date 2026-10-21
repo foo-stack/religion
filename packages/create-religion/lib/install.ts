@@ -510,10 +510,16 @@ export async function editedSinceInstall(
     if (typeof recorded !== "string" || !retiringTree(relative)) continue;
     total += 1;
     const file = path.join(target, ...relative.split("/"));
-    if (await isPlainFile(target, relative)) {
-      if (hash(await fs.readFile(file)) !== recorded) edited.push(relative);
-    } else if (!(await fs.lstat(file).catch(() => null))) {
+    // Anything there that is not the plain, readable file installed counts as edited: a link,
+    // a directory or an unreadable file is what `update` reports too, and this check must
+    // never be the thing that makes doctor fail.
+    if (!(await fs.lstat(file).catch(() => null))) {
       missing.push(relative);
+    } else if (!(await isPlainFile(target, relative))) {
+      edited.push(relative);
+    } else {
+      const contents = await fs.readFile(file).catch(() => null);
+      if (contents === null || hash(contents) !== recorded) edited.push(relative);
     }
   }
   return { edited: edited.sort(), missing: missing.sort(), total };

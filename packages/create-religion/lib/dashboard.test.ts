@@ -81,7 +81,8 @@ test("the dashboard's data carries every view's section", async (t) => {
   const response = await get(`${dashboard.url}/state.json`, new URL(dashboard.url).host);
   const data = JSON.parse(response.body) as Record<string, unknown>;
   assert.equal(response.status, 200);
-  assert.deepEqual(Object.keys(data), ["project", "status", "plan", "findings", "activity", "work", "history", "health"]);
+  assert.deepEqual(Object.keys(data), ["project", "status", "plan", "findings", "activity", "work", "history", "learning", "health"]);
+  assert.deepEqual(Object.keys(data.learning as object), ["lessons", "journal", "undecided"]);
   assert.deepEqual(Object.keys(data.health as object), ["checks", "config", "install", "tool", "inbox", "questions"]);
   assert.equal((data.health as { tool: string }).tool, "9.9.9");
 });

@@ -49,7 +49,7 @@ large, so split it.
 - [x] **Step 2 - the status nudge** - a warning in `computeStatus` at five or more undecided
   entries, and the status skill's warning list. *Done when:* unit tests show no warning at
   four and the warning at five, and the rendered skill names it.
-- [ ] **Step 3 - the Learning view** - `learning` in `/state.json`, a rail link, the view's
+- [x] **Step 3 - the Learning view** - `learning` in `/state.json`, a rail link, the view's
   section and its renderer in `lib/dashboard.ts`, and the dashboard test's key list. *Done
   when:* the dashboard test passes, and a screenshot of the real dashboard against this
   repository shows the view with this repository's journal entries and the empty lessons

@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 69954827de50b69d -->
+<!-- religion:source-hash 393bab848eaef753 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -65,8 +65,9 @@ follow; the plan states both in prose, so nothing enforces the order yet (item 2
 26. **Scanner results in the ledger** - SARIF ingested as unverified findings, matched
     across runs
 27. **Waves built in isolation** - one worktree per wave step, joined into one packet
-30. **Scope drift made visible** - spec amendments recorded, and a hook warning on edits
-    outside the step
+30. **Scope drift made visible**, split in two:
+    - 30a. **Spec amendments recorded** - dated amendments with their reason, archived
+    - 30b. **A hook that warns on drift** - edits outside the current step's files; after 30a
 32. **Check the preview deployment** - outcomes run against the host's preview, one provider
     first
 34. **Complete drafts the release note** - a Changesets entry proposed for approval

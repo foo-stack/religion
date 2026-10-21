@@ -42,6 +42,8 @@
 - [x] 28. **Verified outcomes become regression checks** - after `check` proves a command-line or API outcome from captured evidence, it offers to keep that capture as a test, where a test command is declared; after item 17
 - [x] 29. **Plan lines that know what they wait on** - a line can say `after item N` or `spike first`, and `feature`, `status`, and `auto all` skip it until that is met, reporting cycles and unknown numbers rather than skipping silently
 - [ ] 30. **Scope drift made visible** - changes to an approved spec are recorded as dated amendments with their reason and archived, and a Claude Code hook warns when an edit touches a file the current step does not name
+  - [ ] 30a. **Spec amendments recorded** - a change to an approved spec is recorded as a dated amendment with its reason, and the archive keeps the amendments
+  - [ ] 30b. **A hook that warns on drift** - a Claude Code hook warns when an edit touches a file the current step does not name; after item 30a
 - [x] 31. **Recurring findings become standards** - `distill` reads archived findings and, where the same kind recurs across items, proposes the coding-standard rule that would have prevented it, for approval
 - [ ] 32. **Check the preview deployment** - under `pull-request` mode, `check` can run its outcomes against the host's preview deployment as well as locally, one provider first, each call asked for under the authority tiers
 - [x] 33. **Spec from an issue** - `fix` and `feature` take an issue number or link, read it through the host's command-line tool as untrusted input, draft the spec from it behind the usual review stop, and the pull request `complete` opens references it

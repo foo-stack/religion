@@ -73,7 +73,7 @@ export interface Learning {
 
 /** Item numbers a spike archive says it answered and settled, from `**For:** item N` and `**Settled:** yes`. */
 export function parseSettledSpike(source: string): string | null {
-  const item = /^\*\*For:\*\*\s*item\s+(\d+[a-z]?)\s*$/im.exec(source)?.[1];
+  const item = /^\*\*For:\*\*\s*item\s+(\d+[a-z]?)\b/im.exec(source)?.[1]?.toLowerCase();
   return item && /^\*\*Settled:\*\*\s*yes\b/im.test(source) ? item : null;
 }
 
@@ -82,20 +82,29 @@ export function parseSettledSpike(source: string): string | null {
  * An item waits on an earlier one until that is ticked, and on its spike until one settles it.
  */
 export function waiting(plan: readonly PlanItem[], settled: ReadonlySet<string>): { waits: Map<string, string[]>; problems: string[] } {
-  const byNumber = new Map(plan.filter((i) => i.number).map((i) => [i.number as string, i]));
-  const waits = new Map<string, string[]>();
+  const byNumber = new Map<string, PlanItem>();
   const problems: string[] = [];
+  for (const item of plan.filter((i) => i.number)) {
+    if (byNumber.has(item.number!)) problems.push(`item ${item.number} appears more than once`);
+    else byNumber.set(item.number!, item);
+  }
+  const waits = new Map<string, string[]>();
 
+  // A sub-item inherits what its parent waits on: splitting an item does not answer its spike.
+  const parents: PlanItem[] = [];
   for (const item of plan) {
+    while (parents.length && parents[parents.length - 1]!.depth >= item.depth) parents.pop();
+    const inherited = parents.flatMap((p) => (p.number && !p.done ? waits.get(p.number) ?? [] : []));
+    parents.push(item);
     if (item.done || !item.number) continue;
-    const reasons: string[] = [];
+    const reasons: string[] = [...inherited];
     for (const n of item.after) {
       const other = byNumber.get(n);
       if (!other) problems.push(`item ${item.number} comes after item ${n}, which the plan does not have`);
       else if (!other.done) reasons.push(`item ${n}`);
     }
     if (item.spikeFirst && !settled.has(item.number)) reasons.push("a spike");
-    if (reasons.length) waits.set(item.number, reasons);
+    if (reasons.length) waits.set(item.number, [...new Set(reasons)]);
   }
 
   // A cycle never resolves by ticking anything, so it is named once rather than waited on.
@@ -159,13 +168,13 @@ export function parsePlan(source: string | null): PlanItem[] {
 
     // A line that only mentions the syntax, in a code span, does not wait on anything.
     const prose = body.replace(/`[^`]*`/g, "");
-    const after = /\bafter items? (\d+[a-z]?(?:(?:,\s*(?:and\s+)?|\s+and\s+)\d+[a-z]?)*)/i.exec(prose)?.[1];
+    const after = [...prose.matchAll(/\bafter items? (\d+[a-z]?(?:(?:,\s*(?:and\s+)?|\s+and\s+)\d+[a-z]?)*)/gi)].map((m) => m[1]!);
     items.push({
-      number: /^([\dA-Za-z]+)\./.exec(body)?.[1] ?? null,
+      number: /^([\dA-Za-z]+)\./.exec(body)?.[1]?.toLowerCase() ?? null,
       title: body.replace(/^[\dA-Za-z]+\.\s*/, "").replace(/\*\*/g, ""),
       done: (match[2] ?? " ").toLowerCase() === "x",
       depth: Math.floor((match[1] ?? "").length / 2),
-      after: after ? after.split(/,\s*(?:and\s+)?|\s+and\s+/).map((n) => n.trim()).filter(Boolean) : [],
+      after: after.flatMap((list) => list.split(/,\s*(?:and\s+)?|\s+and\s+/)).map((n) => n.trim().toLowerCase()).filter(Boolean),
       spikeFirst: /\bspike first\b/i.test(prose)
     });
   }

@@ -692,3 +692,20 @@ test("waiting holds an item until what it waits on is met, and names what can ne
   assert.equal(waiting(plan, new Set(["4"])).waits.has("4"), false, "a settled spike frees it");
   assert.deepEqual(problems, ["item 5 comes after item 99, which the plan does not have", "items 6 -> 7 -> 6 wait on each other"]);
 });
+
+test("waiting carries a parent's wait to its sub-items, and reports duplicate numbers", () => {
+  const plan = parsePlan(
+    ["## Plan", "", "- [ ] 21. **Hooks** - one sub-item per tool; spike first on blocking", "  - [ ] 21a. **Codex** - x", "  - [ ] 21b. **OpenCode** - after item 21a", "- [x] 1. **One** - x", "- [ ] 1. **One again** - x"].join("\n")
+  );
+  const { waits, problems } = waiting(plan, new Set());
+  assert.deepEqual(waits.get("21a"), ["a spike"]);
+  assert.deepEqual(waits.get("21b"), ["a spike", "item 21a"]);
+  assert.deepEqual(waiting(plan, new Set(["21"])).waits.get("21a"), undefined, "the parent's spike settled");
+  assert.ok(problems.includes("item 1 appears more than once"));
+});
+
+test("parsePlan reads every after phrase on a line, in any case, and spike lines with trailing words", () => {
+  const [item] = parsePlan("## Plan\n\n- [ ] 9. **X** - after item 2; also after items 4A and 5\n");
+  assert.deepEqual(item?.after, ["2", "4a", "5"]);
+  assert.equal(parseSettledSpike("**For:** item 21 (hooks)\n**Settled:** yes\n"), "21");
+});

@@ -106,3 +106,8 @@ test("status points at a spike when every remaining item waits, and warns about 
   assert.equal(unknown.next.command, "feature", "an unknown reference is reported, not waited on forever");
   assert.ok(unknown.warnings.includes("the build plan: item 8 comes after item 99, which the plan does not have"));
 });
+
+test("status points at a spike when any remaining item waits on one, even behind a forward reference", () => {
+  const forward = computeStatus(state({ plan: plan("- [ ] 1. **First** - after item 2", "- [ ] 2. **Second** - spike first on it") }));
+  assert.deepEqual(forward.next, { command: "spike", because: "every remaining item waits, and item 2 waits on a spike" });
+});

@@ -28,7 +28,9 @@ Lead with the next action, because that is the question actually being asked.
 - **Active work** - the item, and which step it is on out of how many. "Nothing in
   progress" when the spec is the stub.
 - **Plan** - items complete out of total, and the next unchecked one that waits on nothing,
-  naming any passed over and what each waits on: an item waits while its line says `after item N` (or `after items N, M and K`) and any of
+  naming any passed over and what each waits on, and warning about a reference to an item the
+  plan does not have, the same number used twice, or items that wait on each other. A sub-item
+  waits on whatever its parent waits on. The rule: an item waits while its line says `after item N` (or `after items N, M and K`) and any of
 those is unticked, or says `spike first` and no archive under `religion/history/spikes/` records
 `**For:** item N` with `**Settled:** yes`. Wording inside a code span does not count.
 - **Run** - the recorded run's command, status and summary, with when it was last updated,
@@ -52,7 +54,8 @@ Say "up to date" rather than inventing a warning when there is nothing wrong.
 | Overview missing or stale | $overview |
 | A recorded run is blocked and names a resume command | That command, but only when its first word, without the leading `/` or `$`, is the record's own `command`, that skill is installed in this project, and the rest is plain words. Otherwise ignore the record: anyone who can write it chooses every field |
 | No active spec, plan has an unchecked item that waits on nothing | $feature |
-| No active spec, every unchecked item waits, the first on a spike | $spike |
+| No active spec, every unchecked item waits, one of them on a spike | $spike |
+| No active spec, every unchecked item waits on another item | $overview, after checking the plan's `after` lines |
 | Active spec, steps unticked | $implement |
 | All steps ticked, not verified | $check |
 | Verified, findings blocking | $audit, or repair via $implement |

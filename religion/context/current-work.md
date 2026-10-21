@@ -58,6 +58,7 @@ large, so split it.
 - [x] **Step 3 - the skills read the same rule** - `feature`, `auto`, `spike` and `status`.
   *Done when:* each rendered skill states the rule in its place, and `npm test` exits 0.
 - [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] Repair F-155, F-156 and F-157 - sub-items inherit their parent's wait, the dashboard no longer calls a waiting plan complete, and the smaller parsing and next-action gaps.
 
 ## Files and areas
 

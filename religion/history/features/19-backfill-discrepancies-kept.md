@@ -84,3 +84,9 @@ Nothing.
 ### Deferred
 
 - **Nothing.**
+
+## Landed
+
+**Base:** 989b8aa3c90b93eab9150602f5f0291b972f2aa8
+**Commits:** 719a7a413ce6e00423c390e55dcfb7b08a72a059, 72cd015bb8c6e2566c9b59e824764d83c8ff54c9, ece81c75fb39e9c8a08b5ba0e23d08a2d647467b
+**Product paths:** .agents/skills/tests/SKILL.md, .changeset/backfill-kept.md, .claude/skills/tests/SKILL.md, src/skills/tests/SKILL.md

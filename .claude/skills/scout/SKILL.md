@@ -23,8 +23,8 @@ queued, given what the project already has. It proposes; it never plans, specs o
 | Level | What qualifies | Ideas |
 | --- | --- | --- |
 | normal | extends what exists, within the current architecture, low risk | 5 |
-| ambitious | a new capability that combines existing pieces or serves a new kind of user, on the same stack, with real uncertainty | 3 |
-| super-ambitious | would change the product's direction, stack, or where it runs; may not be feasible without a spike | 2 |
+| ambitious | a new capability that combines existing pieces or serves a new kind of user, on the same stack, with real uncertainty | 5 |
+| super-ambitious | would change the product's direction, stack, or where it runs; may not be feasible without a spike | 5 |
 
 Fewer ideas as the level rises, each with more depth, because a bigger idea is only useful
 with its risks and its first unknown named.

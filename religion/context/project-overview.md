@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash dea356d166c6fc9a -->
+<!-- religion:source-hash b8868b2c073354de -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,7 +49,78 @@ nothing to sign into.
 
 ## Roadmap
 
-Nothing queued: every item in the build plan is complete.
+Forty-three items queued. Nineteen start with a spike, and several say which items they
+follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
+
+**Status, learning and health**
+
+6. **Status shows live activity and the inbox** - the current run and its resume command,
+   and the inbox's note count, in `status` and its JSON
+7. **A journal that something writes** - `complete` appends an entry per finished item so
+   `distill` has input
+8. **Learning made visible** - lessons and journal size in the dashboard, a `distill` nudge
+   in `status`
+9. **Locally modified managed files** - listed in the dashboard and `doctor` against the
+   install hashes
+10. **Doctor checks every documented setting** - every key and its type, from one schema
+    shared with verification
+11. **Documentation checked against the public surface** - commands, flags, exit codes and
+    relative links
+12. **Everything deferred, in one place** - a dashboard view of every archive's deferred notes
+13. **Doctor confirms the hooks are wired** - settings register the three hooks and each
+    file exists
+14. **Update shows what changed** - changelog entries between versions, the changelog shipped
+15. **Settings explained in the dashboard** - meaning, values and default, from item 10's schema
+16. **A clean way out** - `religion uninstall`, keeping edited files, plans and history
+17. **Evidence that outlives the session** - `check` records per-outcome evidence, kept in
+    the archive
+18. **A handoff that tells the whole story** - stale overview, inbox, unverified findings,
+    blocked runs
+19. **Backfill discrepancies kept** - `tests backfill` offers to `capture` each mismatch
+20. **CI runs doctor** - the workflow `ci` writes fails on a broken install or stale overview
+
+**Bigger capabilities, mostly spike-first**
+
+21. **Hooks beyond Claude Code** - the three hooks for Codex, Copilot and OpenCode, per tool
+22. **Update merges edits** - three-way merge against a stored copy of what was installed
+23. **Adopt from another workflow** - `setup` converts another workflow's plans and specs,
+    landing them unverified
+24. **A review packet for the pull request** - spec, outcomes, evidence and findings,
+    presentation only; after 17
+25. **A record of what an unattended run did** - a capped local activity log
+26. **Scanner results in the ledger** - SARIF ingested as unverified findings, matched
+    across runs
+27. **Waves built in isolation** - one worktree per wave step, joined into one packet
+28. **Verified outcomes become regression checks** - captured CLI or API evidence kept as
+    tests; after 17
+29. **Plan lines that know what they wait on** - `after item N` and `spike first` honoured
+    by `feature`, `status` and `auto all`
+30. **Scope drift made visible** - spec amendments recorded, and a hook warning on edits
+    outside the step
+31. **Recurring findings become standards** - `distill` proposes rules from recurring findings
+32. **Check the preview deployment** - outcomes run against the host's preview, one provider
+    first
+33. **Spec from an issue** - `fix` and `feature` draft from an issue read as untrusted input
+34. **Complete drafts the release note** - a Changesets entry proposed for approval
+35. **Accessibility as evidence** - a scan beside `check`'s browser evidence
+36. **Built UI compared with its reference** - against saved screenshots or the prototype
+37. **A first work item that teaches the loop** - a tiny real change walked through by `setup`
+38. **Dependency changes made visible in review** - lockfile changes listed per step, offline
+
+**Direction changes, all spike-first**
+
+39. **Several work items at once** - one spec per active item; after 27, a major version
+40. **Religion runs in CI** - a labelled issue to a pull request nothing merges; after 20,
+    24 and 33
+41. **One tool builds, another reviews** - review handed to a different installed tool
+42. **Skills users write themselves** - project skills rendered beside the built-in ones
+43. **Religion without Node** - a standalone binary per platform, Windows supported
+44. **State files as an open format** - a versioned specification with conformance checks
+45. **An editor extension** - read-only VS Code view of the spec, findings and next action
+46. **Lessons that travel between projects** - an opt-in user-level store; after 7 and 31
+47. **Religion runs its own agent** - `religion run` through a model API, a separate optional
+    package outside the no-network promise
+48. **Tamper-evident history** - records chained by hash, with a command that verifies them
 
 ## Domain model
 
@@ -126,3 +197,22 @@ The single thing in progress, in `context/current-work.md`.
   workflow serve four tools
 - **npm, Changesets, GitHub Actions** - released over OIDC trusted publishing, no token anywhere
 - **No runtime dependencies** in the published package
+
+## Open questions
+
+Each is deferred to its item's spike, which can run while the item is blocked. The spike's
+answer decides whether the project plan changes.
+
+- **Parallel work items** (affects: item 39, the work item shape) - the non-goals settle "no
+  parallel execution across work items", and item 39 builds it. Decided by item 39's spike.
+- **Independent review** (affects: item 41) - the non-goals settle "no independent-review
+  mechanism", and item 41 hands review to a second tool. Decided by item 41's spike.
+- **Closed extensibility** (affects: item 42, the skill shape) - skill sources, tokens and
+  adapter definitions stay internal, and item 42 makes them a format users author in.
+  Decided by item 42's spike.
+- **Writing outside the project** (affects: item 46) - the plan promises to write nothing
+  outside the project directory, and item 46 adds a user-level store. Decided by item 46's
+  spike, after items 7 and 31.
+- **An authority grant for CI** (affects: item 40) - section 3 says no mode or setting can
+  widen the authority tiers, and item 40 needs a grant that applies with no person present.
+  Decided by item 40's spike on headless operation.

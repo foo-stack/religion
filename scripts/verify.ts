@@ -20,6 +20,7 @@ import type { Shape, Surface } from "./surface.js";
 import { currentOutputs, currentSurface, SURFACE_RECORD } from "./surface-current.js";
 import { upgradeProblems } from "./upgrade.js";
 import { networkProblems, statementProblems } from "./promises.js";
+import { docsProblems } from "./docs.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -312,6 +313,18 @@ const checks: Check[] = [
     run: statementProblems
   },
   {
+    name: "the documentation names only what the surface records, and its links resolve",
+    run: async () => {
+      const record = JSON.parse(await fs.readFile(SURFACE_RECORD, "utf8")) as Parameters<typeof docsProblems>[1];
+      const docs = ["README.md", "packages/create-religion/README.md", ...(await markdownUnder("docs"))];
+      const files = Object.fromEntries(await Promise.all(docs.map(async (file) => [file, await fs.readFile(path.join(repoRoot, file), "utf8")])));
+      return docsProblems(files, record, {
+        exists: (relative) => fsSync.existsSync(path.join(repoRoot, relative)),
+        read: (relative) => (fsSync.existsSync(path.join(repoRoot, relative)) ? fsSync.readFileSync(path.join(repoRoot, relative), "utf8") : null)
+      });
+    }
+  },
+  {
     name: "shipped code opens no network connection",
     run: networkProblems
   },
@@ -416,3 +429,12 @@ main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
 });
+
+/** Every markdown file under a directory of the repository, as repository-relative paths. */
+async function markdownUnder(directory: string): Promise<string[]> {
+  const entries = await fs.readdir(path.join(repoRoot, directory), { recursive: true, withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+    .map((entry) => path.relative(repoRoot, path.join(entry.parentPath, entry.name)).split(path.sep).join("/"))
+    .sort();
+}

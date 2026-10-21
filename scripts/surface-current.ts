@@ -10,7 +10,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { GRAMMAR } from "../packages/create-religion/lib/args.js";
+import { EXIT_CODES, GRAMMAR } from "../packages/create-religion/lib/args.js";
 import { ALLOWED, doctorReport, runDoctor } from "../packages/create-religion/lib/doctor.js";
 import { ADAPTERS } from "../packages/create-religion/lib/install.js";
 import { readProjectState } from "../packages/create-religion/lib/state.js";
@@ -34,6 +34,7 @@ export async function currentSurface(): Promise<Record<string, Surface>> {
 
   return {
     commands: Object.fromEntries(Object.entries(GRAMMAR).map(([command, flags]) => [command, [...flags]])),
+    exitCodes: Object.keys(EXIT_CODES).map(Number),
     // The authored sources, not the planned roster: the roster is kept by hand, and a skill
     // removed from both would otherwise leave nothing to notice.
     skills: (await readSkills(path.join(repoRoot, "src", "skills"))).map((skill) => skill.name),

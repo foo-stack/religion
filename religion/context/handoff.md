@@ -5,9 +5,15 @@
 
 ## Where the work sits
 
-**Update shows what changed** is in progress: 3 step(s) done, 0 to go.
+**A clean way out** is in progress: 5 step(s) done, 0 to go.
 
-Plan: 17 of 52 item(s) complete. Next up: 14. **Update shows what changed** - `update` prints the changelog entries between the installed version and the one it brings, with the changelog shipped in the package
+Plan: 19 of 52 item(s) complete. Next up: 16. **A clean way out** - `religion uninstall` removes the unedited managed files, leaves and reports the edited ones, takes the managed block out of the entry file and Religion's own hook entries out of the settings, and keeps the plans and history; it shows its plan unless given `--yes`
+
+## Blocking findings
+
+- F-147 [P1] fixed - A link inside the backups directory makes uninstall write outside the project
+
+These prevent completion until repaired and re-reviewed.
 
 ## Read first
 

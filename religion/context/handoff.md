@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Learning made visible** is in progress: 4 step(s) done, 0 to go.
+**Locally modified managed files** is in progress: 4 step(s) done, 0 to go.
 
-Plan: 11 of 52 item(s) complete. Next up: 8. **Learning made visible** - a dashboard view of the lessons and the journal's size, and a `status` nudge toward `distill` once the journal has grown
+Plan: 12 of 52 item(s) complete. Next up: 9. **Locally modified managed files** - the dashboard's install panel, and `doctor`, list the managed files whose contents no longer match the hash recorded at install
 
 ## Read first
 

@@ -53,3 +53,10 @@ verification check, and both were found by hand first.
 **Surprised:** The audit measured the new parsers before judging them: a 120,000-line journal parsed in 38 ms, which settled the cost question with a number instead of an argument.
 **Went wrong:** The heading pattern used `\s`, which crosses newlines, a mistake the spec parser's own comment already warns about; reading the neighbouring parser's comments first would have avoided it.
 **Deferred:** Matching entries on their archive line as well as their heading, and ignoring code fences, both rare enough to leave as P3 findings.
+
+## 2026-10-21 - Locally modified managed files
+
+**Archive:** history/features/09-locally-modified-managed-files.md
+**Surprised:** This repository's own install record is from 0.5.0, so the first real run of the check named six edited skills: the rendered trees here are built, never installed, and the manifest has not followed them.
+**Went wrong:** An advisory check could still crash doctor through an unguarded read, and the first test encoded the wrong answer for a symlink rather than catching it.
+**Deferred:** Showing what changed inside an edited file.

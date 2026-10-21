@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash babe246adc8e1cf5 -->
+<!-- religion:source-hash 85b53140f8695e03 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,13 +49,11 @@ nothing to sign into.
 
 ## Roadmap
 
-Forty items queued. Nineteen start with a spike, and several say which items they
+Thirty-nine items queued. Nineteen start with a spike, and several say which items they
 follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
 
 **Status, learning and health**
 
-9. **Locally modified managed files** - listed in the dashboard and `doctor` against the
-   install hashes
 10. **Doctor checks every documented setting** - every key and its type, from one schema
     shared with verification
 11. **Documentation checked against the public surface** - commands, flags, exit codes and

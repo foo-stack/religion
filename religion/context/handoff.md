@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-Nothing in progress.
+**Doctor confirms the hooks are wired** is in progress: 3 step(s) done, 0 to go.
 
-Plan: 14 of 52 item(s) complete. Next up: 11. **Documentation checked against the public surface** - a verification check that fails when the docs name a command, flag, or exit code the surface record lacks, or carry a broken relative link
+Plan: 16 of 52 item(s) complete. Next up: 13. **Doctor confirms the hooks are wired** - when the Claude Code adapter is installed, check that its settings register the three hooks and that each hook file exists, and offer the fix when one is missing
 
 ## Read first
 

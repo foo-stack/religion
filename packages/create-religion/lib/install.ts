@@ -181,7 +181,7 @@ function retiringTree(relative: string): string | null {
 }
 
 /** Every component a real directory and the last a regular file, with no symbolic link anywhere. */
-async function isPlainFile(target: string, relative: string): Promise<boolean> {
+export async function isPlainFile(target: string, relative: string): Promise<boolean> {
   const parts = relative.split("/");
   let current = target;
   for (const [index, part] of parts.entries()) {

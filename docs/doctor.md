@@ -36,7 +36,7 @@ Failures come first, worst first, each labelled with what it stops:
 | `blocks completion` | you can build, but finishing an item will fail |
 | `cosmetic` | nothing is blocked; it is untidy |
 
-Eight checks run. Six can fail. `visibility` and `managed files` only ever report.
+Nine checks run. Seven can fail. `visibility` and `managed files` only ever report.
 
 ## required files
 
@@ -256,6 +256,37 @@ managed path that is not the plain, readable file installed, such as a link or a
 counts as edited too, since `update` will not overwrite it either. A missing file is put back
 by the next `update`. Entry files are not compared, because `update` merges
 them and an edit there is expected.
+
+## hooks
+
+**Protects:** the three Claude Code hooks that back the workflow's rules: the guard against
+editing rendered output, the injection scan, and the handoff written at the end of a turn.
+It only applies where `.claude/skills` is installed.
+
+```text
+  FAIL  hooks (cosmetic)
+          not registered in .claude/settings.json or .claude/settings.local.json: scan-untrusted-input.mjs (PostToolUse); copy them from a fresh install's settings
+```
+
+Nothing is blocked, because each hook backs a rule that applies without it, but the rule is
+no longer enforced. `install` writes `.claude/settings.json` once and `update` never touches it
+again, so a hook added by a later version, or one deleted by hand, stays unwired. Add the
+missing entry under the event named, for example:
+
+```json
+"PostToolUse": [
+  { "matcher": "Read|WebFetch|WebSearch",
+    "hooks": [{ "type": "command", "command": "node .claude/hooks/scan-untrusted-input.mjs" }] }
+]
+```
+
+The check compares with the hooks this version of the tool ships, not with
+`religion/.state/settings-template.json`, which is copied once at install and goes stale.
+A hook counts as wired when its script is registered under the right event in either settings
+file, whatever its matcher, and whether the command names it directly or through
+`"$CLAUDE_PROJECT_DIR"`. `disableAllHooks` turned on fails the check, since then nothing runs. A
+`missing hook file` means the hook's script is gone from `.claude/hooks`, and `update` puts it
+back. A settings file reached through a link is not read.
 
 ## What a healthy report does not prove
 

@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { doctorReport, managedFilesCheck, runDoctor } from "./doctor.js";
+import { doctorReport, HOOKS, hooksCheck, managedFilesCheck, runDoctor } from "./doctor.js";
 import type { CheckResult } from "./doctor.js";
 
 const pass: CheckResult = { name: "configuration", ok: true, detail: "valid", blocks: "work" };
@@ -37,4 +37,100 @@ test("runDoctor includes the managed files check", async (t) => {
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const check = (await runDoctor(root)).find((c) => c.name === "managed files");
   assert.equal(check?.detail, "no install record to compare with");
+});
+
+const wired = JSON.stringify({
+  hooks: Object.fromEntries(HOOKS.map((h) => [h.event, [{ matcher: "anything", hooks: [{ type: "command", command: h.command }] }]]))
+});
+const allFiles = new Set(HOOKS.map((h) => h.command.replace(/^node /, "")));
+
+test("hooksCheck passes when every shipped hook is registered under its event and present", () => {
+  assert.deepEqual(hooksCheck({ installed: true, wanted: HOOKS, settings: wired, files: allFiles }), {
+    name: "hooks",
+    ok: true,
+    detail: "all 3 wired",
+    blocks: "nothing"
+  });
+});
+
+test("hooksCheck names an unregistered hook and a missing hook file", () => {
+  const without = JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: "command", command: "node .claude/hooks/write-handoff.mjs" }] }] } });
+  const unwired = hooksCheck({ installed: true, wanted: HOOKS, settings: without, files: allFiles });
+  assert.equal(unwired.ok, false);
+  assert.match(unwired.detail, /guard-rendered-output\.mjs \(PreToolUse\), scan-untrusted-input\.mjs \(PostToolUse\)/);
+
+  const elsewhere = JSON.stringify({ hooks: { Stop: [{ hooks: HOOKS.map((h) => ({ type: "command", command: h.command })) }] } });
+  assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings: elsewhere, files: allFiles }).ok, false, "the right command under the wrong event");
+
+  const fileless = hooksCheck({ installed: true, wanted: HOOKS, settings: wired, files: new Set() });
+  assert.match(fileless.detail, /missing hook file: guard-rendered-output\.mjs/);
+});
+
+test("hooksCheck reports a settings file that is missing, unparseable or a link", () => {
+  for (const settings of [null, "{ not json", "link"] as const) {
+    const check = hooksCheck({ installed: true, wanted: HOOKS, settings, files: allFiles });
+    assert.equal(check.ok, false, String(settings));
+  }
+});
+
+test("hooksCheck stays out of the way where Claude Code is not installed", () => {
+  assert.deepEqual(hooksCheck({ installed: false, wanted: HOOKS, settings: null, files: new Set() }).ok, true);
+});
+
+test("runDoctor reads the settings and the hook files from the project", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-doctor-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, ".claude", "skills"), { recursive: true });
+  await fs.mkdir(path.join(root, ".claude", "hooks"), { recursive: true });
+  for (const file of allFiles) await fs.writeFile(path.join(root, file), "");
+  await fs.writeFile(path.join(root, ".claude", "settings.json"), wired);
+  assert.equal((await runDoctor(root)).find((c) => c.name === "hooks")?.detail, "all 3 wired");
+
+  await fs.rm(path.join(root, ".claude", "settings.json"));
+  await fs.symlink(path.join(root, "elsewhere.json"), path.join(root, ".claude", "settings.json"));
+  assert.match((await runDoctor(root)).find((c) => c.name === "hooks")?.detail ?? "", /reached through a link/);
+});
+
+test("hooksCheck matches a hook by its file, in the forms Claude Code documents", () => {
+  const command = (file: string) => [
+    `node "$CLAUDE_PROJECT_DIR"/${file}`,
+    `node  ${file}`,
+    `node "\${CLAUDE_PROJECT_DIR}/${file}" --quiet`
+  ];
+  for (const form of [0, 1, 2]) {
+    const settings = JSON.stringify({
+      hooks: Object.fromEntries(HOOKS.map((h) => [h.event, [{ hooks: [{ type: "command", command: command(h.command.replace(/^node /, ""))[form] }] }]]))
+    });
+    assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings, files: allFiles }).ok, true, `form ${form}`);
+  }
+});
+
+test("hooksCheck counts settings.local.json, and fails when every hook is disabled", () => {
+  assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings: null, local: wired, files: allFiles }).ok, true);
+  const disabled = JSON.stringify({ ...JSON.parse(wired), disableAllHooks: true });
+  assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings: disabled, files: allFiles }).detail, "disableAllHooks is on, so no hook runs");
+  assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings: wired, local: JSON.stringify({ disableAllHooks: true }), files: allFiles }).ok, false);
+  assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings: JSON.stringify({ hooks: [] }), files: allFiles }).ok, false, "hooks as an array");
+});
+
+test("runDoctor tells a linked .claude, a directory at the settings path and linked hook files apart", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-doctor-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const hooks = async () => (await runDoctor(root)).find((c) => c.name === "hooks")?.detail ?? "";
+
+  await fs.mkdir(path.join(root, "real", "skills"), { recursive: true });
+  await fs.symlink(path.join(root, "real"), path.join(root, ".claude"));
+  assert.match(await hooks(), /reached through a link/);
+
+  await fs.rm(path.join(root, ".claude"));
+  await fs.mkdir(path.join(root, ".claude", "skills"), { recursive: true });
+  await fs.mkdir(path.join(root, ".claude", "settings.json"));
+  assert.match(await hooks(), /not a regular file/);
+
+  await fs.rm(path.join(root, ".claude", "settings.json"), { recursive: true });
+  await fs.writeFile(path.join(root, ".claude", "settings.json"), wired);
+  await fs.mkdir(path.join(root, "hookfiles"));
+  for (const file of allFiles) await fs.writeFile(path.join(root, "hookfiles", path.basename(file)), "");
+  await fs.symlink(path.join(root, "hookfiles"), path.join(root, ".claude", "hooks"));
+  assert.equal(await hooks(), "all 3 wired");
 });

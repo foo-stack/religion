@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { applyInstall, hash, manifestRefusal, planInstall, wireHooks, writeManifest } from "./install.js";
+import { applyInstall, editedSinceInstall, hash, manifestRefusal, planInstall, wireHooks, writeManifest } from "./install.js";
 import { exists } from "./paths.js";
 import type { Manifest, PlanEntry } from "./install.js";
 import { MANAGED_END, MANAGED_START } from "./merge.js";
@@ -536,3 +536,43 @@ test("wireHooks: a linked settings file is left alone, even a dangling one", asy
   assert.deepEqual(await fs.readdir(outside), []);
 });
 
+
+test("editedSinceInstall lists edited and missing managed files, and nothing else", async (t) => {
+  const { target } = await fixture(t);
+  const installed = "skill\n";
+  const files = [".claude/skills/feature/SKILL.md", ".claude/skills/fix/SKILL.md", ".claude/skills/audit/SKILL.md", ".claude/hooks/a.mjs"];
+  for (const file of files) await write(target, file, installed);
+  await write(target, "CLAUDE.md", "entry\n");
+  await write(target, "outside.md", "secret\n");
+  const managed: Record<string, string> = Object.fromEntries([...files, "CLAUDE.md", "../outside.md", "outside.md"].map((f) => [f, hash(installed)]));
+  managed["CLAUDE.md"] = hash("entry as installed\n");
+  await write(target, "religion/.state/manifest.json", JSON.stringify({ schemaVersion: 1, version: "1.0.0", adapters: ["claude"], managed }));
+
+  await write(target, ".claude/skills/feature/SKILL.md", "edited\n");
+  await fs.rm(path.join(target, ".claude/skills/fix/SKILL.md"));
+  await fs.rm(path.join(target, ".claude/hooks/a.mjs"));
+  await fs.symlink(path.join(target, "outside.md"), path.join(target, ".claude/hooks/a.mjs"));
+
+  assert.deepEqual(await editedSinceInstall(target), {
+    edited: [".claude/hooks/a.mjs", ".claude/skills/feature/SKILL.md"],
+    missing: [".claude/skills/fix/SKILL.md"],
+    total: 4
+  });
+});
+
+test("editedSinceInstall counts an unreadable managed file as edited rather than failing", async (t) => {
+  if (process.getuid?.() === 0) return t.skip("root reads files whatever their mode");
+  const { target } = await fixture(t);
+  await write(target, ".claude/skills/a/SKILL.md", "skill\n");
+  await write(target, "religion/.state/manifest.json", JSON.stringify({ managed: { ".claude/skills/a/SKILL.md": hash("skill\n") } }));
+  await fs.chmod(path.join(target, ".claude/skills/a/SKILL.md"), 0o000);
+
+  assert.deepEqual(await editedSinceInstall(target), { edited: [".claude/skills/a/SKILL.md"], missing: [], total: 1 });
+});
+
+test("editedSinceInstall reads a missing or unreadable manifest as null", async (t) => {
+  const { target } = await fixture(t);
+  assert.equal(await editedSinceInstall(target), null);
+  await write(target, "religion/.state/manifest.json", "{ not json");
+  assert.equal(await editedSinceInstall(target), null);
+});

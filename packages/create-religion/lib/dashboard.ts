@@ -9,7 +9,7 @@ import http from "node:http";
 import path from "node:path";
 
 import { runDoctor } from "./doctor.js";
-import { readManifest } from "./install.js";
+import { editedSinceInstall, readManifest } from "./install.js";
 import { readIfPresent, statePath } from "./paths.js";
 import { parseInbox, parseSpec, readHistory, readProjectState } from "./state.js";
 import { computeStatus, DISTILL_AFTER } from "./status.js";
@@ -91,6 +91,7 @@ function send(response: http.ServerResponse, status: number, type: string, body:
 
 async function readState(root: string, version: string | null) {
   const state = await readProjectState(root);
+  const changes = await editedSinceInstall(root);
   return {
     project: path.basename(root),
     status: computeStatus(state),
@@ -101,9 +102,9 @@ async function readState(root: string, version: string | null) {
     history: await readHistory(root),
     learning: { ...state.learning, distillAfter: DISTILL_AFTER },
     health: {
-      checks: await runDoctor(root),
+      checks: await runDoctor(root, changes),
       config: state.config,
-      install: await readInstall(root),
+      install: await readInstall(root, changes),
       tool: version,
       inbox: parseInbox(await readIfPresent(statePath(root, "context", "inbox.md"))),
       questions: state.openQuestions
@@ -112,14 +113,16 @@ async function readState(root: string, version: string | null) {
 }
 
 /** The manifest is the project's file and may be hand-edited, so only well-formed parts are shown. */
-async function readInstall(root: string) {
+async function readInstall(root: string, changes: Awaited<ReturnType<typeof editedSinceInstall>>) {
   const manifest: unknown = await readManifest(root);
   if (!manifest || typeof manifest !== "object") return null;
   const { version, adapters, managed } = manifest as Record<string, unknown>;
   return {
     version: typeof version === "string" ? version : null,
     adapters: Array.isArray(adapters) ? adapters.filter((a): a is string => typeof a === "string") : [],
-    managed: managed && typeof managed === "object" ? Object.keys(managed).length : 0
+    managed: managed && typeof managed === "object" ? Object.keys(managed).length : 0,
+    edited: changes?.edited ?? [],
+    missing: changes?.missing ?? []
   };
 }
 
@@ -961,7 +964,13 @@ button.chip { font-family: inherit; cursor: pointer; }
     $("hl-install").innerHTML =
       (install
         ? "<dl class='kv'>" + field("Installed by", esc(install.version || "unknown"), "mono") + field("This tool", esc(h.tool || "unknown"), "mono") +
-          field("Adapters", esc(install.adapters.map((x) => ADAPTER_NAMES[x] || x).join(", ") || "none")) + field("Managed", install.managed + " files") + "</dl>"
+          field("Adapters", esc(install.adapters.map((x) => ADAPTER_NAMES[x] || x).join(", ") || "none")) + field("Managed", install.managed + " files") + "</dl>" +
+          "<div class='divider'></div><div class='label section-label'>Changed since install</div>" +
+          (install.edited.length || install.missing.length
+            ? "<ul class='list'>" + install.edited.map((f) => "<li class='mono'>" + esc(f) + "</li>").join("") +
+              install.missing.map((f) => "<li class='mono'>" + esc(f) + " <span class='faint'>missing</span></li>").join("") + "</ul>" +
+              "<p class='prose dim'>update keeps edited files and reports them as changed locally; it puts missing ones back.</p>"
+            : empty("Nothing. Every skill and hook matches what was installed."))
         : empty("No install record. Installing or updating writes religion/.state/manifest.json.")) +
       "<div class='divider'></div><div class='label section-label'>Inbox</div>" +
       (h.inbox.length ? h.inbox.map((n) => "<p class='prose'>" + (n.date ? "<span class='faint mono'>" + esc(n.date) + "</span> " : "") + md(n.text) + "</p>").join("") : empty("Empty.")) +

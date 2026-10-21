@@ -489,6 +489,42 @@ function parseVersion(version: unknown): number[] | null {
   return match ? match.slice(1, 4).map(Number) : null;
 }
 
+/**
+ * Managed files whose contents no longer match what was installed, and those that are gone.
+ *
+ * Only plain files under a skill or hook tree are compared, the same line `update` draws for
+ * what it may retire: the manifest is a file in someone's repository, so a recorded path must
+ * not be able to make this read anything else. Entry files are left out because `update`
+ * merges them, so an edit there is expected rather than a change it will report.
+ */
+export async function editedSinceInstall(
+  target: string
+): Promise<{ edited: string[]; missing: string[]; total: number } | null> {
+  const managed = (await readManifest(target))?.managed;
+  if (!managed || typeof managed !== "object") return null;
+
+  const edited: string[] = [];
+  const missing: string[] = [];
+  let total = 0;
+  for (const [relative, recorded] of Object.entries(managed)) {
+    if (typeof recorded !== "string" || !retiringTree(relative)) continue;
+    total += 1;
+    const file = path.join(target, ...relative.split("/"));
+    // Anything there that is not the plain, readable file installed counts as edited: a link,
+    // a directory or an unreadable file is what `update` reports too, and this check must
+    // never be the thing that makes doctor fail.
+    if (!(await fs.lstat(file).catch(() => null))) {
+      missing.push(relative);
+    } else if (!(await isPlainFile(target, relative))) {
+      edited.push(relative);
+    } else {
+      const contents = await fs.readFile(file).catch(() => null);
+      if (contents === null || hash(contents) !== recorded) edited.push(relative);
+    }
+  }
+  return { edited: edited.sort(), missing: missing.sort(), total };
+}
+
 export async function readManifest(target: string): Promise<Manifest | null> {
   try {
     return JSON.parse(await fs.readFile(path.join(target, MANIFEST), "utf8")) as Manifest;

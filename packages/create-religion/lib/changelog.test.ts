@@ -48,3 +48,22 @@ test("changesSince gives nothing rather than guessing", () => {
   assert.deepEqual(changesSince(null, "1.0.0", "1.2.0"), []);
   assert.deepEqual(changesSince("", "1.0.0", "1.2.0"), []);
 });
+
+test("changesSince leaves out prereleases, nested bullets and abbreviations", () => {
+  const changelog = [
+    "## 1.3.0",
+    "",
+    "### Minor Changes",
+    "",
+    "- 1111111: Adds flags, e.g. `--yes`, to install. And more.",
+    "- 2222222: Patch only",
+    "  - nested bullet",
+    "",
+    "## 1.3.0-beta.1",
+    "",
+    "- 3333333: A beta note."
+  ].join("\n");
+  assert.deepEqual(changesSince(changelog, "1.2.0", "1.3.0"), [
+    { version: "1.3.0", changes: ["Adds flags, e.g. `--yes`, to install.", "Patch only"] }
+  ]);
+});

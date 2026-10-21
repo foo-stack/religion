@@ -50,6 +50,7 @@ large, so split it.
   on a temporary project whose manifest says `1.0.0` prints the 1.1.0 and 1.2.0 changes, one
   whose manifest says this version prints none, and `npm test` exits 0.
 - [x] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] Repair F-144, F-145 and F-146 - prerelease headings left out, entries cut at nested bullets, and abbreviations not taken for the end of a sentence.
 
 ## Files and areas
 

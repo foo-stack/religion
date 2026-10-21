@@ -38,7 +38,7 @@ Promote an observation only when it is all of these:
 - **Not already written down.** If it belongs in the coding standards or the project plan,
   it goes there instead, where it is already loaded and already owned.
 
-Everything else stays in the journal or is dropped. A single surprising incident is not a
+Everything else is rejected, or kept for later until it recurs. A single surprising incident is not a
 lesson; it is an incident.
 
 ## Step 3 - route by kind

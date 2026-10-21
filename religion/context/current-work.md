@@ -51,7 +51,7 @@ large, so split it.
   `scripts/surface-current.ts`, and the example in `docs/doctor.md`. *Done when:* `doctor`
   on a config with `"auto.maxRepairAttempts": 11` fails naming the key, and
   `npm run verify` passes with `surface.json` unchanged.
-- [ ] **Step 3 - verification reads it** - the configuration check in `scripts/verify.ts`.
+- [x] **Step 3 - verification reads it** - the configuration check in `scripts/verify.ts`.
   *Done when:* the check passes on this repository, and fails when a schema key's row in
   the reference loses one of its values (shown by a scratch edit, then reverted).
 - [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in

@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 
 import { SHARED, TREES } from "../src/lib/adapters.js";
 import { PLANNED_SKILLS, readSkills } from "../src/lib/skills.js";
+import { SETTINGS, settingProblems } from "../packages/create-religion/lib/settings.js";
 import { compareSurface, shapeProblems } from "./surface.js";
 import type { Shape, Surface } from "./surface.js";
 import { currentOutputs, currentSurface, SURFACE_RECORD } from "./surface-current.js";
@@ -121,7 +122,7 @@ const checks: Check[] = [
     }
   },
   {
-    name: "every configuration key is documented",
+    name: "every setting is documented and checked",
     run: async () => {
       // A setting that ships without a row in the reference is invisible: nobody can set
       // what they cannot find, and the default becomes the only value anyone ever uses.
@@ -130,12 +131,25 @@ const checks: Check[] = [
       ) as Record<string, unknown>;
       const docs = await fs.readFile(path.join(repoRoot, "docs/architecture/config.md"), "utf8");
 
-      const problems: string[] = [];
+      // The schema doctor validates with is the third copy of the same facts, so all three are
+      // held together here: shipped keys, schema entries, and the reference's rows and values.
+      const problems: string[] = settingProblems(config).map((p) => `config.json: the shipped default fails the schema: ${p}`);
       for (const [section, value] of Object.entries(config)) {
-        if (typeof value !== "object" || value === null) continue;
-        for (const key of Object.keys(value as Record<string, unknown>)) {
-          const setting = `${section}.${key}`;
-          if (!docs.includes(`\`${setting}\``)) problems.push(`config.json: ${setting} has no row in config.md`);
+        const keys = typeof value === "object" && value !== null ? Object.keys(value).map((k) => `${section}.${k}`) : [section];
+        for (const setting of keys) {
+          if (!SETTINGS[setting]) problems.push(`config.json: ${setting} is not in lib/settings.ts, so doctor never checks it`);
+        }
+      }
+      for (const [setting, rule] of Object.entries(SETTINGS)) {
+        if (!setting.includes(".")) continue;
+        const row = docs.split("\n").find((line) => line.startsWith(`| \`${setting}\` |`));
+        if (!row) {
+          problems.push(`config.md: ${setting} has no row`);
+          continue;
+        }
+        if (rule.kind !== "enum") continue;
+        for (const allowed of rule.values) {
+          if (!row.includes(`\`${allowed}\``)) problems.push(`config.md: ${setting}'s row does not name ${allowed}`);
         }
       }
       return problems;

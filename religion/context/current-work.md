@@ -70,7 +70,7 @@ large, so split it.
   prints the plan and changes nothing, `religion uninstall` without a terminal prints the
   plan and removes nothing, `religion uninstall --yes` removes what it planned, and
   `npm test` exits 0.
-- [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

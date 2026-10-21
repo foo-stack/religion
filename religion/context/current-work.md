@@ -45,7 +45,7 @@ large, so split it.
   in a temporary project show the stale overview named, the inbox counted, unverified
   findings listed, a blocked run shown with its resume command, a run whose fields fail the
   rule shown with neither, and none of the four when nothing applies.
-- [ ] **Step 2 - the shipped copy and the release note** - the hook staged into the package
+- [x] **Step 2 - the shipped copy and the release note** - the hook staged into the package
   template by `npm run build`, and a minor changeset. This repository's own `.claude/hooks/`
   is ignored installer output, so it is not part of the change. *Done when:* the template's
   copy matches the source, and `npm test` exits 0.

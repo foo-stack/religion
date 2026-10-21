@@ -63,8 +63,10 @@ No database. State is markdown and JSON under `religion/`, with exactly one writ
 | `context/findings.md` | findings with severity and status | `audit` |
 | `context/inbox.md` | notes taken mid-build | `capture` |
 | `history/` | archives by kind: features, fixes, rollbacks, refactors, spikes | `complete`, and `spike` for its own |
-| `learning/` | the journal, and the lessons distilled from it | `distill` |
-| `.state/` | the install manifest and the activity record, never committed | the command-line tool |
+| `learning/journal.md` | what each finished item surprised, broke, or deferred | `complete` |
+| `learning/lessons.md` | the lessons distilled from the journal | `distill` |
+| `.state/manifest.json`, `.state/settings-template.json` | the install manifest and the hook wiring, never committed | the command-line tool |
+| `.state/run.json`, and the activity log once item 25 adds it | what the running skill is doing, never committed | the skill that is running |
 
 The one-writer rule is what makes fan-out safe: subagents read and return, and the parent
 performs the single write.
@@ -104,3 +106,5 @@ Already settled, with the reasoning in `docs/architecture/decisions/`:
   directory; the dashboard listens on loopback only. Reversing that is a breaking change.
   What an agent does while following a skill is governed by the authority tiers, not by
   this promise.
+  An agent runner, if one ships, is a separate optional package outside this promise; the
+  command-line tool, the hooks and the dashboard stay within it.

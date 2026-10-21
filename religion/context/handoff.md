@@ -7,7 +7,7 @@
 
 Nothing in progress.
 
-Plan: 9 of 9 item(s) complete.
+Plan: 9 of 52 item(s) complete. Next up: 6. **Status shows live activity and the inbox** - `status` and its JSON report the current run from `run.json`, with its resume command when blocked, and how many notes the inbox holds
 
 ## Read first
 

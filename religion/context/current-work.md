@@ -52,7 +52,7 @@ large, so split it.
 - [x] **Step 2 - held to the shipped template** - a verification check that `HOOKS` equals
   the `(event, command)` pairs in `src/state/.state/settings-template.json`. *Done when:* it
   passes, and fails on a scratch edit to the template, then reverted.
-- [ ] **Step 3 - the docs and the release note** - a `hooks` section in `docs/doctor.md`,
+- [x] **Step 3 - the docs and the release note** - a `hooks` section in `docs/doctor.md`,
   the check count, and a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas

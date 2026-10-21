@@ -863,3 +863,11 @@
 **Why it matters:** A forward reference to a spike-first item pointed at the overview instead of a spike, duplicate numbers resolved silently, only the first `after` phrase on a line was read, `4A` did not match `4a`, a spike's `For` line with trailing words was missed, and the status skill had no row for items waiting only on each other.
 **Suggested fix:** Each as named.
 **Resolution:** Repaired 2026-10-21, each with a test or a skill line.
+
+### F-158 [P3] fixed - Ways a spec's drift could be misread or hidden
+
+**File:** packages/create-religion/lib/state.ts:278
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** Trailing spaces on a line read as drift; a differently cased Evidence heading was hashed; a malformed stamp silently disabled the check; `~~~` fences were not fences; a fenced heading could replace the real build steps unseen; the warning claimed to check amendments it never read; and steps `auto fix` folds in were added without an amendment.
+**Suggested fix:** Each as named.
+**Resolution:** Repaired 2026-10-21: per-line whitespace ignored, headings matched in any case, a stamp parsed leniently and an unreadable one counted as drift, both fence kinds recognised, sections read outside fences, the warning reworded, and the auto skill told to amend; each tested or written into the skill.

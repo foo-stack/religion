@@ -18,6 +18,7 @@ import {
   parseSettledSpike,
   parseSpec,
   parseWork,
+  specHash,
   readHistory,
   readProjectState,
   waiting
@@ -708,4 +709,82 @@ test("parsePlan reads every after phrase on a line, in any case, and spike lines
   const [item] = parsePlan("## Plan\n\n- [ ] 9. **X** - after item 2; also after items 4A and 5\n");
   assert.deepEqual(item?.after, ["2", "4a", "5"]);
   assert.equal(parseSettledSpike("**For:** item 21 (hooks)\n**Settled:** yes\n"), "21");
+});
+
+test("specHash ignores what changes as work proceeds, and nothing else", () => {
+  const spec = [
+    "# Export",
+    "",
+    "**Type:** Feature",
+    "**Status:** in progress",
+    "",
+    "## Build steps",
+    "",
+    "- [ ] **Step 1 - the plan** - x",
+    "- [ ] **Step 2 - the command** - y",
+    ""
+  ].join("\n");
+  const base = specHash(spec);
+  const progressed = spec
+    .replace("**Status:** in progress", "**Status:** verified\n**Approved:** 2026-10-21, 0123456789abcdef")
+    .replace("- [ ] **Step 1", "- [x] **Step 1") +
+    "\n## Evidence\n\nChecked 2026-10-21 at abc1234, tree clean.\n\n## Amendments\n\n- 2026-10-21 - a note - a reason\n";
+  assert.equal(specHash(progressed), base);
+  assert.notEqual(specHash(spec.replace("- y", "- y, and more")), base);
+});
+
+test("parseSpec reads the stamp and the amendments, and calls a spec drifted only against a stamp", () => {
+  const body = "# Export\n\n**Type:** Feature\n\n## Build steps\n\n- [ ] **Step 1 - a** - x\n";
+  const stamped = (hash: string) => body.replace("**Type:** Feature", `**Type:** Feature\n**Approved:** 2026-10-21, ${hash}`) +
+    "\n## Amendments\n\n- 2026-10-21 - Step 1 narrowed - the first version was too big.\n";
+
+  const fresh = parseSpec(stamped(specHash(body)));
+  assert.deepEqual(fresh?.approved, { date: "2026-10-21", hash: specHash(body) });
+  assert.deepEqual(fresh?.amendments, ["2026-10-21 - Step 1 narrowed - the first version was too big."]);
+  assert.equal(fresh?.drifted, false);
+
+  assert.equal(parseSpec(stamped(specHash(body)).replace("- x", "- x, quietly widened"))?.drifted, true);
+  assert.equal(parseSpec(body)?.drifted, false, "no stamp, no drift");
+});
+
+test("parseSpec and specHash leave examples inside code fences alone", () => {
+  const spec = [
+    "# Export",
+    "",
+    "**Type:** Feature",
+    "",
+    "## Data and contracts",
+    "",
+    "```markdown",
+    "**Approved:** 2026-10-21, 0123456789abcdef",
+    "",
+    "## Amendments",
+    "",
+    "- 2026-10-21 - an example - not a real amendment",
+    "```",
+    "",
+    "## Build steps",
+    "",
+    "- [ ] **Step 1 - a** - x",
+    ""
+  ].join("\n");
+  const parsed = parseSpec(spec);
+  assert.equal(parsed?.approved, null, "the example stamp is not the stamp");
+  assert.deepEqual(parsed?.amendments, []);
+  assert.notEqual(specHash(spec), specHash(spec.replace("an example", "a changed example")), "fenced text is part of what was approved");
+});
+
+test("specHash and the stamp hold against whitespace, heading case, tilde fences and malformed stamps", () => {
+  const body = "# Export\n\n**Type:** Feature\n\n## Build steps\n\n- [ ] **Step 1 - a** - x\n";
+  const base = specHash(body);
+  assert.equal(specHash(body.replace("## Build steps", "## Build steps   ")), base, "trailing spaces on a line");
+  assert.equal(specHash(body + "\n##  evidence\n\nChecked.\n"), base, "an evidence heading in another case");
+  const tilde = body.replace("**Type:** Feature", "**Type:** Feature\n\n~~~\n**Approved:** 2026-01-01, aaaaaaaaaaaaaaaa\n~~~");
+  assert.equal(parseSpec(tilde)?.approved, null, "a stamp inside a tilde fence is an example");
+  const upper = body.replace("**Type:** Feature", `**Type:** Feature\n**Approved:** 2026-10-21 , ${base.toUpperCase()}`);
+  assert.deepEqual(parseSpec(upper)?.approved, { date: "2026-10-21", hash: base });
+  assert.equal(parseSpec(upper)?.drifted, false);
+  assert.equal(parseSpec(body.replace("**Type:** Feature", "**Type:** Feature\n**Approved:** soon"))?.drifted, true, "an unreadable stamp is drift");
+  const hidden = body + "\n## Evidence\n\n```\n## Build steps\n\n- [ ] **Step 1 - a** - x\n- [ ] **Step 2 - b** - y\n```\n";
+  assert.equal(parseSpec(hidden)?.steps.length, 1, "a fenced heading does not replace the real steps");
 });

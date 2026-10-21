@@ -21,6 +21,7 @@ function state(overrides: Partial<ProjectState> = {}): ProjectState {
     inbox: [],
     learning: { lessons: [], journal: [], undecided: 0 },
     settledSpikes: [],
+    spec: { hash: null, approved: null, drifted: false },
     ...overrides
   };
 }
@@ -110,4 +111,10 @@ test("status points at a spike when every remaining item waits, and warns about 
 test("status points at a spike when any remaining item waits on one, even behind a forward reference", () => {
   const forward = computeStatus(state({ plan: plan("- [ ] 1. **First** - after item 2", "- [ ] 2. **Second** - spike first on it") }));
   assert.deepEqual(forward.next, { command: "spike", because: "every remaining item waits, and item 2 waits on a spike" });
+});
+
+test("status warns when the active spec drifted from its approval", () => {
+  const drift = "the active spec changed since its approval stamp; record an amendment saying why and renew the stamp";
+  assert.ok(computeStatus(state({ spec: { hash: "1111111111111111", approved: "2222222222222222", drifted: true } })).warnings.includes(drift));
+  assert.ok(!computeStatus(state()).warnings.includes(drift));
 });

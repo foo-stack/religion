@@ -213,6 +213,11 @@
       "inbox": {
         "notes": "number"
       },
+      "spec": {
+        "hash": "string|null",
+        "approved": "string|null",
+        "drifted": "boolean"
+      },
       "warnings": [
         "string"
       ]

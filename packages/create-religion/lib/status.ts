@@ -17,6 +17,7 @@ export interface Status {
   overview: { present: boolean; fresh: boolean | null };
   activity: ProjectState["activity"];
   inbox: { notes: number };
+  spec: ProjectState["spec"];
   warnings: string[];
 }
 
@@ -52,6 +53,9 @@ export function computeStatus(state: ProjectState): Status {
   if (state.openQuestions.length > 0) {
     warnings.push(`open question(s) in the overview: ${state.openQuestions.join(", ")}`);
   }
+  if (state.spec.drifted) {
+    warnings.push("the active spec changed since its approval stamp; record an amendment saying why and renew the stamp");
+  }
   if (state.learning.undecided >= DISTILL_AFTER) {
     warnings.push(`${state.learning.undecided} journal entries are waiting for distill`);
   }
@@ -69,6 +73,7 @@ export function computeStatus(state: ProjectState): Status {
     overview: { present: state.overviewPresent, fresh: state.overviewFresh },
     activity: state.activity,
     inbox: { notes: state.inbox.length },
+    spec: state.spec,
     warnings
   };
 }

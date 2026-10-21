@@ -11,7 +11,7 @@ function state(overrides: Partial<ProjectState> = {}): ProjectState {
     root: "/project",
     config: {},
     configValid: true,
-    plan: [{ number: "1", title: "Export reports", done: false, depth: 0 }],
+    plan: [{ number: "1", title: "Export reports", done: false, depth: 0, after: [], spikeFirst: false }],
     work: parseWork(null),
     findings: [],
     overviewPresent: true,
@@ -20,6 +20,7 @@ function state(overrides: Partial<ProjectState> = {}): ProjectState {
     activity: parseActivity(null),
     inbox: [],
     learning: { lessons: [], journal: [], undecided: 0 },
+    settledSpikes: [],
     ...overrides
   };
 }

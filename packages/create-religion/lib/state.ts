@@ -16,6 +16,10 @@ export interface PlanItem {
   title: string;
   done: boolean;
   depth: number;
+  /** Item numbers this line says it comes after. */
+  after: string[];
+  /** Whether the line says a spike must answer its question first. */
+  spikeFirst: boolean;
 }
 
 export interface Finding {
@@ -67,6 +71,54 @@ export interface Learning {
   undecided: number;
 }
 
+/** Item numbers a spike archive says it answered and settled, from `**For:** item N` and `**Settled:** yes`. */
+export function parseSettledSpike(source: string): string | null {
+  const item = /^\*\*For:\*\*\s*item\s+(\d+[a-z]?)\s*$/im.exec(source)?.[1];
+  return item && /^\*\*Settled:\*\*\s*yes\b/im.test(source) ? item : null;
+}
+
+/**
+ * What each unticked item still waits on, and the references that cannot be met at all.
+ * An item waits on an earlier one until that is ticked, and on its spike until one settles it.
+ */
+export function waiting(plan: readonly PlanItem[], settled: ReadonlySet<string>): { waits: Map<string, string[]>; problems: string[] } {
+  const byNumber = new Map(plan.filter((i) => i.number).map((i) => [i.number as string, i]));
+  const waits = new Map<string, string[]>();
+  const problems: string[] = [];
+
+  for (const item of plan) {
+    if (item.done || !item.number) continue;
+    const reasons: string[] = [];
+    for (const n of item.after) {
+      const other = byNumber.get(n);
+      if (!other) problems.push(`item ${item.number} comes after item ${n}, which the plan does not have`);
+      else if (!other.done) reasons.push(`item ${n}`);
+    }
+    if (item.spikeFirst && !settled.has(item.number)) reasons.push("a spike");
+    if (reasons.length) waits.set(item.number, reasons);
+  }
+
+  // A cycle never resolves by ticking anything, so it is named once rather than waited on.
+  const seen = new Set<string>();
+  for (const start of byNumber.keys()) {
+    const path: string[] = [];
+    const visit = (n: string): void => {
+      if (seen.has(n)) return;
+      const at = path.indexOf(n);
+      if (at >= 0) {
+        problems.push(`items ${[...path.slice(at), n].join(" -> ")} wait on each other`);
+        return;
+      }
+      path.push(n);
+      for (const next of byNumber.get(n)?.after ?? []) if (byNumber.has(next) && !byNumber.get(next)!.done) visit(next);
+      path.pop();
+      seen.add(n);
+    };
+    visit(start);
+  }
+  return { waits, problems };
+}
+
 export interface ProjectState {
   root: string;
   config: unknown;
@@ -80,6 +132,8 @@ export interface ProjectState {
   activity: Activity;
   inbox: InboxNote[];
   learning: Learning;
+  /** Plan items a spike archive says it settled. */
+  settledSpikes: string[];
 }
 
 const CHECKBOX = /^(\s*)- \[( |x|X)\]\s*(.*)$/;
@@ -103,11 +157,14 @@ export function parsePlan(source: string | null): PlanItem[] {
     // The template ships two placeholder items so the shape is visible. They are not work.
     if (/^\d+\.\s+\*\*(Feature one|Feature two)\*\*/.test(body)) continue;
 
+    const after = /\bafter items? (\d+[a-z]?(?:(?:,\s*(?:and\s+)?|\s+and\s+)\d+[a-z]?)*)/i.exec(body)?.[1];
     items.push({
       number: /^([\dA-Za-z]+)\./.exec(body)?.[1] ?? null,
       title: body.replace(/^[\dA-Za-z]+\.\s*/, "").replace(/\*\*/g, ""),
       done: (match[2] ?? " ").toLowerCase() === "x",
-      depth: Math.floor((match[1] ?? "").length / 2)
+      depth: Math.floor((match[1] ?? "").length / 2),
+      after: after ? after.split(/,\s*(?:and\s+)?|\s+and\s+/).map((n) => n.trim()).filter(Boolean) : [],
+      spikeFirst: /\bspike first\b/i.test(body)
     });
   }
 
@@ -490,6 +547,15 @@ export async function readProjectState(root: string): Promise<ProjectState> {
     readIfPresent(statePath(root, "learning", "journal-archive.md"))
   ]);
   const entries = parseJournal(journal, journalArchive);
+  const settledSpikes: string[] = [];
+  try {
+    for (const name of (await fs.readdir(statePath(root, "history", "spikes"))).filter((n) => n.endsWith(".md") && n !== "README.md")) {
+      const item = parseSettledSpike((await readIfPresent(statePath(root, "history", "spikes", name))) ?? "");
+      if (item) settledSpikes.push(item);
+    }
+  } catch {
+    // No spikes directory: nothing settled.
+  }
 
   let config: unknown = null;
   let configValid = true;
@@ -519,6 +585,7 @@ export async function readProjectState(root: string): Promise<ProjectState> {
     openQuestions: parseOpenQuestions(overview),
     activity: parseActivity(activity, await installedSkills(root)),
     inbox: parseInbox(inbox),
-    learning: { lessons: parseLessons(lessons), journal: entries, undecided: entries.filter((e) => !e.decided).length }
+    learning: { lessons: parseLessons(lessons), journal: entries, undecided: entries.filter((e) => !e.decided).length },
+    settledSpikes
   };
 }

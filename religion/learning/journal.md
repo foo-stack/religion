@@ -186,3 +186,10 @@ verification check, and both were found by hand first.
 **Surprised:** A test that the hook allowed named files passed while the hook allowed everything, because every path looked outside the project; an allow test proves nothing without a deny test beside it run first.
 **Went wrong:** The hook would have asked about a file this very item had to change, the uninstall tests, which is the drift it exists to catch, recorded as an amendment.
 **Deferred:** Wave partners; wiring it in this repository's own settings.
+
+## 2026-10-21 - Check the preview deployment
+
+**Archive:** history/features/32-check-the-preview-deployment.md
+**Surprised:** "One provider first" turned out to be the host rather than a provider: Vercel, Netlify and Render all publish previews to the pull request's deployments, so reading those covers all three.
+**Went wrong:** nothing
+**Deferred:** Hosts without deployments; protected previews.

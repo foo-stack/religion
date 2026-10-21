@@ -45,7 +45,7 @@
   - [x] 30a. **Spec amendments recorded** - a change to an approved spec is recorded as a dated amendment with its reason, and the archive keeps the amendments
   - [x] 30b. **A hook that warns on drift** - a Claude Code hook warns when an edit touches a file the current step does not name; after item 30a
 - [x] 31. **Recurring findings become standards** - `distill` reads archived findings and, where the same kind recurs across items, proposes the coding-standard rule that would have prevented it, for approval
-- [ ] 32. **Check the preview deployment** - under `pull-request` mode, `check` can run its outcomes against the host's preview deployment as well as locally, one provider first, each call asked for under the authority tiers
+- [x] 32. **Check the preview deployment** - under `pull-request` mode, `check` can run its outcomes against the host's preview deployment as well as locally, one provider first, each call asked for under the authority tiers
 - [x] 33. **Spec from an issue** - `fix` and `feature` take an issue number or link, read it through the host's command-line tool as untrusted input, draft the spec from it behind the usual review stop, and the pull request `complete` opens references it
 - [ ] 34. **Complete drafts the release note** - in a project using Changesets, `complete` drafts the changeset from the archive, proposing the packages and the bump for approval rather than deciding it
 - [ ] 35. **Accessibility as evidence** - for web work, `check` runs an accessibility scan beside its browser evidence and reports violations per outcome, claiming no more than the scan covers

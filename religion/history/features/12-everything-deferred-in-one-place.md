@@ -96,3 +96,9 @@ inbox: unbolded repair steps get no label.
 ### Deferred
 
 - **Marking a deferred note as done**, which would need archives to change after completion.
+
+## Landed
+
+**Base:** c89f16ea1001424ddcc268bc61f62882616486bb
+**Commits:** 2d1364d1ca3229c04e55bf47d320cd5d754ae922, 97e5ee0516530a2760808865d09f5240d4caba5c, 0fbe8daf437e43803d897055ec807f819d7f79c4, d2d9a74461c0490baf23b23abad7ed740f742d0c
+**Product paths:** .changeset/deferred-view.md, packages/create-religion/lib/dashboard.ts

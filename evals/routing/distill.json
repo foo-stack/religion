@@ -9,6 +9,9 @@
     },
     {
       "prompt": "Clean up the lessons file"
+    },
+    {
+      "prompt": "Turn the findings that keep coming back into coding standards"
     }
   ],
   "negative": [

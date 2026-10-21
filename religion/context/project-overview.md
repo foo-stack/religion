@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 92b6dba950cd17d3 -->
+<!-- religion:source-hash 301efda73bb36514 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,7 +49,7 @@ nothing to sign into.
 
 ## Roadmap
 
-Twenty-five items queued. Nineteen start with a spike, and several say which items they
+Twenty-four items queued. Nineteen start with a spike, and several say which items they
 follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
 
 **Status, learning and health**
@@ -67,7 +67,6 @@ follow; the plan states both in prose, so nothing enforces the order yet (item 2
 27. **Waves built in isolation** - one worktree per wave step, joined into one packet
 30. **Scope drift made visible** - spec amendments recorded, and a hook warning on edits
     outside the step
-31. **Recurring findings become standards** - `distill` proposes rules from recurring findings
 32. **Check the preview deployment** - outcomes run against the host's preview, one provider
     first
 33. **Spec from an issue** - `fix` and `feature` draft from an issue read as untrusted input

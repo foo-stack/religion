@@ -11,6 +11,8 @@ import {
   parseArchive,
   parseFindings,
   parseInbox,
+  parseJournal,
+  parseLessons,
   parseOpenQuestions,
   parsePlan,
   parseSpec,
@@ -531,4 +533,53 @@ test("readProjectState carries the activity record and the inbox", async (t) => 
   const busy = await readProjectState(root);
   assert.equal(busy.activity.command, "feature");
   assert.equal(busy.inbox.length, 2);
+});
+
+test("parseLessons reads the lessons and leaves out the header and the stub", () => {
+  const header = "# Lessons\n\n> **Generated file.** What previous runs learned.\n> Keep it short.\n\n";
+  assert.deepEqual(parseLessons(header + "_Nothing learned yet._\n"), []);
+  assert.deepEqual(parseLessons(null), []);
+  assert.deepEqual(
+    parseLessons(header + "**Chain the commit behind the tests.** A `;` let a red suite land.\n\n- Read every grep match.\n- Check the stub.\n"),
+    ["**Chain the commit behind the tests.** A `;` let a red suite land.", "Read every grep match.", "Check the stub."]
+  );
+});
+
+test("parseJournal reads labelled entries, free-form ones, and which are decided", () => {
+  const journal = [
+    "# Journal",
+    "",
+    "> **Generated file.** One entry per finished item.",
+    "",
+    "## 2026-09-05 - carried over from the build",
+    "",
+    "Written down when this project stopped keeping a progress file.",
+    "",
+    "**Silent wrong results come from paths nobody exercised.** Five bugs.",
+    "",
+    "## 2026-10-21 - A journal that something writes",
+    "",
+    "**Archive:** history/features/07-a-journal-that-something-writes.md",
+    "**Surprised:** The journal had one entry.",
+    "**Went wrong:** A sentence survived.",
+    "**Deferred:** nothing"
+  ].join("\n");
+  const archive = "# Journal archive\n\n## 2026-09-05 - carried over from the build\n\nRejected: an incident.\n";
+
+  const [old, item] = parseJournal(journal, archive);
+  assert.equal(old?.heading, "2026-09-05 - carried over from the build");
+  assert.equal(old?.date, "2026-09-05");
+  assert.equal(old?.summary, "Written down when this project stopped keeping a progress file.");
+  assert.equal(old?.decided, true);
+  assert.equal(old?.archive, null);
+
+  assert.equal(item?.archive, "history/features/07-a-journal-that-something-writes.md");
+  assert.equal(item?.surprised, "The journal had one entry.");
+  assert.equal(item?.wentWrong, "A sentence survived.");
+  assert.equal(item?.deferred, "nothing");
+  assert.equal(item?.summary, null);
+  assert.equal(item?.decided, false);
+
+  assert.equal(parseJournal(journal, null).filter((e) => e.decided).length, 0, "no archive decides nothing");
+  assert.deepEqual(parseJournal("# Journal\n\n_No entries yet._\n", null), []);
 });

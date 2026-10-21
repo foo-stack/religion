@@ -50,7 +50,7 @@ large, so split it.
   and a routing case. *Done when:* the rendered skill reads the Evidence section, re-runs each
   capture before writing, asserts exit status and stable output only, writes one reviewed diff
   per test, and stops without a test command; `npm test` exits 0 with the new routing case.
-- [ ] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

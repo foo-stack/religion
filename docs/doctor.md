@@ -95,15 +95,23 @@ Run `religion install` from the project root to add one.
 
 Restore it from `update` instead, or copy the shipped defaults back in.
 
-Or it parses and a value is not one of the allowed ones:
+Or it parses and a value is not one the setting accepts:
 
 ```text
   FAIL  configuration (blocks work)
           git.mode is "trunkk", expected one of trunk, branch-per-item, pull-request
 ```
 
-The message names the key, what it found, and every value that would work. Every setting and
-its allowed values are in [the configuration reference](architecture/config.md).
+Every setting is checked against what it accepts, not only the ones with a list of values:
+
+```text
+  FAIL  configuration (blocks work)
+          auto.maxRepairAttempts is 11, expected an integer from 0 through 10
+```
+
+The message names the key, what it found, and what would work. Every setting and what it
+accepts are in [the configuration reference](architecture/config.md). A key the reference does
+not name is ignored, so notes of your own in the file do not fail the check.
 
 ## adapters
 

@@ -60,3 +60,10 @@ verification check, and both were found by hand first.
 **Surprised:** This repository's own install record is from 0.5.0, so the first real run of the check named six edited skills: the rendered trees here are built, never installed, and the manifest has not followed them.
 **Went wrong:** An advisory check could still crash doctor through an unguarded read, and the first test encoded the wrong answer for a symlink rather than catching it.
 **Deferred:** Showing what changed inside an edited file.
+
+## 2026-10-21 - Doctor checks every documented setting
+
+**Archive:** history/features/10-doctor-checks-every-documented-setting.md
+**Surprised:** The surface record already carried a type for every setting, built from the shipped defaults, so a schema existed in three partial copies before this item made it one.
+**Went wrong:** The verification check was written to the spec's wording but not its aim; only planting a drift and watching it pass showed the gap. A check is proved by a case it fails on, not by passing.
+**Deferred:** Flagging keys the reference does not name.

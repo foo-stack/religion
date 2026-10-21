@@ -288,6 +288,16 @@ file, whatever its matcher, and whether the command names it directly or through
 `missing hook file` means the hook's script is gone from `.claude/hooks`, and `update` puts it
 back. A settings file reached through a link is not read.
 
+## In continuous integration
+
+The workflow `ci` writes runs `doctor --json` on every pull request and fails the build only for
+a failed check that blocks work or completion: a stale overview, invalid configuration, a missing
+required file, an entry file still waiting for `setup`. A failed check that blocks nothing, such
+as `hooks` or `managed files`, is shown as a warning. Those read `.claude/settings.json` and
+`religion/.state/`, which a project may well not commit, so on a runner they could fail without
+anything being wrong. The decision reads each check's `ok` and `blocks` from the JSON, both part
+of the stable output, since `doctor`'s exit code is 1 for any failed check at all.
+
 ## What a healthy report does not prove
 
 ```text

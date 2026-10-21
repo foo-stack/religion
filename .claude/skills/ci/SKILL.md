@@ -48,6 +48,31 @@ pushes to the default branch.
 - Grant `contents: read` and nothing more.
 - Cache the package manager's store if that is straightforward.
 
+Then a second step that runs `religion doctor`, so a broken install or an overview the plans
+have moved past fails the build rather than waiting to be noticed. Pin the tool to the major
+version that installed the project, and give the job Node if the stack does not already set
+it up:
+
+    - name: Religion doctor
+      run: |
+        npx --yes create-religion@1 doctor --json > doctor.json || true
+        node -e '
+          const fs = require("fs");
+          let report;
+          try { report = JSON.parse(fs.readFileSync("doctor.json", "utf8")); }
+          catch { console.log("::error::religion doctor printed no report"); process.exit(1); }
+          const failing = report.checks.filter((check) => !check.ok);
+          for (const check of failing) console.log((check.blocks === "nothing" ? "::warning::" : "::error::") + check.name + ": " + check.detail);
+          process.exit(failing.some((check) => check.blocks !== "nothing") ? 1 : 0);
+        '
+
+Only a failed check that blocks `work` or `completion` fails the build. One that blocks
+`nothing` is shown as a warning, because those are the checks a runner cannot pass honestly:
+`hooks` reads `.claude/settings.json`, and `managed files` reads the install record under
+`religion/.state/`, and many projects commit neither. Doctor exits 1 for any failed check, so
+its exit code is not the signal; the JSON is, and its `checks`, `ok` and `blocks` are part of
+the stable surface. A doctor that prints no report fails the build.
+
 **Never overwrite existing continuous integration.** If a workflow already runs these
 checks, say so, show where they overlap, and stop. Two workflows running the same suite
 doubles the cost and halves the trust in both.
@@ -56,6 +81,9 @@ doubles the cost and halves the trust in both.
 
 Run the Verify command exactly as written. If it fails, the recipe is wrong or the project
 is broken, and either way it must not be committed in that state.
+
+Run the doctor step's two lines too. If they fail here they will fail on every pull request,
+and the cause, usually a stale overview, is cheaper to fix now.
 
 ## Step 5 - report and stop
 

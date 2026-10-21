@@ -74,3 +74,10 @@ verification check, and both were found by hand first.
 **Surprised:** Twenty-six documents and forty relative links held no mistake at all, so the value of the check is entirely in what it will catch next.
 **Went wrong:** Nothing beyond a trailing slash in a fixture; a check that passes first time needed a planted failure before it counted as evidence, the same lesson the settings check taught one item earlier.
 **Deferred:** Running the tool to compare exit codes, and external links.
+
+## 2026-10-21 - Everything deferred, in one place
+
+**Archive:** history/features/12-everything-deferred-in-one-place.md
+**Surprised:** The page's script is forbidden from writing any `href`, so even an in-page anchor has to be static markup; the network check reads the script's string literals.
+**Went wrong:** A checkpoint was committed on a failing suite because `npm test | grep ... && git commit` takes grep's exit status, the same slip archive 05 records twice. Gate commits on the test command's own exit code, never on a filtered pipe.
+**Deferred:** Marking deferred notes as done.

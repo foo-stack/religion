@@ -123,3 +123,61 @@ test("write-handoff bounds and cleans what it copies from the ledger, and counts
   assert.doesNotMatch(text, /F-6 |F-7 /);
   assert.match(text, new RegExp(`Inbox:\\*\\* ${parseInbox(inbox).length} note`));
 });
+
+const DRIFT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "hooks", "warn-on-drift.mjs");
+
+function drift(cwd: string, input: string): string {
+  return spawnSync(process.execPath, [DRIFT], { cwd, input, encoding: "utf8" }).stdout;
+}
+const editing = (file: string) => JSON.stringify({ tool_name: "Edit", tool_input: { file_path: file } });
+
+const SPEC = [
+  "# Export",
+  "",
+  "**Status:** in progress",
+  "",
+  "## Build steps",
+  "",
+  "- [x] **Step 1 - done** - `src/old.ts`.",
+  "- [ ] **Step 2 - the route** - `src/routes/export.ts`, and",
+  "  `lib/format.ts`.",
+  "- [ ] **Step 3 - later** - `src/later.ts`.",
+  "",
+  "## Files and areas",
+  "",
+  "- `docs/`",
+  "- `packages/app/README.md`",
+  ""
+].join("\n");
+
+test("warn-on-drift is silent with no spec in progress", async (t) => {
+  const { root } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), "# Current Work\n\n_Nothing in progress._\n");
+  assert.equal(drift(root, editing(path.join(root, "anything.ts"))), "");
+});
+
+test("warn-on-drift allows what the current step and Files and areas name, and the workflow's own files", async (t) => {
+  const { root } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), SPEC);
+  for (const file of ["src/routes/export.ts", "packages/app/lib/format.ts", "docs/guide/start.md", "packages/app/README.md", "religion/context/current-work.md", ".changeset/x.md", ".claude/skills/a/SKILL.md"]) {
+    assert.equal(drift(root, editing(path.join(root, file))), "", file);
+  }
+});
+
+test("warn-on-drift asks before an edit the spec does not name, a later step's file included", async (t) => {
+  const { root } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), SPEC);
+  for (const file of ["src/unrelated.ts", "src/later.ts", "src/old.ts"]) {
+    const out = JSON.parse(drift(root, editing(path.join(root, file))));
+    assert.equal(out.hookSpecificOutput.permissionDecision, "ask", file);
+    assert.match(out.hookSpecificOutput.permissionDecisionReason, new RegExp(`^${file.replace(/[.]/g, "\\.")} is not named`));
+  }
+});
+
+test("warn-on-drift stays silent on a payload it cannot read or a path outside the project", async (t) => {
+  const { root, outside } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), SPEC);
+  assert.equal(drift(root, "{ not json"), "");
+  assert.equal(drift(root, JSON.stringify({ tool_input: {} })), "");
+  assert.equal(drift(root, editing(path.join(outside, "victim.md"))), "");
+});

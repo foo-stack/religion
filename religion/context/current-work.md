@@ -54,7 +54,7 @@ large, so split it.
 - [x] **Step 3 - the dashboard shows it** - `evidence` in `parseSpec` in `lib/state.ts`, and the
   Work view in `lib/dashboard.ts`. *Done when:* a unit test shows the section parsed into its
   stamp and one entry per outcome, and the running dashboard shows it for a spec carrying one.
-- [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

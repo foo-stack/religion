@@ -65,6 +65,16 @@ const FLAGS: Readonly<Record<string, Flag>> = {
 /** The options each command accepts, read from the same table parsing uses. */
 export const GRAMMAR: Readonly<Record<Command, readonly string[]>> = grammar();
 
+/** Every exit code the tool uses, and what each means. Public: a meaning never changes within 1.x. */
+export const EXIT_CODES: Readonly<Record<number, string>> = {
+  0: "the command did what it was asked",
+  1:
+    "it ran and reports failure: no project found, a failing doctor check,\n" +
+    "conflicts, declined merges or linked files left by install or update,\n" +
+    "a project installed by a newer version, or an unexpected error",
+  2: "usage error: nothing was written"
+};
+
 function grammar(): Record<Command, readonly string[]> {
   const table = {} as Record<Command, readonly string[]>;
   for (const command of COMMANDS) table[command] = Object.keys(FLAGS).filter((flag) => FLAGS[flag]!.commands.has(command));

@@ -13,7 +13,7 @@ import path from "node:path";
 import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
-import { parseArgs } from "../lib/args.js";
+import { EXIT_CODES, parseArgs } from "../lib/args.js";
 import type { Options } from "../lib/args.js";
 import { startDashboard } from "../lib/dashboard.js";
 import { doctorReport, renderDoctor, runDoctor } from "../lib/doctor.js";
@@ -316,11 +316,9 @@ Options
   --yes         no prompts
 
 Exit codes
-  0   the command did what it was asked
-  1   it ran and reports failure: no project found, a failing doctor check,
-      conflicts, declined merges or linked files left by install or update,
-      a project installed by a newer version, or an unexpected error
-  2   usage error: nothing was written
+${Object.entries(EXIT_CODES)
+  .map(([code, meaning]) => `  ${code.padEnd(4)}${meaning.replace(/\n/g, "\n      ")}`)
+  .join("\n")}
 `);
 }
 

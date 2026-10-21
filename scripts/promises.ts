@@ -21,6 +21,7 @@ const STATEMENT = path.join(repoRoot, "docs", "stability.md");
 export async function statementProblems(): Promise<string[]> {
   const record = JSON.parse(await fs.readFile(SURFACE_RECORD, "utf8")) as {
     commands: Record<string, string[]>;
+    exitCodes: number[];
     skills: string[];
     adapters: Record<string, unknown>;
     config: Record<string, unknown>;
@@ -33,6 +34,7 @@ export async function statementProblems(): Promise<string[]> {
   const entries: [string, string][] = [
     ...Object.keys(record.commands).map((name): [string, string] => ["command", name]),
     ...[...new Set(Object.values(record.commands).flat())].map((name): [string, string] => ["option", name]),
+    ...record.exitCodes.map((code): [string, string] => ["exit code", String(code)]),
     ...record.skills.map((name): [string, string] => ["skill", name]),
     ...Object.keys(record.adapters).map((name): [string, string] => ["adapter", name]),
     ...Object.keys(record.config).map((name): [string, string] => ["setting", name]),

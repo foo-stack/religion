@@ -54,7 +54,7 @@ large, so split it.
   when:* the dashboard test passes, and a screenshot of the real dashboard against this
   repository shows the view with this repository's journal entries and the empty lessons
   state.
-- [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in
+- [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in
   full.
 
 ## Files and areas

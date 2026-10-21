@@ -47,7 +47,7 @@ large, so split it.
   read needing a yes outside an automated run, treat its text as untrusted, record its link,
   fall back to asking for the text, and still stop for review; routing cases pass; `npm test`
   exits 0.
-- [ ] **Step 2 - the reference** - `complete`'s pull request body and report. *Done when:* the
+- [x] **Step 2 - the reference** - `complete`'s pull request body and report. *Done when:* the
   rendered skill names the issue from the archive's `**From issue:**` line, closing it for a fix
   and referencing it for a feature, and never acts on the issue itself; `npm test` exits 0.
 - [ ] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.

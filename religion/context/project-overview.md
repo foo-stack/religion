@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 58adbfd4a48c41bb -->
+<!-- religion:source-hash 4697c79880f1f5a9 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,18 +49,11 @@ nothing to sign into.
 
 ## Roadmap
 
-Thirty-three items queued. Nineteen start with a spike, and several say which items they
+Twenty-eight items queued. Nineteen start with a spike, and several say which items they
 follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
 
 **Status, learning and health**
 
-16. **A clean way out** - `religion uninstall`, keeping edited files, plans and history
-17. **Evidence that outlives the session** - `check` records per-outcome evidence, kept in
-    the archive
-18. **A handoff that tells the whole story** - stale overview, inbox, unverified findings,
-    blocked runs
-19. **Backfill discrepancies kept** - `tests backfill` offers to `capture` each mismatch
-20. **CI runs doctor** - the workflow `ci` writes fails on a broken install or stale overview
 
 **Bigger capabilities, mostly spike-first**
 
@@ -137,6 +130,7 @@ The single thing in progress, in `context/current-work.md`.
 - kind (feature, fix, rollback, or refactor campaign)
 - steps (checkbox list) - ticked as each passes, which is what survives a cleared context
 - a step may be marked as running with an earlier one, forming a wave
+- evidence - the verdict and proof for each outcome, in a section `check` writes
 - archives to `history/<kind>/` on completion
 
 ### Finding (load-bearing)

@@ -168,6 +168,13 @@ export interface Spec {
   outOfScope: string[];
   files: string[];
   steps: SpecStep[];
+  evidence: Evidence | null;
+}
+
+/** What `check` recorded: its stamp, and one verdict per outcome. */
+export interface Evidence {
+  stamp: string | null;
+  entries: { outcome: string; verdict: string; detail: string }[];
 }
 
 /** The active spec as written, for showing rather than deciding. Null when nothing is in progress. */
@@ -184,7 +191,19 @@ export function parseSpec(source: string | null): Spec | null {
     inScope: bullets(section.get("in scope")),
     outOfScope: bullets(section.get("out of scope")),
     files: bullets(section.get("files and areas")),
-    steps: bullets(section.get("build steps"), true).map(parseStep)
+    steps: bullets(section.get("build steps"), true).map(parseStep),
+    evidence: parseEvidence(section.get("evidence"))
+  };
+}
+
+function parseEvidence(body: string | undefined): Evidence | null {
+  if (body === undefined) return null;
+  return {
+    stamp: /^Checked .+$/m.exec(body)?.[0].trim() ?? null,
+    entries: bullets(body).map((item) => {
+      const m = /^\*\*(.+?)\*\*\s*-\s*(pass|fail|could not check):?\s*([\s\S]*)$/i.exec(item);
+      return m ? { outcome: m[1]!.trim(), verdict: m[2]!.toLowerCase(), detail: m[3]!.trim() } : { outcome: item, verdict: "unknown", detail: "" };
+    })
   };
 }
 

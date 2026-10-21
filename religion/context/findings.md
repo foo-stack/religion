@@ -814,3 +814,28 @@
 **Why it matters:** "Adds flags, e.g. `--yes`, to install." printed as "Adds flags, e.g."; nothing in the current changelog is affected.
 **Suggested fix:** End a sentence only at a full stop before a capital or a code span, and not after a common abbreviation.
 **Resolution:** Repaired 2026-10-21 as suggested, tested.
+
+### F-152 [P3] fixed - A link swapped in after the backup check can still redirect a backup
+
+**File:** packages/create-religion/lib/uninstall.ts:142
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Surfaced by:** F-147
+**Why it matters:** Backup paths were checked once, before the removals ran, so a folder turned into a link in between was followed by the copy, and a collision at the final file threw after the skills were gone.
+**Suggested fix:** Check again just before the copy, and record a failed copy as a kept file instead of throwing.
+**Resolution:** Repaired 2026-10-21 as suggested; a link planted at the destination after the plan leaves the outside file and the entry file untouched, tested.
+
+### F-153 [P2] fixed - Unverified finding titles reach always-loaded context with no limits
+
+**File:** src/hooks/write-handoff.mjs:45
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Why it matters:** The handoff is imported into every session, and the least trusted titles in the ledger were copied into it verbatim: control, bidi and tag characters, backticks, an unclosed `<!--`, a 200 KB title and 3,000 entries all went through.
+**Suggested fix:** List unverified findings by identifier only, and strip, shorten and cap the blocking titles already copied.
+**Resolution:** Repaired 2026-10-21: unverified findings appear as identifiers and severities, at most ten; blocking titles have control and format characters, backticks and angle brackets removed, are cut to 120 characters, and stop after five with a pointer to the ledger, tested.
+
+### F-154 [P3] fixed - The handoff's inbox count disagrees with status
+
+**File:** src/hooks/write-handoff.mjs:53
+**Found:** 2026-10-21 by audit (scope: current; lens: correctness)
+**Why it matters:** `-  two` was counted by `parseInbox` and not by the hook, so the two reports gave different numbers for the same file.
+**Suggested fix:** Match `parseInbox`'s rule.
+**Resolution:** Repaired 2026-10-21; a test compares the hook's count with `parseInbox` directly, and the staleness test now stamps with `overviewHash` over a CRLF plan.

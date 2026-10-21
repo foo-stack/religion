@@ -97,6 +97,7 @@ test("GRAMMAR lists the options each command accepts", () => {
   assert.deepEqual(GRAMMAR, {
     install: writes,
     update: writes,
+    uninstall: ["--help", "-h", "--dry-run", "--yes", "-y"],
     status: ["--help", "-h", "--json"],
     doctor: ["--help", "-h", "--json"],
     dashboard: ["--help", "-h"],
@@ -114,3 +115,13 @@ test("a repeated adapter option is recorded once, in first-seen order", () => {
   assert.deepEqual(options(["--codex", "--claude", "--codex", "--claude"]).adapters, ["codex", "claude"]);
 });
 
+
+test("uninstall takes a directory, --dry-run and --yes, and nothing install-only", () => {
+  const parsed = parseArgs(["uninstall", "./app", "--dry-run", "-y"], { cwd: "/here", isDirectory: () => false });
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) assert.deepEqual([parsed.options.command, parsed.options.target, parsed.options.dryRun, parsed.options.yes], ["uninstall", "./app", true, true]);
+  for (const flag of ["--force", "--claude", "--json"]) {
+    const refused = parseArgs(["uninstall", flag], { cwd: "/here", isDirectory: () => false });
+    assert.equal(refused.ok ? "" : refused.error, `Option '${flag}' does not apply to uninstall.`);
+  }
+});

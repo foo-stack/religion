@@ -102,3 +102,38 @@ verification check, and both were found by hand first.
 **Surprised:** Item 10's schema made this item small: one field per setting and one function, because the kinds, ranges, defaults and the reference's wording already lived in one place.
 **Went wrong:** A display case the reference table never exercised, a range with one value, only showed up on the real page; looking at the rendered output caught what the tests did not ask about.
 **Deferred:** Editing settings from the page.
+
+## 2026-10-21 - A clean way out
+
+**Archive:** history/features/16-a-clean-way-out.md
+**Surprised:** The first destructive command in the tool needed the review more than any item before it: one P1 and two P2s, each a way to touch something the plan never meant to, and each reproduced by the reviewer on a throwaway project.
+**Went wrong:** Reused helpers carried assumptions that suit reading and not deleting: a root found by walking up, a link check on a folder but not its contents, a plan treated as still true at the moment of removal.
+**Deferred:** Removing `religion/` itself.
+
+## 2026-10-21 - Evidence that outlives the session
+
+**Archive:** history/features/17-evidence-that-outlives-the-session.md
+**Surprised:** The archive needed no change at all to keep the evidence: putting the record in the spec made the existing archive step carry it.
+**Went wrong:** Test counts were typed from memory twice in a row and were wrong both times; numbers in a record should be copied from the output that produced them, never recalled.
+**Deferred:** Per-step evidence from implement.
+
+## 2026-10-21 - A handoff that tells the whole story
+
+**Archive:** history/features/18-a-handoff-that-tells-the-whole-story.md
+**Surprised:** The handoff is imported into every session, which makes the hook that writes it an injection path into always-loaded context; that was the deciding fact for what it may copy.
+**Went wrong:** Unverified finding titles were copied verbatim, the least trusted text in the ledger, until the audit planted bidi and escape characters and a 3,000-entry ledger.
+**Deferred:** Refreshing this repository's own ignored hook copy.
+
+## 2026-10-21 - Backfill discrepancies kept
+
+**Archive:** history/features/19-backfill-discrepancies-kept.md
+**Surprised:** nothing
+**Went wrong:** nothing
+**Deferred:** nothing
+
+## 2026-10-21 - CI runs doctor
+
+**Archive:** history/features/20-ci-runs-doctor.md
+**Surprised:** The `blocks` field doctor already reported for ordering its output turned out to be exactly the line between what a runner can and cannot check.
+**Went wrong:** nothing
+**Deferred:** Running doctor in this repository's own workflow.

@@ -10,7 +10,7 @@
 import { ADAPTERS } from "./install.js";
 import type { Adapter } from "./install.js";
 
-export type Command = "install" | "update" | "status" | "doctor" | "dashboard" | "help";
+export type Command = "install" | "update" | "uninstall" | "status" | "doctor" | "dashboard" | "help";
 
 export interface Options {
   command: Command;
@@ -29,8 +29,9 @@ export interface ParseContext {
   isDirectory: (candidate: string) => boolean;
 }
 
-const COMMANDS: readonly Command[] = ["install", "update", "status", "doctor", "dashboard", "help"];
+const COMMANDS: readonly Command[] = ["install", "update", "uninstall", "status", "doctor", "dashboard", "help"];
 const WRITES: ReadonlySet<Command> = new Set(["install", "update"]);
+const CHANGES: ReadonlySet<Command> = new Set(["install", "update", "uninstall"]);
 const REPORTS: ReadonlySet<Command> = new Set(["status", "doctor"]);
 const EVERY: ReadonlySet<Command> = new Set(COMMANDS);
 
@@ -43,10 +44,10 @@ interface Flag {
 const FLAGS: Readonly<Record<string, Flag>> = {
   "--help": { commands: EVERY, apply: (options) => void (options.command = "help") },
   "-h": { commands: EVERY, apply: (options) => void (options.command = "help") },
-  "--dry-run": { commands: WRITES, apply: (options) => void (options.dryRun = true) },
+  "--dry-run": { commands: CHANGES, apply: (options) => void (options.dryRun = true) },
   "--force": { commands: WRITES, apply: (options) => void (options.force = true) },
-  "--yes": { commands: WRITES, apply: (options) => void (options.yes = true) },
-  "-y": { commands: WRITES, apply: (options) => void (options.yes = true) },
+  "--yes": { commands: CHANGES, apply: (options) => void (options.yes = true) },
+  "-y": { commands: CHANGES, apply: (options) => void (options.yes = true) },
   "--json": { commands: REPORTS, apply: (options) => void (options.json = true) },
   ...Object.fromEntries(
     (Object.keys(ADAPTERS) as Adapter[]).map((adapter): [string, Flag] => [
@@ -71,7 +72,8 @@ export const EXIT_CODES: Readonly<Record<number, string>> = {
   1:
     "it ran and reports failure: no project found, a failing doctor check,\n" +
     "conflicts, declined merges or linked files left by install or update,\n" +
-    "a project installed by a newer version, or an unexpected error",
+    "a file uninstall meant to change but left, a project installed by a\n" +
+    "newer version, or an unexpected error",
   2: "usage error: nothing was written"
 };
 

@@ -15,6 +15,8 @@ import { fileURLToPath } from "node:url";
 
 import { EXIT_CODES, parseArgs } from "../lib/args.js";
 import { changesSince } from "../lib/changelog.js";
+import { applyUninstall, planUninstall, uninstallRoot } from "../lib/uninstall.js";
+import type { UninstallEntry } from "../lib/uninstall.js";
 import type { Options } from "../lib/args.js";
 import { startDashboard } from "../lib/dashboard.js";
 import { doctorReport, renderDoctor, runDoctor } from "../lib/doctor.js";
@@ -74,12 +76,24 @@ async function main(argv: readonly string[]): Promise<void> {
   if (options.command === "help") return printHelp();
   if (options.command === "install" || options.command === "update") return runInstall(options);
 
+  if (options.command === "uninstall") {
+    const named = await uninstallRoot(options.target);
+    if (!named) {
+      console.error(`No Religion project in ${path.resolve(options.target)}. Uninstall acts only on the directory it is given,`);
+      console.error("never a parent found by walking up, so run it from the project root or name that directory.");
+      process.exitCode = 1;
+      return;
+    }
+    return runUninstall(named, options);
+  }
+
   const root = await findProjectRoot(options.target);
   if (!root) {
     console.error("No Religion project found here or in any parent directory.");
     console.error("Run `religion install` from the project root to add one.");
     process.exit(1);
   }
+
 
   if (options.command === "status") {
     const status = computeStatus(await readProjectState(root));
@@ -279,6 +293,59 @@ async function chooseAdapters(assumeYes: boolean): Promise<Adapter[]> {
   return chosen.length > 0 ? chosen : all;
 }
 
+const UNINSTALL_LABELS: Record<UninstallEntry["action"], string> = {
+  remove: "remove",
+  "remove-manifest": "remove",
+  "cut-block": "cut Religion's block from",
+  unwire: "take Religion's hooks out of",
+  "keep-edited": "keep, edited since install:",
+  "keep-linked": "keep, not a plain file:",
+  "keep-entry": "keep, cannot be split safely:",
+  "keep-settings": "keep, could not be read:"
+};
+
+/** Show the plan, then carry it out only with `--yes` or a yes at the prompt. */
+async function runUninstall(root: string, options: Options): Promise<void> {
+  const plan = await planUninstall(root);
+  if (plan.length === 0) {
+    console.error("No install record found, so there is nothing Religion knows it installed here.");
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(`\nUninstalling Religion from ${root}. The plans, history and the rest of ${STATE_DIR}/ stay.\n`);
+  for (const entry of plan) {
+    console.log(`  ${UNINSTALL_LABELS[entry.action]} ${entry.relative}${entry.why ? ` (${entry.why})` : ""}`);
+  }
+
+  if (options.dryRun) {
+    console.log("\nDry run. Nothing removed.");
+    return;
+  }
+  if (!(await confirmUninstall(options.yes))) {
+    console.log("\nNothing removed. Run with --yes to remove what is listed.");
+    return;
+  }
+
+  const result = await applyUninstall(root, plan);
+  console.log(`\nRemoved ${result.removed.length} file(s).`);
+  if (result.cut.length > 0) console.log(`Cut Religion's block from ${result.cut.join(", ")}, keeping what you wrote.`);
+  if (result.unwired.length > 0) console.log(`Took Religion's hooks out of ${result.unwired.join(", ")}, keeping your own settings.`);
+  if (result.backups.length > 0) console.log(`Backed up ${result.backups.length} file(s) to ${BACKUPS} before changing them.`);
+  const kept = result.kept.filter((entry) => entry.action !== "keep-edited");
+  if (result.kept.length > 0) console.log(`Kept ${result.kept.length} file(s), listed above, for you to remove or keep.`);
+  if (kept.length > 0) process.exitCode = 1;
+}
+
+/** Defaults to no: removing files is the one thing this tool does that cannot be redone by running it again. */
+async function confirmUninstall(assumeYes: boolean): Promise<boolean> {
+  if (assumeYes || !process.stdin.isTTY) return assumeYes;
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const answer = (await rl.question("\nRemove what is listed? [y/N] ")).trim().toLowerCase();
+  rl.close();
+  return answer === "y" || answer === "yes";
+}
+
 /** What changed since the installed version, from the changelog the package ships. */
 async function printChanges(installed: unknown, current: string): Promise<void> {
   const file = path.join(packageRoot, "CHANGELOG.md");
@@ -319,6 +386,7 @@ is installed globally.
 
   install [dir]     add the workflow to a project
   update  [dir]     update the workflow files, preserving your own
+  uninstall [dir]   take the workflow back out, keeping the plans and history
   status            where the work stands, and what to do next
   doctor            check the setup is healthy
   dashboard         a local read-only view

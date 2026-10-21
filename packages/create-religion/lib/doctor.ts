@@ -225,7 +225,7 @@ export function parseHooks(source: string | null): Hook[] | null {
 // `node .claude/hooks/x.mjs`, or the `"$CLAUDE_PROJECT_DIR"/...` form Claude Code's own docs use.
 const HOOK_COMMAND = /\bnode\s+"?(?:\$\{?CLAUDE_PROJECT_DIR\}?"?\/)?(\.claude\/hooks\/[\w.-]+\.mjs)"?(?:\s|$)/;
 
-function hookFile(command: string): string | null {
+export function hookFile(command: string): string | null {
   return HOOK_COMMAND.exec(command)?.[1] ?? null;
 }
 

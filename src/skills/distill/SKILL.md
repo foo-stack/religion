@@ -9,23 +9,22 @@ description: "Read {{state}}/learning/journal.md, promote observations that have
 The journal is cheap and unfiltered: anything surprising goes in. Lessons are expensive,
 because they are loaded into every session forever. This skill is the gate between them.
 
-## What goes in the journal, and when
+## What is in the journal
 
-Any skill appends to `{{state}}/learning/journal.md` when something is worth remembering:
+{{cmd:complete}} appends one entry to `{{state}}/learning/journal.md` for every item it
+finishes, and it is the journal's only writer. Each entry is a `##` heading with the date
+and the item's title, then its archive, what surprised, what went wrong, and what was
+deferred and why. Nothing is loaded from here, so the entries can be plain.
 
-- a correction from the user, especially a repeated one
-- an assumption that turned out to be wrong about this project
-- a failure whose cause was non-obvious
-- a convention discovered in the code that no document states
-
-One entry, dated, in a sentence or two. What happened and what it implies. Appending is
-cheap and unreviewed; nothing is loaded from here.
-
-Do not journal the ordinary. "The build passed" is not an observation.
+This skill reads the journal and never edits it. What it decides is recorded in
+`{{state}}/learning/journal-archive.md`, which this skill alone writes.
 
 ## Step 1 - read and group
 
-Read the journal. Group entries that are really the same observation seen more than once.
+Read the journal, skipping every entry whose heading and `Archive` line already appear in
+`journal-archive.md`: those were decided on an earlier pass. Group the rest, together with
+earlier entries the archive kept for later, where they are really the same observation seen
+more than once.
 Recurrence is the main evidence that something is a lesson rather than an incident.
 
 ## Step 2 - decide what has earned promotion
@@ -67,11 +66,13 @@ nobody reads, which is worse than no file.
 
 If the file is getting long, that is a finding: report it rather than adding to it.
 
-## Step 5 - archive what was processed
+## Step 5 - record what was decided
 
-Remove promoted and rejected entries from the journal, appending them to
-`{{state}}/learning/journal-archive.md` with what was decided. Nothing is deleted outright:
-a rejected observation that recurs is exactly the evidence that promotes it next time.
+Append every entry read on this pass to `{{state}}/learning/journal-archive.md`, under its
+own heading and `Archive` line, with what was decided: promoted, rejected and why, or kept
+for later because it has not recurred yet. Leave the journal exactly as it is. Nothing is
+lost either way: a rejected observation that recurs is exactly the evidence that promotes it
+next time, and the archive is where the earlier sighting is found.
 
 ## Step 6 - report
 

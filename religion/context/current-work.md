@@ -45,7 +45,7 @@ large, so split it.
   `src/skills/complete/SKILL.md` naming the entry's shape, when it is written, and what to do
   when the file is missing, rendered into both trees. *Done when:* the rendered skill states
   the entry and its shape, and `npm run verify` passes.
-- [ ] **Step 2 - `distill` reads without rewriting** - its "what goes in the journal" section
+- [x] **Step 2 - `distill` reads without rewriting** - its "what goes in the journal" section
   names `complete` as the writer; Step 1 skips entries already in `journal-archive.md`;
   Step 5 records decisions there and leaves the journal alone. The journal template's
   header and `docs/architecture/state-model.md` follow, plus the changeset. *Done when:*

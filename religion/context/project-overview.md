@@ -49,8 +49,8 @@ nothing to sign into.
 
 ## Roadmap
 
-Twenty-nine items queued. Nineteen start with a spike, and several say which items they
-follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
+Nineteen items queued, and every one waits on a spike, so `status` points at `spike` until one
+is settled. Several also say which items they follow; item 29 made the tooling honour both.
 
 **Status, learning and health**
 

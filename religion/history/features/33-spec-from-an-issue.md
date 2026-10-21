@@ -103,3 +103,9 @@ Nothing.
 ### Deferred
 
 - **Hosts without a signed-in command-line tool**, where the skills ask for the issue's text.
+
+## Landed
+
+**Base:** 0e8ad91bb9d5992e0a3ffb2af82edf3bd675e625
+**Commits:** c3f87ecfd77a8bee78ca8b1bf0097d99e8d93666, 5250dc5944dd2c4d8774a5788aa4d96b898d0069, 7981ee6379c23eedc7c6469fc94a6ac3a7fc38c0, 965caf7503fe29dda9837d4d2d2421cb0eb886d7
+**Product paths:** .agents/skills/complete/SKILL.md, .agents/skills/feature/SKILL.md, .agents/skills/feature/reference/spec-template.md, .agents/skills/fix/SKILL.md, .changeset/spec-from-issue.md, .claude/skills/complete/SKILL.md, .claude/skills/feature/SKILL.md, .claude/skills/feature/reference/spec-template.md, .claude/skills/fix/SKILL.md, evals/routing/feature.json, evals/routing/fix.json, src/skills/complete/SKILL.md, src/skills/feature/SKILL.md, src/skills/feature/reference/spec-template.md, src/skills/fix/SKILL.md

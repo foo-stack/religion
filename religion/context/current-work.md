@@ -49,7 +49,7 @@ large, so split it.
   asks before each network read outside an automated run, runs the outcomes there and locally,
   stamps the address in Evidence, reports a missing or protected preview as could not check, and
   never deploys; the routing corpus passes with the new case; `npm test` exits 0.
-- [ ] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 1757204902a03736 -->
+<!-- religion:source-hash 956ef45df8e72bef -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,7 +49,7 @@ nothing to sign into.
 
 ## Roadmap
 
-Twenty-two items queued. Nineteen start with a spike, and several say which items they
+Twenty-one items queued. Nineteen start with a spike, and several say which items they
 follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
 
 **Status, learning and health**
@@ -65,8 +65,6 @@ follow; the plan states both in prose, so nothing enforces the order yet (item 2
 26. **Scanner results in the ledger** - SARIF ingested as unverified findings, matched
     across runs
 27. **Waves built in isolation** - one worktree per wave step, joined into one packet
-30. **Scope drift made visible**, split in two:
-    - 30b. **A hook that warns on drift** - edits outside the current step's files; after 30a
 32. **Check the preview deployment** - outcomes run against the host's preview, one provider
     first
 34. **Complete drafts the release note** - a Changesets entry proposed for approval
@@ -144,7 +142,7 @@ The single thing in progress, in `context/current-work.md`.
   rendered tree
 - `src/entry/` - the entry-file sources and the partials shared between them
 - `src/state/` - the state files a project is seeded with, written once and never re-rendered
-- `src/hooks/` - three Claude Code hooks, copied rather than rendered
+- `src/hooks/` - four Claude Code hooks, copied rather than rendered
 - `src/lib/` - the token vocabulary and adapter definitions, and the skill frontmatter reader
 - `scripts/` - the renderer, the package staging step, and the verification suite
 - `evals/routing/` - the routing corpus, one file per skill, positive and negative cases

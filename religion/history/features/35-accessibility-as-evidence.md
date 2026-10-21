@@ -97,3 +97,9 @@ Nothing.
 
 - **F-160**, open: the dashboard's selectable items have no role for assistive technology.
 - **A setting that makes the scan required.**
+
+## Landed
+
+**Base:** e17c5b62681839facc62fa414c4a35cab94955ba
+**Commits:** b157ac79fd1ad5468132115d83daf344599eabf0, 0731bce6b7e05be610e3f52eabc1631e1b7882e1, b36db4f9aa54a6ecaca68c3a031ba6b0b0516118
+**Product paths:** .agents/skills/check/SKILL.md, .changeset/a11y-evidence.md, .claude/skills/check/SKILL.md, evals/routing/check.json, src/skills/check/SKILL.md

@@ -45,11 +45,11 @@ large, so split it.
   entry's first sentence with its commit prefix removed, nothing for an equal or newer
   installed version or an unparseable one, and an empty or missing changelog read as
   nothing.
-- [ ] **Step 2 - update prints it, and the package ships it** - `bin/religion.ts`,
+- [x] **Step 2 - update prints it, and the package ships it** - `bin/religion.ts`,
   `package.json`'s `files`, and `docs/upgrading.md`. *Done when:* `religion update --dry-run`
   on a temporary project whose manifest says `1.0.0` prints the 1.1.0 and 1.2.0 changes, one
   whose manifest says this version prints none, and `npm test` exits 0.
-- [ ] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

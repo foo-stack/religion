@@ -30,7 +30,7 @@
     "create-religion": "dist/bin/religion.js",
     "religion": "dist/bin/religion.js"
   },
-  "files": ["dist/", "template/", "README.md", "LICENSE"],
+  "files": ["dist/", "template/", "README.md", "LICENSE", "CHANGELOG.md"],
   "engines": { "node": ">=22" },
   "scripts": {
     "build": "tsc -p tsconfig.json",

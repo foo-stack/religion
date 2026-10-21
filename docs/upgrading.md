@@ -17,6 +17,19 @@ run, though some are left out where they add nothing.
 
 ## Look before it writes
 
+When the installed version is older than the one running, `update` starts by saying what
+changed in between, newest release first, one line per change, from the changelog the package
+ships:
+
+```text
+What changed since 1.0.0:
+  1.2.0
+    - `auto fix` works through the findings ledger unattended, under the same grant, gates and landing rules as a plan run.
+  1.1.0
+    - `religion dashboard` is rebuilt as an operational console with an overview and four views, ...
+  The whole changelog: .../node_modules/create-religion/CHANGELOG.md
+```
+
 `--dry-run` plans the update and writes nothing. On a project a 0.5.0 install left behind,
 after `setup` had filled in its Commands section:
 

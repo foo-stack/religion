@@ -10,6 +10,7 @@ import path from "node:path";
 
 import { exists, readIfPresent, SKILL_TREES, STATE_DIR, statePath } from "./paths.js";
 import { editedSinceInstall } from "./install.js";
+import { SETTINGS, settingProblems } from "./settings.js";
 import { readProjectState } from "./state.js";
 
 export interface CheckResult {
@@ -38,16 +39,10 @@ const REQUIRED = [
   "reference"
 ];
 
-/** The values each enumerated setting accepts. Other settings are not checked. */
-export const ALLOWED: Record<string, readonly string[]> = {
-  "workflow.stepReview": ["every", "item"],
-  "git.mode": ["trunk", "branch-per-item", "pull-request"],
-  "git.checkpoints": ["none", "every-step", "squash"],
-  "verification.logicTests": ["when-configured", "required"],
-  "verification.uiEvidence": ["when-available", "required"],
-  "qualityGates.audit": ["manual", "when-sensitive", "always"],
-  "qualityGates.check": ["manual", "when-behavioral", "always"]
-};
+/** The values each enumerated setting accepts, as the surface record lists them. */
+export const ALLOWED: Record<string, readonly string[]> = Object.fromEntries(
+  Object.entries(SETTINGS).flatMap(([key, setting]) => (setting.kind === "enum" ? [[key, setting.values]] : []))
+);
 
 /** `changes` lets a caller that already compared the managed files share the result. */
 export async function runDoctor(
@@ -71,7 +66,7 @@ export async function runDoctor(
   if (!state.configValid) {
     results.push({ name: "configuration", ok: false, detail: "config.json does not parse", blocks: "work" });
   } else {
-    const bad = invalidSettings(state.config);
+    const bad = settingProblems(state.config);
     results.push({
       name: "configuration",
       ok: bad.length === 0,
@@ -170,23 +165,6 @@ export function managedFilesCheck(changes: Awaited<ReturnType<typeof editedSince
   const changed = [...edited, ...missing.map((file) => `${file} (missing)`)];
   const shown = changed.slice(0, LISTED).join(", ") + (changed.length > LISTED ? `, and ${changed.length - LISTED} more` : "");
   return result(`${edited.length} edited and ${missing.length} missing of ${total} since install: ${shown}`);
-}
-
-function invalidSettings(config: unknown): string[] {
-  const problems: string[] = [];
-  if (config === null || typeof config !== "object") return ["not an object"];
-
-  for (const [key, allowed] of Object.entries(ALLOWED)) {
-    const value = key.split(".").reduce<unknown>(
-      (node, part) => (node && typeof node === "object" ? (node as Record<string, unknown>)[part] : undefined),
-      config
-    );
-    if (value === undefined) continue;
-    if (!allowed.includes(String(value))) {
-      problems.push(`${key} is "${String(value)}", expected one of ${allowed.join(", ")}`);
-    }
-  }
-  return problems;
 }
 
 /** The `doctor --json` shape, versioned so it can gain fields without breaking readers. */

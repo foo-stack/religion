@@ -47,7 +47,7 @@ large, so split it.
   show each kind accepting what the reference allows and refusing the rest with a message
   naming the key, the value and what would work, a missing key ignored, and a section that
   is not an object reported.
-- [ ] **Step 2 - doctor and the surface record read it** - `lib/doctor.ts` and
+- [x] **Step 2 - doctor and the surface record read it** - `lib/doctor.ts` and
   `scripts/surface-current.ts`, and the example in `docs/doctor.md`. *Done when:* `doctor`
   on a config with `"auto.maxRepairAttempts": 11` fails naming the key, and
   `npm run verify` passes with `surface.json` unchanged.

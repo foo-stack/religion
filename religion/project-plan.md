@@ -59,7 +59,7 @@ No database. State is markdown and JSON under `religion/`, with exactly one writ
 | --- | --- | --- |
 | `project-plan.md`, `build-plan.md` | the two plans | you |
 | `context/project-overview.md` | the generated source of truth | `overview` |
-| `context/current-work.md` | the one active work item, with its steps ticked | `feature`, `fix`, `rollback`, `refactor` |
+| `context/current-work.md` | the one active work item, with its steps ticked and the evidence that proved its outcomes | `feature`, `fix`, `rollback`, `refactor`; `check` writes its Evidence section |
 | `context/findings.md` | findings with severity and status | `audit` |
 | `context/inbox.md` | notes taken mid-build | `capture` |
 | `history/` | archives by kind: features, fixes, rollbacks, refactors, spikes | `complete`, and `spike` for its own |

@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 58adbfd4a48c41bb -->
+<!-- religion:source-hash 895c62b3ef649fb6 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -137,6 +137,7 @@ The single thing in progress, in `context/current-work.md`.
 - kind (feature, fix, rollback, or refactor campaign)
 - steps (checkbox list) - ticked as each passes, which is what survives a cleared context
 - a step may be marked as running with an earlier one, forming a wave
+- evidence - the verdict and proof for each outcome, in a section `check` writes
 - archives to `history/<kind>/` on completion
 
 ### Finding (load-bearing)

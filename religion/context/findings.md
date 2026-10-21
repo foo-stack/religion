@@ -670,13 +670,13 @@
 **Suggested fix:** Pass the signal only when `AbortSignal.timeout` exists.
 **Resolution:**
 
-### F-125 [P2] fixed - The resume command check accepts any command, not only a skill
+### F-125 [P2] closed - The resume command check accepts any command, not only a skill
 
 **File:** packages/create-religion/lib/state.ts:292
 **Found:** 2026-10-21 by audit (scope: current; lens: security)
 **Why it matters:** `git push --force`, `npm publish` and `sudo reboot` all match the pattern, become `next.command`, and the status skill tells an agent to run that command.
 **Suggested fix:** Require the first word to equal the record's `command`, which must itself be a skill name, and test that `git push --force` is rejected.
-**Resolution:** Repaired 2026-10-21, second attempt: the first tied the resume command to the record's `command`, but a re-review showed the record controls both fields (`command: "git"` passed). The record's `command` must now name a skill installed in `.claude/skills` or `.agents/skills`, read from the directories; `git` and `rm` records are tested as not recorded.
+**Resolution:** Repaired 2026-10-21, second attempt: the first tied the resume command to the record's `command`, but a re-review showed the record controls both fields (`command: "git"` passed). The record's `command` must now name a skill installed in `.claude/skills` or `.agents/skills`, read from the directories; `git` and `rm` records are tested as not recorded. Closed 2026-10-21 by a fresh-context re-review: records naming `git`, `sh`, a file, a symlink or an odd directory read as not recorded, and only `/auto resume` survived.
 
 ### F-126 [P2] closed - Control characters in the record reach the terminal and can fake the Next line
 
@@ -702,11 +702,20 @@
 **Suggested fix:** Read `state.activity` and `state.inbox`, after checking which extra fields the dashboard's renderer uses.
 **Resolution:**
 
-### F-129 [P3] fixed - Bidi overrides and line separators pass the control-character strip
+### F-129 [P3] closed - Bidi overrides and line separators pass the control-character strip
 
 **File:** packages/create-religion/lib/state.ts:299
 **Found:** 2026-10-21 by audit (scope: current; lens: security)
 **Surfaced by:** F-126
 **Why it matters:** The strip covered only C0, DEL and C1, so U+202E could visually reorder the Run and Next lines in a bidi-aware terminal, and U+2028 can render as a line break.
 **Suggested fix:** Strip `\p{Cc}`, `\p{Cf}`, `\p{Zl}` and `\p{Zp}`.
-**Resolution:** Repaired 2026-10-21 with that class; a summary carrying U+202E, U+2028 and U+200F is tested.
+**Resolution:** Repaired 2026-10-21 with that class; a summary carrying U+202E, U+2028 and U+200F is tested. Closed 2026-10-21 by a fresh-context re-review: every format, separator and control character probed became a space.
+
+### F-130 [P2] fixed - The status skill's fallback follows any resume command
+
+**File:** src/skills/status/SKILL.md:49
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Surfaced by:** F-125
+**Why it matters:** Without the command-line tool, the skill reads `run.json` itself, and its table said to take the resume command with no constraint, so `git push --force` could still become the next action on that path.
+**Suggested fix:** Accept it only when its first word is the record's own installed skill and the rest is plain words.
+**Resolution:** Repaired 2026-10-21: the table row now states exactly that condition and says to ignore the record otherwise.

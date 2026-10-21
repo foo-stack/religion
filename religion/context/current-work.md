@@ -63,6 +63,7 @@ large, so split it.
   minor changeset. *Done when:* `npm test` passes in full.
 - [x] Repair F-125, F-126 and F-127 - the activity record's command must be a skill name, the resume command must resume that skill and stay under a length bound, and control characters are stripped from what is printed.
 - [x] Repair F-125 again, and F-129 - the record's skill must be installed, read from the skill trees, and bidi and line-separator characters are stripped too.
+- [x] Repair F-130 - the status skill's fallback applies the same condition before following a resume command.
 
 ## Files and areas
 

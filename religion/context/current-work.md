@@ -64,7 +64,7 @@ large, so split it.
   file, emptied directories removed and a non-empty one kept, `religion/` other than the
   manifest untouched, and a run through a linked state directory refused before anything
   is written.
-- [ ] **Step 3 - the command** - `uninstall` in `lib/args.ts`, `runUninstall` and the help
+- [x] **Step 3 - the command** - `uninstall` in `lib/args.ts`, `runUninstall` and the help
   text in `bin/religion.ts`, `surface.json`, `docs/stability.md`, and a section in
   `docs/upgrading.md`. *Done when:* on a temporary project, `religion uninstall --dry-run`
   prints the plan and changes nothing, `religion uninstall` without a terminal prints the

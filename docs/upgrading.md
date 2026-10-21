@@ -214,3 +214,28 @@ a newer install would quietly downgrade it.
   empty directory and copy the new entry from the `.claude/settings.json` there.
 - **The files of an adapter you stop choosing.** `religion update --claude` on a project that
   also has `.agents/skills` leaves that tree where it is.
+
+## Taking Religion out again
+
+```bash
+religion uninstall --dry-run
+```
+
+`uninstall` reads the install record and plans to take out exactly what Religion put in.
+Every skill and hook nobody edited is removed, along with any directory that leaves empty.
+An edited one is kept and named, since it is yours now. The entry file loses only its
+managed block, with everything you wrote around it left where it was; if it is still exactly
+what was installed, it goes entirely, and if you edited one that has no markers, it is kept
+for you to tidy by hand. `.claude/settings.json` loses only Religion's three hook entries,
+keeping every other setting and hook, or goes entirely if it is still the installed copy.
+The install record goes last.
+
+Everything else under `religion/` stays: the plans, the history, the findings and the
+journal are the project's record, and deleting them is your decision. Any file changed rather
+than removed is backed up to `religion/.state/backups/` first.
+
+Without `--yes` it shows the plan and asks, defaulting to no, and outside a terminal it
+removes nothing at all. It exits 0 when it did what it planned, edited files kept included,
+and 1 when it left something it meant to change: an entry file whose markers were damaged,
+settings it could not read, or a file reached through a link.
+

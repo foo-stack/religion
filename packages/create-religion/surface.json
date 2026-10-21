@@ -27,6 +27,13 @@
       "--copilot",
       "--opencode"
     ],
+    "uninstall": [
+      "--help",
+      "-h",
+      "--dry-run",
+      "--yes",
+      "-y"
+    ],
     "status": [
       "--help",
       "-h",

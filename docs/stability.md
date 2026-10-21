@@ -18,6 +18,7 @@ the check or test that holds the code to it. Where nothing does yet, it says so 
 | --- | --- |
 | `install [dir]` | `--dry-run`, `--force`, `--yes`, `-y`, `--claude`, `--codex`, `--copilot`, `--opencode`, `--help`, `-h` |
 | `update [dir]` | the same as `install` |
+| `uninstall [dir]` | `--dry-run`, `--yes`, `-y`, `--help`, `-h` |
 | `status [dir]` | `--json`, `--help`, `-h` |
 | `doctor [dir]` | `--json`, `--help`, `-h` |
 | `dashboard [dir]` | `--help`, `-h` |
@@ -39,7 +40,7 @@ grammar with the option table the parser runs on; and the parser's tests in
 | Code | Meaning |
 | --- | --- |
 | `0` | the command did what it was asked |
-| `1` | it ran and reports failure: no project found, a failing `doctor` check, conflicts, declined merges or linked files left by `install` or `update`, a project installed by a newer version, or an unexpected error |
+| `1` | it ran and reports failure: no project found, a failing `doctor` check, conflicts, declined merges or linked files left by `install` or `update`, a file `uninstall` meant to change but left, a project installed by a newer version, or an unexpected error |
 | `2` | usage error: nothing was written |
 
 `--dry-run` plans without writing and exits 0 even when the plan holds conflicts, so a

@@ -172,3 +172,10 @@ verification check, and both were found by hand first.
 **Surprised:** The untrusted-input rule already named issue text, so the safety half of this item was a pointer rather than new prose.
 **Went wrong:** nothing
 **Deferred:** Hosts without a command-line tool.
+
+## 2026-10-21 - Spec amendments recorded
+
+**Archive:** history/features/30a-spec-amendments-recorded.md
+**Surprised:** Building the feature on its own spec found its gaps faster than any test: the missing hash source, the fenced example, and a scratch edit that silently did nothing.
+**Went wrong:** A sed edit across a wrapped line did not apply and the check that followed looked like a failure of the code; confirm a scratch edit landed before reading its result.
+**Deferred:** The drift hook, item 30b.

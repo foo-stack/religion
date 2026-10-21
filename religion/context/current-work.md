@@ -51,7 +51,7 @@ large, so split it.
 - [x] **Step 2 - `complete` reuses it** - `src/skills/complete/SKILL.md` Step 1, and the
   ownership row in `docs/architecture/state-model.md`. *Done when:* the rendered skill says
   when the record is reused and when `check` runs again, and `npm test` exits 0.
-- [ ] **Step 3 - the dashboard shows it** - `evidence` in `parseSpec` in `lib/state.ts`, and the
+- [x] **Step 3 - the dashboard shows it** - `evidence` in `parseSpec` in `lib/state.ts`, and the
   Work view in `lib/dashboard.ts`. *Done when:* a unit test shows the section parsed into its
   stamp and one entry per outcome, and the running dashboard shows it for a spec carrying one.
 - [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
@@ -94,3 +94,11 @@ sits last in the spec, after Notes for the agent.
 - A record from another commit, or from a dirty tree that has changed since, proves nothing
   about the code being completed; `complete` must not reuse it.
 - State templates and skills use the token vocabulary, not one tool's invocation syntax.
+
+## Evidence
+
+Checked 2026-10-21 at ead1253, tree dirty.
+
+- **Step 1 - `check` records it** - pass: the rendered `.claude/skills/check/SKILL.md` has Step 5 with the section shape; `npm test` exited 0, routing corpus clean.
+- **Step 2 - `complete` reuses it** - pass: the rendered complete skill states the reuse rule; `npm test` exited 0.
+- **Step 3 - the dashboard shows it** - pass: `parseSpec reads the Evidence section check writes` passed with 34 state tests.

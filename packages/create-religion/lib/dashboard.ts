@@ -757,7 +757,7 @@ button.chip { font-family: inherit; cursor: pointer; }
             (step.doneWhen ? "<p class='when'><b>Done when</b>" + md(step.doneWhen) + "</p>" : "") + "</div>"
           ).join("")
         : "<div class='body'>" + empty("The spec has no build steps yet.") + "</div>") +
-      "</section></div><div class='col'>" +
+      "</section>" + evidencePanel(work.evidence) + "</div><div class='col'>" +
       "<section class='panel'><header><h2>Scope</h2></header><div class='body'><div class='label section-label'>In</div>" + list(work.inScope) + "<div class='label section-label'>Out</div>" + list(work.outOfScope) + "</div></section>" +
       "<section class='panel'><header><h2>Files and areas</h2><span class='count'>" + work.files.length + "</span></header><div class='body'>" + list(work.files) + "</div></section>" +
       "<section class='panel'><header><h2>How it is built</h2></header><div class='body'><dl class='kv'>" +
@@ -767,6 +767,18 @@ button.chip { font-family: inherit; cursor: pointer; }
       "<dt>Audit</dt><dd class='mono'>" + esc(setting("qualityGates", "audit", "when-sensitive")) + "</dd>" +
       "<dt>Check</dt><dd class='mono'>" + esc(setting("qualityGates", "check", "when-behavioral")) + "</dd>" +
       "</dl></div></section></div></div>";
+  }
+
+  // What check recorded, so the proof is on the page rather than only in a past conversation.
+  function evidencePanel(evidence) {
+    const verdict = { pass: "ok", fail: "bad", "could not check": "bad" };
+    return "<section class='panel'><header><h2>Evidence</h2><span class='count'>" + (evidence && evidence.stamp ? esc(evidence.stamp) : "") + "</span></header><div class='body'>" +
+      (evidence && evidence.entries.length
+        ? "<ul class='checklist'>" + evidence.entries.map((e) =>
+            "<li><span class='" + (verdict[e.verdict] || "bad") + "'></span><span>" + md(e.outcome) + "</span><span class='detail'>" + md(e.detail) + "</span><span class='blocks'>" + esc(e.verdict) + "</span></li>"
+          ).join("") + "</ul>"
+        : empty("Not checked yet. check records here what it observed for each outcome.")) +
+      "</div></section>";
   }
 
   const STATUS_ORDER = ["open", "fixed", "unverified", "accepted", "closed", "invalid"];

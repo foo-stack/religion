@@ -88,3 +88,10 @@ verification check, and both were found by hand first.
 **Surprised:** This repository's own Claude Code settings have never wired the injection scan, and its seeded settings template is from 0.5.0, so the seed-once rule had quietly left the project that builds Religion without one of its own hooks.
 **Went wrong:** Comparing against the project's seeded copy instead of what the package ships, and matching commands as exact strings; running the check on a real, old project caught the first, the audit the second.
 **Deferred:** Writing missing hook entries for the user.
+
+## 2026-10-21 - Update shows what changed
+
+**Archive:** history/features/14-update-shows-what-changed.md
+**Surprised:** The network check governs which files the package may publish, not only what code runs, so shipping a markdown file was a change to the promise's allowlist.
+**Went wrong:** The commit gate worked as intended this time: the red suite stopped the commit, where two items earlier a filtered pipe had let one through. A read-only reviewer still ran a stash and pop; reviewer prompts should forbid git commands that touch the working tree.
+**Deferred:** Prerelease notes.

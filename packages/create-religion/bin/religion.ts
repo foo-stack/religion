@@ -14,6 +14,7 @@ import readline from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
 import { EXIT_CODES, parseArgs } from "../lib/args.js";
+import { changesSince } from "../lib/changelog.js";
 import type { Options } from "../lib/args.js";
 import { startDashboard } from "../lib/dashboard.js";
 import { doctorReport, renderDoctor, runDoctor } from "../lib/doctor.js";
@@ -117,6 +118,7 @@ async function runInstall(options: Options): Promise<void> {
   if (updating && !previous) {
     console.log("No manifest found. Files matching the template will be adopted; others are conflicts.");
   }
+  if (updating && previous) await printChanges(previous.version, packageVersion);
 
   const adapters = options.adapters ?? previous?.adapters ?? (await chooseAdapters(options.yes));
   const plan = await planInstall(templateRoot, target, adapters, previous);
@@ -275,6 +277,19 @@ async function chooseAdapters(assumeYes: boolean): Promise<Adapter[]> {
     .filter((a): a is Adapter => a !== undefined);
 
   return chosen.length > 0 ? chosen : all;
+}
+
+/** What changed since the installed version, from the changelog the package ships. */
+async function printChanges(installed: unknown, current: string): Promise<void> {
+  const file = path.join(packageRoot, "CHANGELOG.md");
+  const releases = changesSince(await fs.readFile(file, "utf8").catch(() => null), installed, current);
+  if (releases.length === 0) return;
+  console.log(`\nWhat changed since ${String(installed)}:`);
+  for (const release of releases) {
+    console.log(`  ${release.version}`);
+    for (const change of release.changes) console.log(`    - ${change}`);
+  }
+  console.log(`  The whole changelog: ${file}`);
 }
 
 async function version(): Promise<string> {

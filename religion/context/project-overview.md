@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash f60b8d6295210b6c -->
+<!-- religion:source-hash fa21e7130d37ac33 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,12 +49,11 @@ nothing to sign into.
 
 ## Roadmap
 
-Thirty-five items queued. Nineteen start with a spike, and several say which items they
+Thirty-four items queued. Nineteen start with a spike, and several say which items they
 follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
 
 **Status, learning and health**
 
-14. **Update shows what changed** - changelog entries between versions, the changelog shipped
 15. **Settings explained in the dashboard** - meaning, values and default, from item 10's schema
 16. **A clean way out** - `religion uninstall`, keeping edited files, plans and history
 17. **Evidence that outlives the session** - `check` records per-outcome evidence, kept in

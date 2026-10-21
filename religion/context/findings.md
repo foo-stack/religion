@@ -790,3 +790,27 @@
 **Why it matters:** A directory at the settings path read as a link, a linked `.claude/` read as missing with advice install would not follow, linked hook files were told to run `update` which leaves links alone, `disableAllHooks` passed, and hooks in `settings.local.json` were ignored.
 **Suggested fix:** Say which of those it is, count linked hook files by existence, fail on `disableAllHooks`, and read the local settings too.
 **Resolution:** Repaired 2026-10-21 as suggested, each case tested.
+
+### F-144 [P3] fixed - Prerelease headings are mixed into what update reports
+
+**File:** packages/create-religion/lib/changelog.ts:20
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** `isNewer` ignores a prerelease tag, so a stable user was shown beta notes and a beta user updating to the release saw nothing.
+**Suggested fix:** Compare prerelease tags, or leave prerelease headings out.
+**Resolution:** Repaired 2026-10-21: prerelease headings are left out, tested.
+
+### F-145 [P3] fixed - Nested bullets fold into an entry that has no full stop
+
+**File:** packages/create-religion/lib/changelog.ts:24
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** `Patch only` followed by a nested list printed as one line with the list run into it.
+**Suggested fix:** Cut each entry at a nested bullet as well as at a blank line.
+**Resolution:** Repaired 2026-10-21 as suggested, tested.
+
+### F-146 [P3] fixed - An abbreviation ends the first sentence early
+
+**File:** packages/create-religion/lib/changelog.ts:31
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** "Adds flags, e.g. `--yes`, to install." printed as "Adds flags, e.g."; nothing in the current changelog is affected.
+**Suggested fix:** End a sentence only at a full stop before a capital or a code span, and not after a common abbreviation.
+**Resolution:** Repaired 2026-10-21 as suggested, tested.

@@ -399,7 +399,8 @@ async function hookProblems(root: string): Promise<string[]> {
  *
  * No dependency of any kind, since a dependency's own install script would run; entry points
  * only in the compiled `dist/bin`; published files only the compiled output, the template,
- * and two documents; and the build compiling only the folders this check reads.
+ * and three documents, the changelog among them so `update` can say what changed offline;
+ * and the build compiling only the folders this check reads.
  */
 async function packageProblems(root: string): Promise<string[]> {
   const where = "packages/create-religion/package.json";
@@ -423,7 +424,7 @@ async function packageProblems(root: string): Promise<string[]> {
   }
   const files = (manifest.files as string[] | undefined) ?? [];
   for (const file of files) {
-    if (!["dist/", "template/", "README.md", "LICENSE"].includes(file)) problems.push(`${where} publishes ${file}`);
+    if (!["dist/", "template/", "README.md", "LICENSE", "CHANGELOG.md"].includes(file)) problems.push(`${where} publishes ${file}`);
   }
 
   const config = JSON.parse(await fs.readFile(path.join(dir, "tsconfig.json"), "utf8")) as { include?: string[] };

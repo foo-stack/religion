@@ -242,42 +242,44 @@ const checks: Check[] = [
         path.join(repoRoot, "template")
       ];
 
+      // The changelog ships too, and `update` prints from it into whatever is reading its output.
+      const changelog = path.join(repoRoot, "packages", "create-religion", "CHANGELOG.md");
+      const shipped = [...(await Promise.all(roots.map(walkIfPresent))).flat(), changelog];
+
       const problems: string[] = [];
-      for (const root of roots) {
-        for (const file of await walkIfPresent(root)) {
-          if (EXEMPT.some((name) => file.endsWith(name))) continue;
-          const contents = await fs.readFile(file, "utf8");
-          const where = path.relative(repoRoot, file);
-          contents.split(/\r?\n/).forEach((line, index) => {
-            // One report per line: a line matching two patterns is one problem, not two.
-            const signatures = INJECTION.filter((re) => re.test(line)).length;
-            if (signatures > 0) {
+      for (const file of shipped) {
+        if (EXEMPT.some((name) => file.endsWith(name))) continue;
+        const contents = await fs.readFile(file, "utf8");
+        const where = path.relative(repoRoot, file);
+        contents.split(/\r?\n/).forEach((line, index) => {
+          // One report per line: a line matching two patterns is one problem, not two.
+          const signatures = INJECTION.filter((re) => re.test(line)).length;
+          if (signatures > 0) {
+            problems.push(
+              `${where}:${index + 1}: ${signatures} injection signature${signatures === 1 ? "" : "s"}: ` +
+              line.trim().slice(0, 80)
+            );
+          }
+          const secret = SECRETS.find(({ re }) => re.test(line));
+          if (secret) problems.push(`${where}:${index + 1}: looks like ${secret.what}`);
+
+          // A regex over the literal text is defeated by one round of base64, which is
+          // cheap enough that leaving it out would make the whole check advisory. Decode
+          // any long blob and ask the same questions of what comes out.
+          for (const blob of line.match(/[A-Za-z0-9+/]{40,}={0,2}/g) ?? []) {
+            const decoded = decodeBase64(blob);
+            if (!decoded) continue;
+            const inner = INJECTION.filter((re) => re.test(decoded)).length;
+            if (inner > 0) {
               problems.push(
-                `${where}:${index + 1}: ${signatures} injection signature${signatures === 1 ? "" : "s"}: ` +
-                line.trim().slice(0, 80)
+                `${where}:${index + 1}: base64 blob decodes to ${inner} injection ` +
+                `signature${inner === 1 ? "" : "s"}: ${decoded.trim().slice(0, 60)}`
               );
             }
-            const secret = SECRETS.find(({ re }) => re.test(line));
-            if (secret) problems.push(`${where}:${index + 1}: looks like ${secret.what}`);
-
-            // A regex over the literal text is defeated by one round of base64, which is
-            // cheap enough that leaving it out would make the whole check advisory. Decode
-            // any long blob and ask the same questions of what comes out.
-            for (const blob of line.match(/[A-Za-z0-9+/]{40,}={0,2}/g) ?? []) {
-              const decoded = decodeBase64(blob);
-              if (!decoded) continue;
-              const inner = INJECTION.filter((re) => re.test(decoded)).length;
-              if (inner > 0) {
-                problems.push(
-                  `${where}:${index + 1}: base64 blob decodes to ${inner} injection ` +
-                  `signature${inner === 1 ? "" : "s"}: ${decoded.trim().slice(0, 60)}`
-                );
-              }
-              const hidden = SECRETS.find(({ re }) => re.test(decoded));
-              if (hidden) problems.push(`${where}:${index + 1}: base64 blob decodes to ${hidden.what}`);
-            }
-          });
-        }
+            const hidden = SECRETS.find(({ re }) => re.test(decoded));
+            if (hidden) problems.push(`${where}:${index + 1}: base64 blob decodes to ${hidden.what}`);
+          }
+        });
       }
       return problems;
     }

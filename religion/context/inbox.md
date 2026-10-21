@@ -15,3 +15,4 @@ yourself is the other way out, and needs no ceremony.
 - 2026-10-21 - src/hooks - the rendered-output guard misses edits through Bash and MultiEdit, and the injection scan never sees project source or command output
 - 2026-10-21 - evals/routing - missing negatives for confusable pairs: prototype/spike, debug/spike, check/tests, check/browser-tests, audit/refactor, audit/debug, try/complete, complete/try, complete/auto, distill/capture, implement/rollback `--steps`
 - 2026-10-21 - scripts/evals/routing.ts:4 - header says 22 skills; there are 26
+- 2026-10-21 - packages/create-religion/lib/state.ts:214 - parseStep gives an unbolded `Repair F-03 - title` step, the shape implement prescribes, an empty label, so the dashboard counts 0 repairs for items 6 to 10 although each has repair steps

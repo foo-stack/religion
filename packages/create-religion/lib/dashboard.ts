@@ -461,6 +461,7 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .empty { margin: 0; color: var(--text-3); font-size: var(--text-sm); }
 button.chip { font-family: inherit; cursor: pointer; }
 [data-pick] { cursor: pointer; }
+.section-label [data-pick] { color: var(--accent); } .section-label [data-pick].sel { text-decoration: underline; }
 .nowrap { white-space: nowrap; }
 :focus-visible { outline: var(--mark-ring) solid var(--accent); outline-offset: var(--space-1); }
 @media (max-width: 900px) {
@@ -526,7 +527,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     </section>
     <section class="view" id="deferred">
       <div class="head"><h1>Deferred</h1><div class="meta"><span>history/</span></div></div>
-      <section class="panel"><header><h2>What each item set aside</h2><span class="count" id="df-count"></span></header><div class="body" id="df-body"></div></section>
+      <section class="panel"><header><h2>What each item set aside</h2><a href="#history">Open the chosen item in History</a></header><div class="body" id="df-body"></div></section>
     </section>
     <section class="view" id="learning">
       <div class="head"><h1>Learning</h1><div class="meta"><span>learning/lessons.md</span><span>learning/journal.md</span></div></div>
@@ -924,12 +925,13 @@ button.chip { font-family: inherit; cursor: pointer; }
   function renderDeferred() {
     const left = data.history.filter((a) => a.deferred.length);
     const total = sum(left, (a) => a.deferred.length);
-    $("df-count").textContent = total ? total + " notes from " + left.length + " items, newest first" : "";
     $("df-body").innerHTML = left.length
-      ? "<p class='prose dim'>What each item chose to leave, as it stood when the item closed. A note may since have been done; the archive is not changed when it is.</p>" +
+      ? "<p class='prose dim'>" + total + " notes from " + left.length + " items, newest first: what each chose to leave, as it stood when the item closed. " +
+        "A note may since have been done; the archive is not changed when it is. Choose an item to open it in History.</p>" +
         left.map((a) =>
-          "<div class='divider'></div><div class='label section-label'><a href='#history' data-pick='archive' data-value='" + esc(a.kind + "/" + a.file) + "'>" +
-          esc((a.number ? a.number + ". " : "") + (a.title || a.file)) + "</a> <span class='faint'>" + esc(a.type || a.kind) + "</span></div>" +
+          "<div class='divider'></div><div class='label section-label'><span tabindex='0' data-pick='archive' data-value='" + esc(a.kind + "/" + a.file) + "'" +
+          (ui.archive === a.kind + "/" + a.file ? " class='sel'" : "") + ">" +
+          esc((a.number ? a.number + ". " : "") + (a.title || a.file)) + "</span> <span class='faint'>" + esc(a.type || a.kind) + "</span></div>" +
           "<ul class='list'>" + a.deferred.map((d) => "<li>" + md(d) + "</li>").join("") + "</ul>"
         ).join("")
       : empty("Nothing deferred yet. complete archives what each item set aside, and it gathers here.");

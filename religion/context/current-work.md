@@ -58,7 +58,7 @@ large, so split it.
   run with a resume command chosen ahead of active work, one without a resume command
   ignored, configuration problems still winning, and `religion status` printing the run and
   inbox lines.
-- [ ] **Step 4 - the skill's fallback and the release note** - `src/skills/status/SKILL.md`
+- [x] **Step 4 - the skill's fallback and the release note** - `src/skills/status/SKILL.md`
   reads `run.json` and the inbox when the tool is absent, rendered into both trees, plus a
   minor changeset. *Done when:* `npm test` passes in full.
 

@@ -57,7 +57,7 @@ large, so split it.
   skill stamps before the first change, records an amendment with its reason for any change to
   what the spec asks for, renews the stamp, and treats an added repair step as an amendment;
   `npm test` exits 0.
-- [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

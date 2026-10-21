@@ -42,7 +42,7 @@ large, so split it.
   `:target` rule, and `renderDeferred` in `lib/dashboard.ts`. *Done when:* the dashboard
   tests pass, and the running dashboard against this repository shows the view with every
   archive's deferred notes, and choosing an item opens it selected in History.
-- [ ] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` passes in
+- [x] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` passes in
   full.
 
 ## Files and areas

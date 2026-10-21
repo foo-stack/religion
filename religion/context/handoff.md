@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Doctor confirms the hooks are wired** is in progress: 3 step(s) done, 0 to go.
+**Update shows what changed** is in progress: 3 step(s) done, 0 to go.
 
-Plan: 16 of 52 item(s) complete. Next up: 13. **Doctor confirms the hooks are wired** - when the Claude Code adapter is installed, check that its settings register the three hooks and that each hook file exists, and offer the fix when one is missing
+Plan: 17 of 52 item(s) complete. Next up: 14. **Update shows what changed** - `update` prints the changelog entries between the installed version and the one it brings, with the changelog shipped in the package
 
 ## Read first
 

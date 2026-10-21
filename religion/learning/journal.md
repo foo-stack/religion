@@ -116,3 +116,10 @@ verification check, and both were found by hand first.
 **Surprised:** The archive needed no change at all to keep the evidence: putting the record in the spec made the existing archive step carry it.
 **Went wrong:** Test counts were typed from memory twice in a row and were wrong both times; numbers in a record should be copied from the output that produced them, never recalled.
 **Deferred:** Per-step evidence from implement.
+
+## 2026-10-21 - A handoff that tells the whole story
+
+**Archive:** history/features/18-a-handoff-that-tells-the-whole-story.md
+**Surprised:** The handoff is imported into every session, which makes the hook that writes it an injection path into always-loaded context; that was the deciding fact for what it may copy.
+**Went wrong:** Unverified finding titles were copied verbatim, the least trusted text in the ledger, until the audit planted bidi and escape characters and a 3,000-entry ledger.
+**Deferred:** Refreshing this repository's own ignored hook copy.

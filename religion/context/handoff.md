@@ -5,15 +5,9 @@
 
 ## Where the work sits
 
-**A clean way out** is in progress: 5 step(s) done, 0 to go.
+**A handoff that tells the whole story** is in progress: 2 step(s) done, 0 to go.
 
-Plan: 19 of 52 item(s) complete. Next up: 16. **A clean way out** - `religion uninstall` removes the unedited managed files, leaves and reports the edited ones, takes the managed block out of the entry file and Religion's own hook entries out of the settings, and keeps the plans and history; it shows its plan unless given `--yes`
-
-## Blocking findings
-
-- F-147 [P1] fixed - A link inside the backups directory makes uninstall write outside the project
-
-These prevent completion until repaired and re-reviewed.
+Plan: 21 of 52 item(s) complete. Next up: 18. **A handoff that tells the whole story** - the end-of-turn handoff also reports a stale overview, notes waiting in the inbox, unverified findings, and a blocked automated run
 
 ## Read first
 

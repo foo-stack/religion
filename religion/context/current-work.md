@@ -46,7 +46,7 @@ large, so split it.
   `managedFilesCheck`, and its section in `docs/doctor.md`. *Done when:* unit tests cover
   no install record, everything unchanged, and a long list cut short, and `religion doctor`
   on this repository prints the check.
-- [ ] **Step 3 - the Install panel** - `edited` and `missing` from `readInstall` in
+- [x] **Step 3 - the Install panel** - `edited` and `missing` from `readInstall` in
   `lib/dashboard.ts`, shown in the panel. *Done when:* the dashboard tests pass and a
   screenshot of the running dashboard shows the list for this repository.
 - [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in

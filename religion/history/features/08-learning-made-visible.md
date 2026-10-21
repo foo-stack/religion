@@ -138,3 +138,9 @@ warns about, and a tab after `##` dropped an entry silently. Both were repaired 
 - **F-132** (entries matched on the heading alone) and **F-133** (a `## ` inside a code fence
   read as an entry), both P3 and open.
 - **F-131, F-134, F-135 and F-136**, repaired and `fixed`, waiting for a review.
+
+## Landed
+
+**Base:** 2c9b176e9c976c43513b471d43ac28c9ff3a887e
+**Commits:** 2ff04a513e9d222b1af7cfdc60286da1a6c718a1, 387764e77af380500ff29cf74217ef5ef27a0036, 5f58436c2c7cb9f3848cba8db534ccdcbc645e4d, 223f2e8c9ad599b465ff7d28dc20ba386a105376, 13f1807d882a357768c50cbf9b44d87a3e8168fe, da724c2a5e1175f004dfba7d216d37ae6542f129
+**Product paths:** .agents/skills/status/SKILL.md, .changeset/learning-visible.md, .claude/skills/status/SKILL.md, packages/create-religion/lib/dashboard.test.ts, packages/create-religion/lib/dashboard.ts, packages/create-religion/lib/state.test.ts, packages/create-religion/lib/state.ts, packages/create-religion/lib/status.test.ts, packages/create-religion/lib/status.ts, src/skills/status/SKILL.md

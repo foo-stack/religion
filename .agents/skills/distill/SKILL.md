@@ -1,7 +1,7 @@
 ---
 name: distill
 summary: promote proven observations from the journal into loaded lessons
-description: "Read religion/learning/journal.md, promote observations that have proved stable into religion/learning/lessons.md, fold corrections about this project into its coding standards, and archive what was processed. Lessons are loaded every session, so promotion is deliberately strict: an observation earns a place only once it has recurred or been confirmed. Use when the user runs $distill, asks to consolidate what has been learned, or when the journal has grown enough to be worth a pass."
+description: "Read religion/learning/journal.md, promote observations that have proved stable into religion/learning/lessons.md, fold corrections about this project into its coding standards, propose a standard where the same kind of finding has recurred across archived items, and archive what was processed. Lessons are loaded every session, so promotion is deliberately strict: an observation earns a place only once it has recurred or been confirmed. Use when the user runs $distill, asks to consolidate what has been learned, or when the journal has grown enough to be worth a pass."
 ---
 
 # distill - turn observations into lessons
@@ -41,6 +41,24 @@ Promote an observation only when it is all of these:
 Everything else is rejected, or kept for later until it recurs. A single surprising incident is not a
 lesson; it is an incident.
 
+## Step 2b - findings that keep recurring
+
+The second input is the review record. Read the `## Findings` section of every archive under
+`religion/history/`: each entry's identifier, title, file, lens and why it mattered. The open
+entries in `religion/context/findings.md` are context, not evidence, since nothing has closed
+them.
+
+Group findings that are the same kind of mistake, whatever their wording: a path read or written
+through a link, a pattern whose whitespace crosses a line, a read that is not guarded on a path
+that must not fail. A group earns a proposal only when its findings come from **at least two
+different items**. Recurrence across work is the evidence; severity is not, and one serious
+finding, already repaired, is an incident.
+
+For each group that earns it, propose the coding-standard rule that would have prevented every
+finding in it, in the standards' own voice, as an instruction for work not yet started, with the
+findings cited by identifier. A rule that only restates one finding is not a standard. Skip a
+group already recorded in `religion/learning/journal-archive.md` unless it has grown since.
+
 ## Step 3 - route by kind
 
 Two destinations, and the distinction matters.
@@ -78,7 +96,11 @@ next time, and the archive is where the earlier sighting is found.
 
 - entries read, grouped, promoted, and rejected, with the reason for each rejection
 - lessons added, and any removed
-- standards edits proposed, and whether they were approved
+- standards edits proposed, and whether they were approved, including each recurring-finding
+  group, its findings by identifier, and the rule it led to
+- each decided group recorded in `religion/learning/journal-archive.md` under
+  `## findings - <kind>` with the identifiers it covered, approved or not, so a later pass
+  proposes only what is new
 - whether the lessons file is getting too long
 
 ## Rules

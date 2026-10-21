@@ -18,6 +18,7 @@ import {
   parseSettledSpike,
   parseSpec,
   parseWork,
+  specHash,
   readHistory,
   readProjectState,
   waiting
@@ -708,4 +709,40 @@ test("parsePlan reads every after phrase on a line, in any case, and spike lines
   const [item] = parsePlan("## Plan\n\n- [ ] 9. **X** - after item 2; also after items 4A and 5\n");
   assert.deepEqual(item?.after, ["2", "4a", "5"]);
   assert.equal(parseSettledSpike("**For:** item 21 (hooks)\n**Settled:** yes\n"), "21");
+});
+
+test("specHash ignores what changes as work proceeds, and nothing else", () => {
+  const spec = [
+    "# Export",
+    "",
+    "**Type:** Feature",
+    "**Status:** in progress",
+    "",
+    "## Build steps",
+    "",
+    "- [ ] **Step 1 - the plan** - x",
+    "- [ ] **Step 2 - the command** - y",
+    ""
+  ].join("\n");
+  const base = specHash(spec);
+  const progressed = spec
+    .replace("**Status:** in progress", "**Status:** verified\n**Approved:** 2026-10-21, 0123456789abcdef")
+    .replace("- [ ] **Step 1", "- [x] **Step 1") +
+    "\n## Evidence\n\nChecked 2026-10-21 at abc1234, tree clean.\n\n## Amendments\n\n- 2026-10-21 - a note - a reason\n";
+  assert.equal(specHash(progressed), base);
+  assert.notEqual(specHash(spec.replace("- y", "- y, and more")), base);
+});
+
+test("parseSpec reads the stamp and the amendments, and calls a spec drifted only against a stamp", () => {
+  const body = "# Export\n\n**Type:** Feature\n\n## Build steps\n\n- [ ] **Step 1 - a** - x\n";
+  const stamped = (hash: string) => body.replace("**Type:** Feature", `**Type:** Feature\n**Approved:** 2026-10-21, ${hash}`) +
+    "\n## Amendments\n\n- 2026-10-21 - Step 1 narrowed - the first version was too big.\n";
+
+  const fresh = parseSpec(stamped(specHash(body)));
+  assert.deepEqual(fresh?.approved, { date: "2026-10-21", hash: specHash(body) });
+  assert.deepEqual(fresh?.amendments, ["2026-10-21 - Step 1 narrowed - the first version was too big."]);
+  assert.equal(fresh?.drifted, false);
+
+  assert.equal(parseSpec(stamped(specHash(body)).replace("- x", "- x, quietly widened"))?.drifted, true);
+  assert.equal(parseSpec(body)?.drifted, false, "no stamp, no drift");
 });

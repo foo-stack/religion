@@ -237,6 +237,12 @@ export interface Spec {
   files: string[];
   steps: SpecStep[];
   evidence: Evidence | null;
+  /** The stamp implementation wrote when it started: when, and the hash of what was approved. */
+  approved: { date: string; hash: string } | null;
+  /** Dated changes to what the spec asks for, each with its reason. */
+  amendments: string[];
+  /** True only when a stamp exists and the spec no longer matches it. */
+  drifted: boolean;
 }
 
 /** What `check` recorded: its stamp, and one verdict per outcome. */
@@ -260,8 +266,38 @@ export function parseSpec(source: string | null): Spec | null {
     outOfScope: bullets(section.get("out of scope")),
     files: bullets(section.get("files and areas")),
     steps: bullets(section.get("build steps"), true).map(parseStep),
-    evidence: parseEvidence(section.get("evidence"))
+    evidence: parseEvidence(section.get("evidence")),
+    ...approval(source, section)
   };
+}
+
+function approval(source: string, section: Map<string, string>): Pick<Spec, "approved" | "amendments" | "drifted"> {
+  const stamp = /^\*\*Approved:\*\*\s*(\d{4}-\d{2}-\d{2}),\s*([0-9a-f]{16})\s*$/m.exec(source);
+  const approved = stamp ? { date: stamp[1]!, hash: stamp[2]! } : null;
+  return {
+    approved,
+    amendments: bullets(section.get("amendments")),
+    drifted: approved !== null && approved.hash !== specHash(source)
+  };
+}
+
+/**
+ * The hash of what a spec asks for. Ticks, the status, the stamp, and the Evidence and
+ * Amendments sections change as work proceeds without changing what was approved, so they are
+ * left out; anything else that changes is a change to the spec.
+ */
+export function specHash(source: string): string {
+  const kept = source
+    .replace(/\r\n/g, "\n")
+    .split(/^(?=## )/m)
+    .filter((part) => !/^## (Evidence|Amendments)\s*$/m.test(part.split("\n", 1)[0] ?? ""))
+    .join("")
+    .split("\n")
+    .filter((line) => !/^\*\*(Status|Approved):\*\*/.test(line))
+    .map((line) => line.replace(/^(\s*- \[)[xX](\])/, "$1 $2"))
+    .join("\n")
+    .replace(/\s+$/, "");
+  return crypto.createHash("sha256").update(kept).digest("hex").slice(0, 16);
 }
 
 function parseEvidence(body: string | undefined): Evidence | null {

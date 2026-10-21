@@ -746,3 +746,30 @@ test("parseSpec reads the stamp and the amendments, and calls a spec drifted onl
   assert.equal(parseSpec(stamped(specHash(body)).replace("- x", "- x, quietly widened"))?.drifted, true);
   assert.equal(parseSpec(body)?.drifted, false, "no stamp, no drift");
 });
+
+test("parseSpec and specHash leave examples inside code fences alone", () => {
+  const spec = [
+    "# Export",
+    "",
+    "**Type:** Feature",
+    "",
+    "## Data and contracts",
+    "",
+    "```markdown",
+    "**Approved:** 2026-10-21, 0123456789abcdef",
+    "",
+    "## Amendments",
+    "",
+    "- 2026-10-21 - an example - not a real amendment",
+    "```",
+    "",
+    "## Build steps",
+    "",
+    "- [ ] **Step 1 - a** - x",
+    ""
+  ].join("\n");
+  const parsed = parseSpec(spec);
+  assert.equal(parsed?.approved, null, "the example stamp is not the stamp");
+  assert.deepEqual(parsed?.amendments, []);
+  assert.notEqual(specHash(spec), specHash(spec.replace("an example", "a changed example")), "fenced text is part of what was approved");
+});

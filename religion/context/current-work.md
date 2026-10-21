@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 30a
-**Approved:** 2026-10-21, 396c61cc8a8266c6
+**Approved:** 2026-10-21, 47b0c0be7a1a6362
 **Status:** in progress
 
 ## Goal
@@ -69,6 +69,7 @@ large, so split it.
 **Load-bearing**, because item 30b and `status` read it:
 
 ```markdown
+**Approved:** 2026-10-21, 3f2a9c01b4e5d678
 
 ## Amendments
 
@@ -89,3 +90,7 @@ stamp exists and the hash no longer matches.
 
 - A spec without a stamp, from before this item or not yet started, is never drifted.
 - This spec is itself the first to carry a stamp, written once step 1 can compute it.
+
+## Amendments
+
+- 2026-10-21 - Restored the example `**Approved:**` line in Data and contracts - the first stamping script removed the first `**Approved:**` line it found, which was the example inside the code fence; the parser now ignores fenced text.

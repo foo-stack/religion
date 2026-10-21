@@ -267,18 +267,35 @@ export function parseSpec(source: string | null): Spec | null {
     files: bullets(section.get("files and areas")),
     steps: bullets(section.get("build steps"), true).map(parseStep),
     evidence: parseEvidence(section.get("evidence")),
-    ...approval(source, section)
+    ...approval(source)
   };
 }
 
-function approval(source: string, section: Map<string, string>): Pick<Spec, "approved" | "amendments" | "drifted"> {
-  const stamp = /^\*\*Approved:\*\*\s*(\d{4}-\d{2}-\d{2}),\s*([0-9a-f]{16})\s*$/m.exec(source);
+function approval(source: string): Pick<Spec, "approved" | "amendments" | "drifted"> {
+  // An example of the stamp or the section inside a code fence is documentation, not the record.
+  const prose = outsideFences(source);
+  const stamp = /^\*\*Approved:\*\*\s*(\d{4}-\d{2}-\d{2}),\s*([0-9a-f]{16})\s*$/m.exec(prose);
   const approved = stamp ? { date: stamp[1]!, hash: stamp[2]! } : null;
   return {
     approved,
-    amendments: bullets(section.get("amendments")),
+    amendments: bullets(sections(prose).get("amendments")),
     drifted: approved !== null && approved.hash !== specHash(source)
   };
+}
+
+/** The source with every line inside a ``` fence blanked, so line structure stays but nothing inside is read. */
+function outsideFences(source: string): string {
+  let fenced = false;
+  return source
+    .split("\n")
+    .map((line) => {
+      if (/^\s*```/.test(line)) {
+        fenced = !fenced;
+        return "";
+      }
+      return fenced ? "" : line;
+    })
+    .join("\n");
 }
 
 /**
@@ -287,17 +304,18 @@ function approval(source: string, section: Map<string, string>): Pick<Spec, "app
  * left out; anything else that changes is a change to the spec.
  */
 export function specHash(source: string): string {
-  const kept = source
-    .replace(/\r\n/g, "\n")
-    .split(/^(?=## )/m)
-    .filter((part) => !/^## (Evidence|Amendments)\s*$/m.test(part.split("\n", 1)[0] ?? ""))
-    .join("")
-    .split("\n")
-    .filter((line) => !/^\*\*(Status|Approved):\*\*/.test(line))
-    .map((line) => line.replace(/^(\s*- \[)[xX](\])/, "$1 $2"))
-    .join("\n")
-    .replace(/\s+$/, "");
-  return crypto.createHash("sha256").update(kept).digest("hex").slice(0, 16);
+  const kept: string[] = [];
+  let fenced = false;
+  let skipping = false;
+  for (const line of source.replace(/\r\n/g, "\n").split("\n")) {
+    if (/^\s*```/.test(line)) fenced = !fenced;
+    else if (!fenced && /^## /.test(line)) skipping = /^## (Evidence|Amendments)\s*$/.test(line);
+    if (skipping) continue;
+    if (!fenced && /^\*\*(Status|Approved):\*\*/.test(line)) continue;
+    kept.push(fenced ? line : line.replace(/^(\s*- \[)[xX](\])/, "$1 $2"));
+  }
+  const text = kept.join("\n").replace(/\s+$/, "");
+  return crypto.createHash("sha256").update(text).digest("hex").slice(0, 16);
 }
 
 function parseEvidence(body: string | undefined): Evidence | null {

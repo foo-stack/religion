@@ -130,3 +130,9 @@ cell. The schema's `default` field had no reader until then.
 - **Keys the reference does not name**, still ignored, so notes of a project's own in the
   file never fail the check.
 - **F-140 and F-141**, repaired and `fixed`, waiting for a review.
+
+## Landed
+
+**Base:** 07875bc03c1beddfe91874f30cef9709f16692d9
+**Commits:** 3a7652bb1417585db4970e4dfcbfa9b7e7743c95, 245f4ef3458ebbf9097d2f2d8b13af8a7aa2f5bd, 6d26e400128318aad86dadba8c6083c01de99f5b, 135f781e5a72e5783490271a4a671875cd95a044, a49c1708cd64d371397bbbd22283494fe1ee1a95, a2332f4d97c4f2f58be12fe71840b9f7d60fbe8a
+**Product paths:** .changeset/doctor-settings-schema.md, docs/doctor.md, packages/create-religion/lib/doctor.ts, packages/create-religion/lib/settings.test.ts, packages/create-religion/lib/settings.ts, scripts/verify.ts

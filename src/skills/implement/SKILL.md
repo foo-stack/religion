@@ -65,6 +65,19 @@ Set the spec's status to `in progress` before the first code change of this run,
 whenever work resumes after a passing check and touches product code. That invalidates
 stale verification state.
 
+**Stamp what was approved.** Starting the first step is the spec's approval, so before it,
+when the spec carries no stamp, add one under its header fields: `**Approved:** <date>, <hash>`,
+taking the hash from `religion status --json`, which reports it as `spec.hash`. It covers what
+the spec asks for and leaves out its status and stamp lines, step ticks, and the Evidence and
+Amendments sections. From then on, `status` warns if the spec changes and the stamp does not.
+Without the `religion` command installed, leave the stamp out: a spec without one is never
+called drifted.
+
+**Amend, never edit quietly.** When the spec turns out wrong or thin and has to change what it
+asks for, a step reworded, added, split or dropped, a scope line moved, record it in an
+`## Amendments` section at the end of the spec, one dated line saying what changed and why, then
+renew the stamp. Ticking steps, the status, and the Evidence section are not amendments.
+
 Work through the build steps **in order, one at a time**, unless a wave applies. For each:
 
 1. **Implement just that step.** The smallest change that satisfies its stated outcome.
@@ -168,7 +181,8 @@ block completion, so close the loop now rather than discovering it later.
 For each `open` P0 or P1:
 
 1. **Append it to the spec's build steps** first (`- [ ] Repair F-03 - <title>`), so the
-   repair is on the record and survives a cleared context.
+   repair is on the record and survives a cleared context. That changes what the spec asks
+   for, so record it as an amendment naming the finding, and renew the stamp.
 2. Build it through the same loop as Step 2: smallest change, diff, explanation, evidence.
 3. Tick the step and mark the finding `fixed`.
 
@@ -205,7 +219,7 @@ build plan, makes the work commit, and asks separately before any merge or push.
 
 - One small step per diff, and never a commit before its review gate is satisfied.
 - Explain every change in plain language. Understanding the code is the point.
-- Build only what the spec says. If the spec is wrong or thin, stop and fix the spec
+- Build only what the spec says. If the spec is wrong or thin, stop and amend the spec
   first. Do not improvise around it.
 - Follow the project's coding standards, including scoping user-owned queries by the
   authenticated identity taken from the server.

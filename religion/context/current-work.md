@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 30a
-**Approved:** 2026-10-21, 47b0c0be7a1a6362
+**Approved:** 2026-10-21, 8f08823757cf0953
 **Status:** in progress
 
 ## Goal
@@ -19,7 +19,9 @@ amendments because it is the spec.
   changes as work proceeds: ticks, the status line, the stamp itself, and the Evidence and
   Amendments sections.
 - `parseSpec` reads the stamp, the amendments, and whether the content still matches the stamp.
-- `status` warns on a spec that drifted from its stamp.
+- `status` warns on a spec that drifted from its stamp, and `status --json` reports the spec's
+  hash, stamp and drift as `spec`, recorded in the public surface, so `implement` has a hash to
+  stamp with.
 - `implement`: stamps the spec before its first change, records each amendment with its reason
   and renews the stamp, including when it adds a repair step.
 - A minor changeset.
@@ -49,9 +51,9 @@ large, so split it.
   wording changes it; amendments are read as dated lines; and a spec with no stamp is never
   called drifted.
 - [x] **Step 2 - status warns on drift** - `computeStatus`. *Done when:* a unit test shows the
-  warning for a drifted spec and none for a stamped one that matches, and `surface.json` is
-  unchanged.
-- [ ] **Step 3 - `implement` stamps and amends** - the implement skill. *Done when:* the rendered
+  warning for a drifted spec and none for a stamped one that matches, and `status --json`
+  reports `spec`, recorded in `surface.json` and `docs/stability.md`.
+- [x] **Step 3 - `implement` stamps and amends** - the implement skill. *Done when:* the rendered
   skill stamps before the first change, records an amendment with its reason for any change to
   what the spec asks for, renews the stamp, and treats an added repair step as an amendment;
   `npm test` exits 0.
@@ -94,3 +96,4 @@ stamp exists and the hash no longer matches.
 ## Amendments
 
 - 2026-10-21 - Restored the example `**Approved:**` line in Data and contracts - the first stamping script removed the first `**Approved:**` line it found, which was the example inside the code fence; the parser now ignores fenced text.
+- 2026-10-21 - Step 2 now adds `spec` to `status --json` instead of leaving the surface unchanged - step 3 found `implement` had no way to obtain the hash it must stamp with.

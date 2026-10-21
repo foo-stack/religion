@@ -143,8 +143,8 @@ export interface ProjectState {
   learning: Learning;
   /** Plan items a spike archive says it settled. */
   settledSpikes: string[];
-  /** The active spec changed since its approval stamp, with no renewed stamp to say it was decided. */
-  specDrifted: boolean;
+  /** The active spec's hash, its approval stamp, and whether it drifted from that stamp. */
+  spec: { hash: string | null; approved: string | null; drifted: boolean };
 }
 
 const CHECKBOX = /^(\s*)- \[( |x|X)\]\s*(.*)$/;
@@ -283,6 +283,12 @@ function approval(source: string): Pick<Spec, "approved" | "amendments" | "drift
     amendments: bullets(sections(prose).get("amendments")),
     drifted: approved !== null && approved.hash !== specHash(source)
   };
+}
+
+function specState(work: string | null): ProjectState["spec"] {
+  const spec = parseSpec(work);
+  if (!spec || !work) return { hash: null, approved: null, drifted: false };
+  return { hash: specHash(work), approved: spec.approved?.hash ?? null, drifted: spec.drifted };
 }
 
 /** The source with every line inside a ``` fence blanked, so line structure stays but nothing inside is read. */
@@ -654,6 +660,6 @@ export async function readProjectState(root: string): Promise<ProjectState> {
     inbox: parseInbox(inbox),
     learning: { lessons: parseLessons(lessons), journal: entries, undecided: entries.filter((e) => !e.decided).length },
     settledSpikes,
-    specDrifted: parseSpec(work)?.drifted ?? false
+    spec: specState(work)
   };
 }

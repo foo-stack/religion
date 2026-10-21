@@ -21,7 +21,7 @@ function state(overrides: Partial<ProjectState> = {}): ProjectState {
     inbox: [],
     learning: { lessons: [], journal: [], undecided: 0 },
     settledSpikes: [],
-    specDrifted: false,
+    spec: { hash: null, approved: null, drifted: false },
     ...overrides
   };
 }
@@ -115,6 +115,6 @@ test("status points at a spike when any remaining item waits on one, even behind
 
 test("status warns when the active spec drifted from its approval", () => {
   const drift = "the active spec changed since it was approved, with no amendment recording why";
-  assert.ok(computeStatus(state({ specDrifted: true })).warnings.includes(drift));
+  assert.ok(computeStatus(state({ spec: { hash: "1111111111111111", approved: "2222222222222222", drifted: true } })).warnings.includes(drift));
   assert.ok(!computeStatus(state()).warnings.includes(drift));
 });

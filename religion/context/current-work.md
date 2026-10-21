@@ -48,7 +48,7 @@ large, so split it.
   in the shape below, its description says so, and its rules still forbid every other write.
   *Done when:* the rendered skill states the section's shape and that it is the skill's only
   write, and `npm run verify` and the routing corpus pass.
-- [ ] **Step 2 - `complete` reuses it** - `src/skills/complete/SKILL.md` Step 1, and the
+- [x] **Step 2 - `complete` reuses it** - `src/skills/complete/SKILL.md` Step 1, and the
   ownership row in `docs/architecture/state-model.md`. *Done when:* the rendered skill says
   when the record is reused and when `check` runs again, and `npm test` exits 0.
 - [ ] **Step 3 - the dashboard shows it** - `evidence` in `parseSpec` in `lib/state.ts`, and the

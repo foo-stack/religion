@@ -101,3 +101,9 @@ Nothing.
 ### Deferred
 
 - **Repaired findings becoming tests**, which an earlier scout run suggested folding in here.
+
+## Landed
+
+**Base:** 87b601c557a2c111a7493442f693e09be7d801ed
+**Commits:** 830156c203dc0a2456f2c7904ce9b9aef6913a36, 563713b04d5dc82b8c8574cbabb85d947871bde7, b4c6167ec75a63d8c7da7e386da1d3d446e5441f, 2da382736062d40a8133b369e7f17462fd39d53c
+**Product paths:** .agents/skills/check/SKILL.md, .agents/skills/tests/SKILL.md, .changeset/outcome-regressions.md, .claude/skills/check/SKILL.md, .claude/skills/tests/SKILL.md, evals/routing/tests.json, src/skills/check/SKILL.md, src/skills/tests/SKILL.md

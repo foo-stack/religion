@@ -193,3 +193,10 @@ verification check, and both were found by hand first.
 **Surprised:** "One provider first" turned out to be the host rather than a provider: Vercel, Netlify and Render all publish previews to the pull request's deployments, so reading those covers all three.
 **Went wrong:** nothing
 **Deferred:** Hosts without deployments; protected previews.
+
+## 2026-10-21 - Complete drafts the release note
+
+**Archive:** history/features/34-complete-drafts-the-release-note.md
+**Surprised:** Every automated run in this repository had been deciding bumps without saying so; the new rule writes down what those runs did by habit, and puts the decision in front of the reviewer.
+**Went wrong:** nothing
+**Deferred:** Other release tools.

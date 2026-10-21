@@ -47,7 +47,7 @@ large, so split it.
   Configuration panel in `lib/dashboard.ts`. *Done when:* the dashboard tests pass, and the
   running dashboard against this repository shows every setting with its meaning, what it
   accepts, its default and this project's value.
-- [ ] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

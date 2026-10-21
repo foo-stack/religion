@@ -54,7 +54,7 @@ export function computeStatus(state: ProjectState): Status {
     warnings.push(`open question(s) in the overview: ${state.openQuestions.join(", ")}`);
   }
   if (state.spec.drifted) {
-    warnings.push("the active spec changed since it was approved, with no amendment recording why");
+    warnings.push("the active spec changed since its approval stamp; record an amendment saying why and renew the stamp");
   }
   if (state.learning.undecided >= DISTILL_AFTER) {
     warnings.push(`${state.learning.undecided} journal entries are waiting for distill`);

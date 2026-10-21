@@ -773,3 +773,18 @@ test("parseSpec and specHash leave examples inside code fences alone", () => {
   assert.deepEqual(parsed?.amendments, []);
   assert.notEqual(specHash(spec), specHash(spec.replace("an example", "a changed example")), "fenced text is part of what was approved");
 });
+
+test("specHash and the stamp hold against whitespace, heading case, tilde fences and malformed stamps", () => {
+  const body = "# Export\n\n**Type:** Feature\n\n## Build steps\n\n- [ ] **Step 1 - a** - x\n";
+  const base = specHash(body);
+  assert.equal(specHash(body.replace("## Build steps", "## Build steps   ")), base, "trailing spaces on a line");
+  assert.equal(specHash(body + "\n##  evidence\n\nChecked.\n"), base, "an evidence heading in another case");
+  const tilde = body.replace("**Type:** Feature", "**Type:** Feature\n\n~~~\n**Approved:** 2026-01-01, aaaaaaaaaaaaaaaa\n~~~");
+  assert.equal(parseSpec(tilde)?.approved, null, "a stamp inside a tilde fence is an example");
+  const upper = body.replace("**Type:** Feature", `**Type:** Feature\n**Approved:** 2026-10-21 , ${base.toUpperCase()}`);
+  assert.deepEqual(parseSpec(upper)?.approved, { date: "2026-10-21", hash: base });
+  assert.equal(parseSpec(upper)?.drifted, false);
+  assert.equal(parseSpec(body.replace("**Type:** Feature", "**Type:** Feature\n**Approved:** soon"))?.drifted, true, "an unreadable stamp is drift");
+  const hidden = body + "\n## Evidence\n\n```\n## Build steps\n\n- [ ] **Step 1 - a** - x\n- [ ] **Step 2 - b** - y\n```\n";
+  assert.equal(parseSpec(hidden)?.steps.length, 1, "a fenced heading does not replace the real steps");
+});

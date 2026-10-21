@@ -114,7 +114,7 @@ test("status points at a spike when any remaining item waits on one, even behind
 });
 
 test("status warns when the active spec drifted from its approval", () => {
-  const drift = "the active spec changed since it was approved, with no amendment recording why";
+  const drift = "the active spec changed since its approval stamp; record an amendment saying why and renew the stamp";
   assert.ok(computeStatus(state({ spec: { hash: "1111111111111111", approved: "2222222222222222", drifted: true } })).warnings.includes(drift));
   assert.ok(!computeStatus(state()).warnings.includes(drift));
 });

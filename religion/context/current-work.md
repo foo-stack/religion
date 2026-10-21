@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 30a
-**Approved:** 2026-10-21, 8f08823757cf0953
+**Approved:** 2026-10-21, dec621847cc83be2
 **Status:** in progress
 
 ## Goal
@@ -58,6 +58,7 @@ large, so split it.
   what the spec asks for, renews the stamp, and treats an added repair step as an amendment;
   `npm test` exits 0.
 - [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] Repair F-158 - the hash and the stamp hold against whitespace, heading case, tilde fences, malformed stamps and fenced headings, and folded repair steps are amended.
 
 ## Files and areas
 
@@ -97,3 +98,4 @@ stamp exists and the hash no longer matches.
 
 - 2026-10-21 - Restored the example `**Approved:**` line in Data and contracts - the first stamping script removed the first `**Approved:**` line it found, which was the example inside the code fence; the parser now ignores fenced text.
 - 2026-10-21 - Step 2 now adds `spec` to `status --json` instead of leaving the surface unchanged - step 3 found `implement` had no way to obtain the hash it must stamp with.
+- 2026-10-21 - Added the repair step for F-158 - the audit found seven ways drift could be misread or hidden.

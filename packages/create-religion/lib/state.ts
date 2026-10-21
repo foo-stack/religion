@@ -256,7 +256,8 @@ export interface Evidence {
 /** The active spec as written, for showing rather than deciding. Null when nothing is in progress. */
 export function parseSpec(source: string | null): Spec | null {
   if (!source || /_Nothing in progress\./.test(source)) return null;
-  const section = sections(source);
+  // A heading inside a code fence is an example, not a section of the spec.
+  const section = sections(outsideFences(source));
 
   return {
     title: field(source, "#"),
@@ -276,12 +277,14 @@ export function parseSpec(source: string | null): Spec | null {
 function approval(source: string): Pick<Spec, "approved" | "amendments" | "drifted"> {
   // An example of the stamp or the section inside a code fence is documentation, not the record.
   const prose = outsideFences(source);
-  const stamp = /^\*\*Approved:\*\*\s*(\d{4}-\d{2}-\d{2}),\s*([0-9a-f]{16})\s*$/m.exec(prose);
-  const approved = stamp ? { date: stamp[1]!, hash: stamp[2]! } : null;
+  const line = /^\*\*Approved:\*\*.*$/m.exec(prose)?.[0];
+  const stamp = line ? /^\*\*Approved:\*\*\s*(\d{4}-\d{2}-\d{2})\s*,\s*([0-9a-f]{16})\s*$/i.exec(line) : null;
+  const approved = stamp ? { date: stamp[1]!, hash: stamp[2]!.toLowerCase() } : null;
   return {
     approved,
     amendments: bullets(sections(prose).get("amendments")),
-    drifted: approved !== null && approved.hash !== specHash(source)
+    // A stamp line that cannot be read proves nothing, so it counts as drift rather than hiding it.
+    drifted: line !== undefined && (approved === null || approved.hash !== specHash(source))
   };
 }
 
@@ -291,13 +294,15 @@ function specState(work: string | null): ProjectState["spec"] {
   return { hash: specHash(work), approved: spec.approved?.hash ?? null, drifted: spec.drifted };
 }
 
-/** The source with every line inside a ``` fence blanked, so line structure stays but nothing inside is read. */
+const FENCE = /^\s*(```|~~~)/;
+
+/** The source with every line inside a ``` or ~~~ fence blanked, so line structure stays but nothing inside is read. */
 function outsideFences(source: string): string {
   let fenced = false;
   return source
     .split("\n")
     .map((line) => {
-      if (/^\s*```/.test(line)) {
+      if (FENCE.test(line)) {
         fenced = !fenced;
         return "";
       }
@@ -316,11 +321,11 @@ export function specHash(source: string): string {
   let fenced = false;
   let skipping = false;
   for (const line of source.replace(/\r\n/g, "\n").split("\n")) {
-    if (/^\s*```/.test(line)) fenced = !fenced;
-    else if (!fenced && /^## /.test(line)) skipping = /^## (Evidence|Amendments)\s*$/.test(line);
+    if (FENCE.test(line)) fenced = !fenced;
+    else if (!fenced && /^##\s/.test(line)) skipping = /^##\s+(evidence|amendments)\s*$/i.test(line);
     if (skipping) continue;
     if (!fenced && /^\*\*(Status|Approved):\*\*/.test(line)) continue;
-    kept.push(fenced ? line : line.replace(/^(\s*- \[)[xX](\])/, "$1 $2"));
+    kept.push((fenced ? line : line.replace(/^(\s*- \[)[xX](\])/, "$1 $2")).replace(/\s+$/, ""));
   }
   const text = kept.join("\n").replace(/\s+$/, "");
   return crypto.createHash("sha256").update(text).digest("hex").slice(0, 16);

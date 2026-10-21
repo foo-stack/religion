@@ -131,3 +131,9 @@ plan complete**, both caught by the audit along with five smaller parsing gaps.
 ### Deferred
 
 - **F-155, F-156 and F-157**, repaired and `fixed`, waiting for a review.
+
+## Landed
+
+**Base:** 06cc958e7e57fa239d8fbdb8aa0ac0ca93cd31c0
+**Commits:** d91dbda2ed0d93d2cd2736255e0412bed0c37ea9, a76c1821fbf4d51773061625336b01841b800fda, 21644677c66f3733444b54d2dd73412b37eb6614, 68f41cd50010f41493ca8ff420bca0dd455840dc, 9a639eb5fafc7e31d877ba713d1fefc349439218, 7170902bd6b6216c05670704c87a589b0cfb78fc
+**Product paths:** .agents/skills/auto/SKILL.md, .agents/skills/feature/SKILL.md, .agents/skills/spike/SKILL.md, .agents/skills/status/SKILL.md, .changeset/plan-prerequisites.md, .claude/skills/auto/SKILL.md, .claude/skills/feature/SKILL.md, .claude/skills/spike/SKILL.md, .claude/skills/status/SKILL.md, packages/create-religion/lib/dashboard.ts, packages/create-religion/lib/state.test.ts, packages/create-religion/lib/state.ts, packages/create-religion/lib/status.test.ts, packages/create-religion/lib/status.ts, src/skills/auto/SKILL.md, src/skills/feature/SKILL.md, src/skills/spike/SKILL.md, src/skills/status/SKILL.md

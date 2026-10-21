@@ -15,10 +15,12 @@ import {
   parseLessons,
   parseOpenQuestions,
   parsePlan,
+  parseSettledSpike,
   parseSpec,
   parseWork,
   readHistory,
-  readProjectState
+  readProjectState,
+  waiting
 } from "./state.js";
 
 test("parsePlan reads numbers, titles and tick state", () => {
@@ -636,4 +638,74 @@ test("parseSpec reads the Evidence section check writes", () => {
     ]
   });
   assert.equal(parseSpec("# Export\n\n## Build steps\n\n- [ ] **Step 1 - a** - x\n")?.evidence, null);
+});
+
+test("parsePlan reads every way this plan says an item waits", () => {
+  const plan = parsePlan(
+    [
+      "## Plan",
+      "",
+      "- [x] 17. **Evidence** - done",
+      "- [ ] 24. **Packet** - shown; after item 17",
+      "- [ ] 39. **Several** - a major version; after item 27, spike first on whether it helps",
+      "- [ ] 40. **CI** - needs a grant; after items 20, 24, and 33, spike first on headless runs",
+      "- [ ] 46. **Lessons** - opt in; after items 7 and 31, spike first on how many are general",
+      "- [ ] 50. **Plain** - nothing to wait for",
+      "- [ ] 29. **Plan lines** - a line can say `after item N` or `spike first`, and status skips it"
+    ].join("\n")
+  );
+  assert.deepEqual(plan.map((i) => [i.number, i.after, i.spikeFirst]), [
+    ["17", [], false],
+    ["24", ["17"], false],
+    ["39", ["27"], true],
+    ["40", ["20", "24", "33"], true],
+    ["46", ["7", "31"], true],
+    ["50", [], false],
+    ["29", [], false]
+  ]);
+});
+
+test("parseSettledSpike reads which item a spike settled", () => {
+  assert.equal(parseSettledSpike("# Can hooks block?\n\n**For:** item 21\n**Settled:** yes\n"), "21");
+  assert.equal(parseSettledSpike("**For:** item 21\n**Settled:** no\n"), null);
+  assert.equal(parseSettledSpike("**Settled:** yes\n"), null, "a spike for no plan item");
+});
+
+test("waiting holds an item until what it waits on is met, and names what can never be", () => {
+  const plan = parsePlan(
+    [
+      "## Plan",
+      "",
+      "- [x] 1. **Done** - x",
+      "- [ ] 2. **After one** - after item 1",
+      "- [ ] 3. **After two** - after item 2",
+      "- [ ] 4. **Spike** - spike first on something",
+      "- [ ] 5. **Nowhere** - after item 99",
+      "- [ ] 6. **Loop a** - after item 7",
+      "- [ ] 7. **Loop b** - after item 6"
+    ].join("\n")
+  );
+  const { waits, problems } = waiting(plan, new Set());
+  assert.equal(waits.has("2"), false, "its prerequisite is ticked");
+  assert.deepEqual(waits.get("3"), ["item 2"]);
+  assert.deepEqual(waits.get("4"), ["a spike"]);
+  assert.equal(waiting(plan, new Set(["4"])).waits.has("4"), false, "a settled spike frees it");
+  assert.deepEqual(problems, ["item 5 comes after item 99, which the plan does not have", "items 6 -> 7 -> 6 wait on each other"]);
+});
+
+test("waiting carries a parent's wait to its sub-items, and reports duplicate numbers", () => {
+  const plan = parsePlan(
+    ["## Plan", "", "- [ ] 21. **Hooks** - one sub-item per tool; spike first on blocking", "  - [ ] 21a. **Codex** - x", "  - [ ] 21b. **OpenCode** - after item 21a", "- [x] 1. **One** - x", "- [ ] 1. **One again** - x"].join("\n")
+  );
+  const { waits, problems } = waiting(plan, new Set());
+  assert.deepEqual(waits.get("21a"), ["a spike"]);
+  assert.deepEqual(waits.get("21b"), ["a spike", "item 21a"]);
+  assert.deepEqual(waiting(plan, new Set(["21"])).waits.get("21a"), undefined, "the parent's spike settled");
+  assert.ok(problems.includes("item 1 appears more than once"));
+});
+
+test("parsePlan reads every after phrase on a line, in any case, and spike lines with trailing words", () => {
+  const [item] = parsePlan("## Plan\n\n- [ ] 9. **X** - after item 2; also after items 4A and 5\n");
+  assert.deepEqual(item?.after, ["2", "4a", "5"]);
+  assert.equal(parseSettledSpike("**For:** item 21 (hooks)\n**Settled:** yes\n"), "21");
 });

@@ -88,7 +88,10 @@ State the bounds, the gates in force, and how many items are in range. Then star
 
 ## Step 2 - each item
 
-For every item, in plan order:
+For every item, in plan order, passing over any that waits on an earlier unticked item or on
+a spike, by the rule $feature uses with no argument. Each one passed over is named in
+the final report with what it waits on. When every remaining item waits, the run has
+nothing left to build and stops there.
 
 1. **Spec it**, following $feature, including the sizing and the self-critique. Do
    not skip the critique because nobody is reading: it is what catches an oversized step
@@ -161,7 +164,9 @@ default branch. Title it for the run rather than for any one item. Its body is t
 review packet, and it is the artefact a person actually reads:
 
 - one section per completed item, in plan order, naming what it delivered, its merged pull
-  request, and the checks that proved it
+  request, and the checks that proved it, taken from the item's archive and its `## Evidence`
+  section rather than from memory of the run; the item's own pull request carries its full
+  packet, so link it rather than repeating it
 - findings still open or fixed, by identifier, and anything deliberately left out
 - what the run did not reach, and why it stopped
 

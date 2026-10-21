@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 4697c79880f1f5a9 -->
+<!-- religion:source-hash 69954827de50b69d -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,7 +49,7 @@ nothing to sign into.
 
 ## Roadmap
 
-Twenty-eight items queued. Nineteen start with a spike, and several say which items they
+Twenty-three items queued. Nineteen start with a spike, and several say which items they
 follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
 
 **Status, learning and health**
@@ -61,22 +61,14 @@ follow; the plan states both in prose, so nothing enforces the order yet (item 2
 22. **Update merges edits** - three-way merge against a stored copy of what was installed
 23. **Adopt from another workflow** - `setup` converts another workflow's plans and specs,
     landing them unverified
-24. **A review packet for the pull request** - spec, outcomes, evidence and findings,
-    presentation only; after 17
 25. **A record of what an unattended run did** - a capped local activity log
 26. **Scanner results in the ledger** - SARIF ingested as unverified findings, matched
     across runs
 27. **Waves built in isolation** - one worktree per wave step, joined into one packet
-28. **Verified outcomes become regression checks** - captured CLI or API evidence kept as
-    tests; after 17
-29. **Plan lines that know what they wait on** - `after item N` and `spike first` honoured
-    by `feature`, `status` and `auto all`
 30. **Scope drift made visible** - spec amendments recorded, and a hook warning on edits
     outside the step
-31. **Recurring findings become standards** - `distill` proposes rules from recurring findings
 32. **Check the preview deployment** - outcomes run against the host's preview, one provider
     first
-33. **Spec from an issue** - `fix` and `feature` draft from an issue read as untrusted input
 34. **Complete drafts the release note** - a Changesets entry proposed for approval
 35. **Accessibility as evidence** - a scan beside `check`'s browser evidence
 36. **Built UI compared with its reference** - against saved screenshots or the prototype

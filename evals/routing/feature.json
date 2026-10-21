@@ -9,6 +9,9 @@
     },
     {
       "prompt": "Start the login feature"
+    },
+    {
+      "prompt": "Spec the new feature requested in issue #12"
     }
   ],
   "negative": [

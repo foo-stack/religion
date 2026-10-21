@@ -839,3 +839,27 @@
 **Why it matters:** `-  two` was counted by `parseInbox` and not by the hook, so the two reports gave different numbers for the same file.
 **Suggested fix:** Match `parseInbox`'s rule.
 **Resolution:** Repaired 2026-10-21; a test compares the hook's count with `parseInbox` directly, and the staleness test now stamps with `overviewHash` over a CRLF plan.
+
+### F-155 [P2] fixed - Sub-items ignore what their parent waits on
+
+**File:** packages/create-religion/lib/state.ts:87
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** Once a spike-first item was split, its sub-items were offered before the spike, which is exactly how items 21 and 23 are meant to split.
+**Suggested fix:** Let a leaf wait on every unticked ancestor's reasons, and say so in the skills.
+**Resolution:** Repaired 2026-10-21: a sub-item inherits its parent's reasons, tested with a split spike-first item; the status skill says so.
+
+### F-156 [P2] fixed - The dashboard says the plan is complete while items wait
+
+**File:** packages/create-religion/lib/dashboard.ts:688
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** A null next item used to mean every item was ticked; now it also means every remaining item waits, and both Plan tiles showed "Complete".
+**Suggested fix:** Say "Complete" only when every item is ticked.
+**Resolution:** Repaired 2026-10-21: both tiles say "Every remaining item waits" in that case.
+
+### F-157 [P3] fixed - Smaller gaps in reading the plan's prerequisites
+
+**File:** packages/create-religion/lib/status.ts:104
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** A forward reference to a spike-first item pointed at the overview instead of a spike, duplicate numbers resolved silently, only the first `after` phrase on a line was read, `4A` did not match `4a`, a spike's `For` line with trailing words was missed, and the status skill had no row for items waiting only on each other.
+**Suggested fix:** Each as named.
+**Resolution:** Repaired 2026-10-21, each with a test or a skill line.

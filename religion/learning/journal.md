@@ -137,3 +137,38 @@ verification check, and both were found by hand first.
 **Surprised:** The `blocks` field doctor already reported for ordering its output turned out to be exactly the line between what a runner can and cannot check.
 **Went wrong:** nothing
 **Deferred:** Running doctor in this repository's own workflow.
+
+## 2026-10-21 - A review packet for the pull request
+
+**Archive:** history/features/24-a-review-packet-for-the-pull-request.md
+**Surprised:** Item 17 had already done the real work: once evidence lived in the archive, the packet was a matter of reading it out.
+**Went wrong:** nothing
+**Deferred:** nothing
+
+## 2026-10-21 - Verified outcomes become regression checks
+
+**Archive:** history/features/28-verified-outcomes-become-regression-checks.md
+**Surprised:** The plan line said check would keep the capture as a test, but check may not write source; the right split was check offering and tests writing, which the one-writer rule decided before any design did.
+**Went wrong:** nothing
+**Deferred:** Turning repaired findings into tests.
+
+## 2026-10-21 - Plan lines that know what they wait on
+
+**Archive:** history/features/29-plan-lines-that-know-what-they-wait-on.md
+**Surprised:** The plan's own line for this item tripped the parser, since describing a syntax and using it look the same to a regex; running against the real plan found it before any test did.
+**Went wrong:** Sub-items not inheriting their parent's wait would have defeated the feature for exactly the items it exists to hold back.
+**Deferred:** Nothing beyond the fixed findings' review.
+
+## 2026-10-21 - Recurring findings become standards
+
+**Archive:** history/features/31-recurring-findings-become-standards.md
+**Surprised:** This project's own archives already show the pattern the item looks for: findings about following a link recur across items 4b, 4d, 5 and 16, each repaired locally and none turned into a rule.
+**Went wrong:** A template token was written into rendered state and caught by the verification suite.
+**Deferred:** Running distill here.
+
+## 2026-10-21 - Spec from an issue
+
+**Archive:** history/features/33-spec-from-an-issue.md
+**Surprised:** The untrusted-input rule already named issue text, so the safety half of this item was a pointer rather than new prose.
+**Went wrong:** nothing
+**Deferred:** Hosts without a command-line tool.

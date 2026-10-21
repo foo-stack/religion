@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**A handoff that tells the whole story** is in progress: 2 step(s) done, 0 to go.
+**Plan lines that know what they wait on** is in progress: 4 step(s) done, 0 to go.
 
-Plan: 21 of 52 item(s) complete. Next up: 18. **A handoff that tells the whole story** - the end-of-turn handoff also reports a stale overview, notes waiting in the inbox, unverified findings, and a blocked automated run
+Plan: 26 of 52 item(s) complete. Next up: 21. **Hooks beyond Claude Code** - the rendered-output guard, the injection scan, and the handoff rewrite wired for Codex, Copilot, and OpenCode wherever each tool's hooks allow, one sub-item per tool; spike first on whether each can stop a write before it lands
 
 ## Read first
 

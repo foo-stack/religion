@@ -685,7 +685,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     const closed = sum(data.history, (a) => a.findings.filter((f) => f.status === "closed").length);
     $("ov-meta").innerHTML = "<span>" + esc(setting("git", "mode", "trunk")) + " mode</span><span>review " + esc(setting("workflow", "stepReview", "every")) + "</span>";
     $("ov-tiles").innerHTML =
-      tile("Plan", s.plan.done + "<small> / " + s.plan.total + " items</small>", s.plan.nextItem ? "Next: " + esc(short(s.plan.nextItem)) : s.plan.total ? "Complete" : "No items yet", bar([[s.plan.done, "--ok"]], s.plan.total)) +
+      tile("Plan", s.plan.done + "<small> / " + s.plan.total + " items</small>", s.plan.nextItem ? "Next: " + esc(short(s.plan.nextItem)) : !s.plan.total ? "No items yet" : s.plan.done === s.plan.total ? "Complete" : "Every remaining item waits", bar([[s.plan.done, "--ok"]], s.plan.total)) +
       (s.work.active
         ? tile("Active item", s.work.stepsDone + "<small> / " + s.work.stepsTotal + " steps</small>", esc(s.work.title || "Untitled"), bar([[s.work.stepsDone, "--progress"]], s.work.stepsTotal))
         : tile("Active item", "None", "Nothing in progress")) +
@@ -877,7 +877,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     shipped.forEach((a) => (kinds[a.kind] = (kinds[a.kind] || 0) + 1));
     const s = data.status;
     $("hs-tiles").innerHTML =
-      tile("Plan", s.plan.done + "<small> / " + s.plan.total + " items</small>", s.plan.nextItem ? "Next: " + esc(short(s.plan.nextItem)) : s.plan.total ? "Complete" : "No items yet", bar([[s.plan.done, "--ok"]], s.plan.total)) +
+      tile("Plan", s.plan.done + "<small> / " + s.plan.total + " items</small>", s.plan.nextItem ? "Next: " + esc(short(s.plan.nextItem)) : !s.plan.total ? "No items yet" : s.plan.done === s.plan.total ? "Complete" : "Every remaining item waits", bar([[s.plan.done, "--ok"]], s.plan.total)) +
       tile("Shipped", String(shipped.length), shipped.length ? Object.keys(kinds).map((k) => kinds[k] + " " + esc(k)).join(", ") : "Nothing archived yet") +
       tile("Commits", String(commits), shipped.length ? Math.round(commits / shipped.length) + " per item on average" : "None recorded") +
       tile("Repairs", String(sum(shipped, (a) => a.repairs)), "Steps added after an audit") +

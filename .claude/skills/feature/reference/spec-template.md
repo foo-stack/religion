@@ -2,6 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item <n>
+**From issue:** <link, only when the work began from an issue; delete the line otherwise>
 **Status:** not started
 
 ## Goal

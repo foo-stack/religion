@@ -75,6 +75,14 @@ Record the result under `religion/history/spikes/`, named for the question: what
 what the answer was, the evidence, the budget it took, and what is still unknown. That file
 is what stops the same question being asked again in six months.
 
+When the question is the one a build-plan item's `spike first` asks, say so, and whether it
+was answered, on lines of their own:
+
+    **For:** item 21
+    **Settled:** yes
+
+`yes` releases the item for /feature; `no`, a budget that ran out, keeps it waiting.
+
 Deleting files is a first-tier action, so ask before removing anything that is not clearly
 the throwaway you just made.
 

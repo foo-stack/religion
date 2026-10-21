@@ -46,7 +46,7 @@ large, so split it.
 - [x] **Step 1 - `check` offers** - its report and rules. *Done when:* the rendered skill lists
   the passing command-line and API outcomes as candidates, offers `tests` for them only where a
   test command is declared, and still writes nothing but its Evidence section; `npm test` exits 0.
-- [ ] **Step 2 - `tests` keeps them** - an `evidence` mode in the tests skill, its description,
+- [x] **Step 2 - `tests` keeps them** - an `evidence` mode in the tests skill, its description,
   and a routing case. *Done when:* the rendered skill reads the Evidence section, re-runs each
   capture before writing, asserts exit status and stable output only, writes one reviewed diff
   per test, and stops without a test command; `npm test` exits 0 with the new routing case.

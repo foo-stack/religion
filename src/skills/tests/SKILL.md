@@ -1,13 +1,14 @@
 ---
 name: tests
 summary: set up unit testing, or backfill coverage for logic that already exists
-description: "Set up unit testing for this project: detect the stack, reuse an existing runner or install the stack-native one, add a small example test, record the command in the entry file, and run it. Declaring that command is what turns testing into a gate for logic-bearing work. Given `backfill`, instead writes tests for logic that already exists, worst-covered first. Use when the user runs {{cmd}}, asks to add or set up unit tests, or asks to cover existing code with tests."
+description: "Set up unit testing for this project: detect the stack, reuse an existing runner or install the stack-native one, add a small example test, record the command in the entry file, and run it. Declaring that command is what turns testing into a gate for logic-bearing work. Given `backfill`, instead writes tests for logic that already exists, worst-covered first. Given `evidence`, keeps the command-line and API outcomes check proved as regression tests. Use when the user runs {{cmd}}, asks to add or set up unit tests, asks to cover existing code with tests, or asks to keep what check proved as tests."
 ---
 
 # tests - turn the testing gate on, or backfill coverage
 
-Two modes. `{{cmd}}` sets the runner up. `{{cmd}} backfill` covers logic that already
-exists. Setup comes first; backfilling into no runner is not a thing.
+Three modes. `{{cmd}}` sets the runner up. `{{cmd}} backfill` covers logic that already
+exists. `{{cmd}} evidence` keeps what {{cmd:check}} proved as regression tests. Setup comes
+first; backfilling into no runner is not a thing.
 
 ## Setup mode
 
@@ -84,6 +85,36 @@ code does instead of what its name or documentation says:
     src/lib/slug.ts - slugify("Ä") returns "" where its comment promises "a"
 
 Note only the ones the user agrees to. The tests stay as they are, failing, beside the note.
+
+## Evidence mode
+
+For outcomes {{cmd:check}} has already proved. The proof is in the spec's `## Evidence`
+section, and a test is what keeps it true after the next change.
+
+### Step 1 - choose what to keep
+
+Read `{{state}}/context/current-work.md`, or the archive named, and take each `pass` entry whose
+evidence is a captured command with its output and exit status, or a request with its
+response. Leave interface outcomes, which belong to browser evidence rather than unit tests,
+and anything that could not be checked. With no test command declared, stop and run setup
+first.
+
+### Step 2 - see it again
+
+Re-run each capture as written before writing anything. If it no longer behaves as recorded,
+that is the finding: report it, and write no test around it.
+
+### Step 3 - write them, one reviewed diff each
+
+In the project's runner, one test per outcome, asserting the exit status and the parts of the
+output the program promises. Leave out what changes between runs: timestamps, durations,
+absolute paths, ordering nothing guarantees. Show each test fails when the behaviour it covers
+is broken, as setup proves its example test can fail.
+
+### Step 4 - report
+
+Which outcomes became tests, which were left and why, and any that no longer behaved as the
+evidence said.
 
 ## Rules
 

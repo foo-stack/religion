@@ -98,3 +98,9 @@ Nothing. The one design question, which checks cannot hold on a runner, was sett
 
 - **This repository's own workflow**, which builds the tool from source and does not run the
   published `doctor`.
+
+## Landed
+
+**Base:** 15431d6355bf34da3e9df37b322c8e5395c3778f
+**Commits:** 83c08681aeccc1c511ab3ffab4824881dbb670ed, ee85f1c6cbcc8984cbfdc6041d1fe2a176506fbd, 0329656ff886da77a60592a23f25e97ac77d8c54
+**Product paths:** .agents/skills/ci/SKILL.md, .changeset/ci-doctor.md, .claude/skills/ci/SKILL.md, docs/doctor.md, src/skills/ci/SKILL.md

@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Status shows live activity and the inbox** is in progress: 6 step(s) done, 0 to go.
+**Learning made visible** is in progress: 4 step(s) done, 0 to go.
 
-Plan: 9 of 52 item(s) complete. Next up: 6. **Status shows live activity and the inbox** - `status` and its JSON report the current run from `run.json`, with its resume command when blocked, and how many notes the inbox holds
+Plan: 11 of 52 item(s) complete. Next up: 8. **Learning made visible** - a dashboard view of the lessons and the journal's size, and a `status` nudge toward `distill` once the journal has grown
 
 ## Read first
 

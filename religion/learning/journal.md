@@ -46,3 +46,10 @@ verification check, and both were found by hand first.
 **Surprised:** The journal had one entry, carried over on 2026-09-05, and nothing since: the learning loop was complete except for its input, and nothing reported that it was idle.
 **Went wrong:** A sentence in distill still implied it edits the journal after the rewrite, caught only by reading every grep match rather than counting them.
 **Deferred:** Entries for items finished before this one, since their archives already record the same.
+
+## 2026-10-21 - Learning made visible
+
+**Archive:** history/features/08-learning-made-visible.md
+**Surprised:** The audit measured the new parsers before judging them: a 120,000-line journal parsed in 38 ms, which settled the cost question with a number instead of an argument.
+**Went wrong:** The heading pattern used `\s`, which crosses newlines, a mistake the spec parser's own comment already warns about; reading the neighbouring parser's comments first would have avoided it.
+**Deferred:** Matching entries on their archive line as well as their heading, and ignoring code fences, both rare enough to leave as P3 findings.

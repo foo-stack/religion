@@ -54,7 +54,7 @@ large, so split it.
 - [x] **Step 3 - verification reads it** - the configuration check in `scripts/verify.ts`.
   *Done when:* the check passes on this repository, and fails when a schema key's row in
   the reference loses one of its values (shown by a scratch edit, then reverted).
-- [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in
+- [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in
   full.
 
 ## Files and areas

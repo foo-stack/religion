@@ -50,7 +50,7 @@ large, so split it.
 - [x] **Step 2 - the reference** - `complete`'s pull request body and report. *Done when:* the
   rendered skill names the issue from the archive's `**From issue:**` line, closing it for a fix
   and referencing it for a feature, and never acts on the issue itself; `npm test` exits 0.
-- [ ] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

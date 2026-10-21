@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash c32d0ccf75f34ad0 -->
+<!-- religion:source-hash b50073a111986b9d -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,13 +49,11 @@ nothing to sign into.
 
 ## Roadmap
 
-Thirty-two items queued. Nineteen start with a spike, and several say which items they
+Thirty-one items queued. Nineteen start with a spike, and several say which items they
 follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
 
 **Status, learning and health**
 
-17. **Evidence that outlives the session** - `check` records per-outcome evidence, kept in
-    the archive
 18. **A handoff that tells the whole story** - stale overview, inbox, unverified findings,
     blocked runs
 19. **Backfill discrepancies kept** - `tests backfill` offers to `capture` each mismatch

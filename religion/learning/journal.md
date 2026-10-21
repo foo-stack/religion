@@ -109,3 +109,10 @@ verification check, and both were found by hand first.
 **Surprised:** The first destructive command in the tool needed the review more than any item before it: one P1 and two P2s, each a way to touch something the plan never meant to, and each reproduced by the reviewer on a throwaway project.
 **Went wrong:** Reused helpers carried assumptions that suit reading and not deleting: a root found by walking up, a link check on a folder but not its contents, a plan treated as still true at the moment of removal.
 **Deferred:** Removing `religion/` itself.
+
+## 2026-10-21 - Evidence that outlives the session
+
+**Archive:** history/features/17-evidence-that-outlives-the-session.md
+**Surprised:** The archive needed no change at all to keep the evidence: putting the record in the spec made the existing archive step carry it.
+**Went wrong:** Test counts were typed from memory twice in a row and were wrong both times; numbers in a record should be copied from the output that produced them, never recalled.
+**Deferred:** Per-step evidence from implement.

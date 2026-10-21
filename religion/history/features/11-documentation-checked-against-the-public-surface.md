@@ -118,3 +118,9 @@ The scratch edit is what showed it reads them.
 - **Running the tool and comparing its exit codes** with the record, still documented as
   unchecked in the stability statement.
 - **External links**, which would need the network.
+
+## Landed
+
+**Base:** ad3fea1e3fdafe5b3624a9f3fee2f5bd8aec5a60
+**Commits:** e91a05b4ec70e755dd08d96523184aea7def2b17, 3a065ffae88954b355caaadd61ce9295282270f6, da92a58735164e2f96c9f8bbc86530a13e51f2a1, b01eb2f5b6c85c95075381aec9157ae69d92f65c
+**Product paths:** packages/create-religion/bin/religion.ts, packages/create-religion/lib/args.ts, packages/create-religion/surface.json, scripts/docs.test.ts, scripts/docs.ts, scripts/promises.ts, scripts/surface-current.ts, scripts/verify.ts

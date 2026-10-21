@@ -161,6 +161,12 @@ end-to-end run tested nothing; a function replaced it.
 - **F-152**, repaired and `fixed`, waiting for a review.
 - **Removing `religion/` itself**, which stays the user's decision.
 
+## Landed
+
+**Base:** 9c73a3a8f87bfcbb9e3eccef1f4d81b03024ffa6
+**Commits:** 862cfc9087e542ff90e399a45b3c0d27fc407923, 6cb14e9a8d98b5bc3fcc69557170abf500e99980, 88149432d3a329ae99884ea4e5f95b69a16376b4, 844a68fb3a866c2ba6335dca60e400ce12857426, aa564a548d50312f0d3af2fb6ed0d8b19d3fa20a, af27e7b890916850daa6c97693419e307fcb2356, 9f736271270e1b6d96132e76a7d4341c303a541b
+**Product paths:** .changeset/uninstall.md, docs/stability.md, docs/upgrading.md, packages/create-religion/README.md, packages/create-religion/bin/religion.ts, packages/create-religion/lib/args.test.ts, packages/create-religion/lib/args.ts, packages/create-religion/lib/doctor.ts, packages/create-religion/lib/install.ts, packages/create-religion/lib/uninstall.test.ts, packages/create-religion/lib/uninstall.ts, packages/create-religion/surface.json
+
 ## Findings
 
 ### 16/F-147 [P1] closed - A link inside the backups directory makes uninstall write outside the project

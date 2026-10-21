@@ -23,7 +23,7 @@
 - [x] 9. **Locally modified managed files** - the dashboard's install panel, and `doctor`, list the managed files whose contents no longer match the hash recorded at install
 - [x] 10. **Doctor checks every documented setting** - every key in the configuration reference validated, with its type, from one schema shared with the verification check
 - [x] 11. **Documentation checked against the public surface** - a verification check that fails when the docs name a command, flag, or exit code the surface record lacks, or carry a broken relative link
-- [ ] 12. **Everything deferred, in one place** - a dashboard view gathering the deferred notes from every archive, each linked to the item that left it, shown as a record rather than a to-do list
+- [x] 12. **Everything deferred, in one place** - a dashboard view gathering the deferred notes from every archive, each linked to the item that left it, shown as a record rather than a to-do list
 - [ ] 13. **Doctor confirms the hooks are wired** - when the Claude Code adapter is installed, check that its settings register the three hooks and that each hook file exists, and offer the fix when one is missing
 - [ ] 14. **Update shows what changed** - `update` prints the changelog entries between the installed version and the one it brings, with the changelog shipped in the package
 - [ ] 15. **Settings explained in the dashboard** - each setting's meaning, allowed values, and default beside its current value, read from the schema item 10 introduces

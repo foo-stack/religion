@@ -117,3 +117,9 @@ the wrong reason. The hook now compares real paths.
 - **Wave partner steps**, allowed only once parallel steps are in use.
 - **F-159**, repaired and `fixed`, waiting for a review.
 - **This repository's `.claude/settings.json`**, which is the user's and does not wire the new hook.
+
+## Landed
+
+**Base:** 27dc3a3d761dc9c9ed5f717f6f2a6804bc70d87e
+**Commits:** dda2c958466e284003c8da4d1982345bcafe9402, 6cd54930421d7f8c5bd8cf99c98624d9bc989fd6, 057d6e47541320fb733cd81fc6bff8f8267b5314, 5434e1acca5b7e8f81d94bfcce299beb01b35aaf
+**Product paths:** .changeset/drift-hook.md, docs/architecture/enforcement.md, docs/doctor.md, docs/upgrading.md, packages/create-religion/lib/doctor.test.ts, packages/create-religion/lib/doctor.ts, packages/create-religion/lib/uninstall.test.ts, scripts/hooks.test.ts, src/hooks/warn-on-drift.mjs, src/state/.state/settings-template.json

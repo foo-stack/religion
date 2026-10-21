@@ -120,3 +120,9 @@ said the wrong thing.
 - **This repository's own `.claude/settings.json`** lacks the scan hook. It is the user's
   configuration, so it was reported rather than edited.
 - **F-142 and F-143**, repaired and `fixed`, waiting for a review.
+
+## Landed
+
+**Base:** bd9d241737eb69c6536f12365c788c342dd92058
+**Commits:** a927dbfda007cc891b2552e448c46a0cce710ad6, b360315e9bfff410f3738f0c680fd47a60513292, 60f58eca538a5962dd80b696d9c446a2e46ef570, 22da7a285cc2205837e1169a3fc57aedf31bd863, c3d854d4d5485046b277f72df875240db567becd, 3295fefaf05255bc5d8c4e98653e90a75bb33fff
+**Product paths:** .changeset/hooks-wired.md, docs/doctor.md, packages/create-religion/lib/doctor.test.ts, packages/create-religion/lib/doctor.ts, packages/create-religion/lib/install.ts, scripts/verify.ts

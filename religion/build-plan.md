@@ -27,7 +27,7 @@
 - [x] 13. **Doctor confirms the hooks are wired** - when the Claude Code adapter is installed, check that its settings register the three hooks and that each hook file exists, and offer the fix when one is missing
 - [x] 14. **Update shows what changed** - `update` prints the changelog entries between the installed version and the one it brings, with the changelog shipped in the package
 - [x] 15. **Settings explained in the dashboard** - each setting's meaning, allowed values, and default beside its current value, read from the schema item 10 introduces
-- [ ] 16. **A clean way out** - `religion uninstall` removes the unedited managed files, leaves and reports the edited ones, takes the managed block out of the entry file and Religion's own hook entries out of the settings, and keeps the plans and history; it shows its plan unless given `--yes`
+- [x] 16. **A clean way out** - `religion uninstall` removes the unedited managed files, leaves and reports the edited ones, takes the managed block out of the entry file and Religion's own hook entries out of the settings, and keeps the plans and history; it shows its plan unless given `--yes`
 - [ ] 17. **Evidence that outlives the session** - `check` records each outcome's verdict and the evidence that decided it, `complete` reuses that record, and the archive keeps it
 - [ ] 18. **A handoff that tells the whole story** - the end-of-turn handoff also reports a stale overview, notes waiting in the inbox, unverified findings, and a blocked automated run
 - [ ] 19. **Backfill discrepancies kept** - when `tests backfill` finds code that does not do what its name or documentation says, it offers to `capture` each mismatch rather than reporting it only in chat

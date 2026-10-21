@@ -35,6 +35,7 @@ npx create-religion status      # where the work stands, and the one thing to do
 npx create-religion doctor      # is the setup healthy
 npx create-religion dashboard   # a local read-only view
 npx create-religion update      # update the workflow files, preserving yours
+npx create-religion uninstall   # take it back out, keeping the plans and history
 ```
 
 Installing the package globally shortens these to `religion status` and the rest.
@@ -49,7 +50,7 @@ The same for every command, so a script can rely on them:
 | Code | Meaning |
 | --- | --- |
 | `0` | the command did what it was asked |
-| `1` | it ran and reports failure: no project found, a failing `doctor` check, conflicts, declined merges or linked files left by `install` or `update`, a project installed by a newer version, or an unexpected error |
+| `1` | it ran and reports failure: no project found, a failing `doctor` check, conflicts, declined merges or linked files left by `install` or `update`, a file `uninstall` meant to change but left, a project installed by a newer version, or an unexpected error |
 | `2` | usage error: nothing was written |
 
 ## Documentation

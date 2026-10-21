@@ -48,7 +48,7 @@ export interface PlanEntry {
   recorded?: string;
 }
 
-const MANIFEST_PATH = `${STATE_DIR}/.state/manifest.json`;
+export const MANIFEST_PATH = `${STATE_DIR}/.state/manifest.json`;
 const MANIFEST = path.join(...MANIFEST_PATH.split("/"));
 
 /** Where originals are copied before install or update changes them, relative to the project. */
@@ -173,7 +173,7 @@ async function planDropped(templateRoot: string, target: string, previous: Manif
  * asked anything. A case-insensitive disk would otherwise let `RELIGION/` or `.CLAUDE/`
  * reach files the comparison was meant to exclude.
  */
-function retiringTree(relative: string): string | null {
+export function retiringTree(relative: string): string | null {
   if (relative.includes("\\") || path.posix.isAbsolute(relative)) return null;
   if (path.posix.normalize(relative) !== relative || relative.split("/").includes("..")) return null;
   const trees = new Set(Object.values(ADAPTERS).flatMap((adapter) => adapter.trees));
@@ -330,14 +330,14 @@ async function rebuildOrConflict(target: string, relative: string, recorded: unk
   return genuine && (await isPlainFile(target, relative)) ? "rebuild" : "conflict";
 }
 
-async function backUp(target: string, relative: string): Promise<void> {
+export async function backUp(target: string, relative: string): Promise<void> {
   const backup = path.join(target, ...`${BACKUPS}/${relative}`.split("/"));
   await fs.mkdir(path.dirname(backup), { recursive: true });
   await fs.copyFile(path.join(target, relative), backup);
 }
 
 /** Whether any existing component of a project path is a symbolic link. Missing ones are not. */
-async function throughLink(target: string, relative: string): Promise<boolean> {
+export async function throughLink(target: string, relative: string): Promise<boolean> {
   let current = target;
   for (const part of relative.split("/")) {
     current = path.join(current, part);

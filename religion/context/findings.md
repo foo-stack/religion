@@ -814,3 +814,12 @@
 **Why it matters:** "Adds flags, e.g. `--yes`, to install." printed as "Adds flags, e.g."; nothing in the current changelog is affected.
 **Suggested fix:** End a sentence only at a full stop before a capital or a code span, and not after a common abbreviation.
 **Resolution:** Repaired 2026-10-21 as suggested, tested.
+
+### F-152 [P3] fixed - A link swapped in after the backup check can still redirect a backup
+
+**File:** packages/create-religion/lib/uninstall.ts:142
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Surfaced by:** F-147
+**Why it matters:** Backup paths were checked once, before the removals ran, so a folder turned into a link in between was followed by the copy, and a collision at the final file threw after the skills were gone.
+**Suggested fix:** Check again just before the copy, and record a failed copy as a kept file instead of throwing.
+**Resolution:** Repaired 2026-10-21 as suggested; a link planted at the destination after the plan leaves the outside file and the entry file untouched, tested.

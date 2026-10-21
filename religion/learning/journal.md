@@ -102,3 +102,10 @@ verification check, and both were found by hand first.
 **Surprised:** Item 10's schema made this item small: one field per setting and one function, because the kinds, ranges, defaults and the reference's wording already lived in one place.
 **Went wrong:** A display case the reference table never exercised, a range with one value, only showed up on the real page; looking at the rendered output caught what the tests did not ask about.
 **Deferred:** Editing settings from the page.
+
+## 2026-10-21 - A clean way out
+
+**Archive:** history/features/16-a-clean-way-out.md
+**Surprised:** The first destructive command in the tool needed the review more than any item before it: one P1 and two P2s, each a way to touch something the plan never meant to, and each reproduced by the reviewer on a throwaway project.
+**Went wrong:** Reused helpers carried assumptions that suit reading and not deleting: a root found by walking up, a link check on a folder but not its contents, a plan treated as still true at the moment of removal.
+**Deferred:** Removing `religion/` itself.

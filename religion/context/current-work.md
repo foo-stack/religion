@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 30b
-**Approved:** 2026-10-21, 6dc8e9f8d39666ea
+**Approved:** 2026-10-21, 03045a36fa324214
 **Status:** in progress
 
 ## Goal
@@ -51,6 +51,7 @@ large, so split it.
   `docs/architecture/enforcement.md`, and a minor changeset. *Done when:* the verify check that
   holds `HOOKS` to the template passes with four, `doctor` reports all four wired on a fresh
   install, and `npm test` exits 0.
+- [x] Repair F-159 - the split made linear, names read as specs write them, bare basenames held to the root, sub-steps kept with their step, and notebooks covered.
 
 ## Files and areas
 
@@ -81,3 +82,4 @@ large, so split it.
 ## Amendments
 
 - 2026-10-21 - Step 2 also changes `lib/uninstall.test.ts` - its fixture settings were built one hook per event, so a second PreToolUse hook overwrote the first; the doctor tests had the same shape.
+- 2026-10-21 - Added the repair step for F-159, and the hook's matcher gains NotebookEdit - the audit found notebook edits skipped the check.

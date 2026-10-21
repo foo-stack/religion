@@ -35,21 +35,27 @@ try {
 }
 if (!spec.trim() || /_Nothing in progress\./.test(spec)) process.exit(0);
 
-const file = JSON.parse(readFileSync(0, "utf8"))?.tool_input?.file_path;
+const input = JSON.parse(readFileSync(0, "utf8"))?.tool_input;
+const file = input?.file_path ?? input?.notebook_path;
 if (typeof file !== "string" || !file) process.exit(0);
 const relative = path.relative(root, real(path.resolve(root, file))).split(path.sep).join("/");
-if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) process.exit(0);
+if (!relative || relative === ".." || relative.startsWith("../") || path.isAbsolute(relative)) process.exit(0);
 if (ALWAYS.some((prefix) => relative.startsWith(prefix))) process.exit(0);
 
 const section = (heading) => spec.split(/^(?=## )/m).find((part) => new RegExp(`^## ${heading}\\s*$`, "im").test(part.split("\n", 1)[0])) ?? "";
-const steps = section("Build steps").split(/^(?=\s*- \[[ xX]\])/m);
-const current = steps.find((step) => /^\s*- \[ \]/.test(step)) ?? "";
-const names = [...(current + section("Files and areas")).matchAll(/`([^`\s]+)`/g)]
-  .map((m) => m[1].replace(/^\.\//, ""))
-  .filter((name) => name.includes("/") || name.includes("."));
+// Split on top-level steps only, so a step keeps its own sub-steps; [ \t]* rather than \s* keeps
+// the pattern from scanning across blank lines, which made a large spec take seconds per edit.
+const steps = section("Build steps").split(/^(?=- \[[ xX]\])/m);
+const current = steps.find((step) => /^- \[ \]/.test(step)) ?? "";
+const spans = (text) => [...text.matchAll(/`([^`\s]+)`/g)].map((m) => m[1].replace(/^\.\//, "").replace(/(:\d+){1,2}$|#L\d+(-L?\d+)?$/, ""));
+// A step's spans include commands and values, so only path-like ones count there; Files and
+// areas lists nothing but files, `Makefile` included.
+const names = [...spans(current).filter((name) => name.includes("/") || name.includes(".")), ...spans(section("Files and areas"))]
+  .filter((name) => name && !/^[./*]+$/.test(name));
 const named = names.some((name) =>
   relative === name ||
-  relative.endsWith("/" + name) ||
+  // A bare name is one file at the root; only a path with a directory may stand for a deeper one.
+  (name.includes("/") && relative.endsWith("/" + name)) ||
   relative.startsWith(name.endsWith("/") ? name : name + "/")
 );
 if (named) process.exit(0);

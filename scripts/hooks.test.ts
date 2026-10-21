@@ -181,3 +181,39 @@ test("warn-on-drift stays silent on a payload it cannot read or a path outside t
   assert.equal(drift(root, JSON.stringify({ tool_input: {} })), "");
   assert.equal(drift(root, editing(path.join(outside, "victim.md"))), "");
 });
+
+test("warn-on-drift reads names the way specs write them, without letting a bare basename stand for any file", async (t) => {
+  const { root } = await project(t);
+  const spec = [
+    "# Export",
+    "",
+    "## Build steps",
+    "",
+    "- [ ] **Step 1 - the route** - `lib/state.ts:42`, `index.ts`, and",
+    "  - [ ] a sub-step touching `lib/sub.ts`",
+    "",
+    "## Files and areas",
+    "",
+    "- `Makefile`",
+    "- `notes/run.ipynb`",
+    ""
+  ].join("\n");
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), spec);
+  const asks = (input: string) => drift(root, input) !== "";
+  assert.equal(asks(editing(path.join(root, "packages/app/lib/state.ts"))), false, "a line suffix is dropped");
+  assert.equal(asks(editing(path.join(root, "packages/app/lib/sub.ts"))), false, "a sub-step belongs to its step");
+  assert.equal(asks(editing(path.join(root, "Makefile"))), false, "a name with no extension in Files and areas");
+  assert.equal(asks(editing(path.join(root, "index.ts"))), false, "a bare name is the file at the root");
+  assert.equal(asks(editing(path.join(root, "deep/a/index.ts"))), true, "a bare name is not any file of that name");
+  assert.equal(asks(editing(path.join(root, "..config.ts"))), true, "a root file whose name starts with two dots");
+  assert.equal(asks(JSON.stringify({ tool_name: "NotebookEdit", tool_input: { notebook_path: path.join(root, "notes/run.ipynb") } })), false);
+  assert.equal(asks(JSON.stringify({ tool_name: "NotebookEdit", tool_input: { notebook_path: path.join(root, "other.ipynb") } })), true);
+});
+
+test("warn-on-drift stays quick on a spec with a very long build steps section", async (t) => {
+  const { root } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), "# X\n\n## Build steps\n\n" + "   \n".repeat(200_000) + "- [ ] **Step 1 - a** - `a.ts`\n");
+  const started = Date.now();
+  drift(root, editing(path.join(root, "b.ts")));
+  assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+});

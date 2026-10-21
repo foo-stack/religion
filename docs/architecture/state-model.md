@@ -65,7 +65,7 @@ to happen, and a file with no writer is documentation nobody updates.
 | `context/coding-standards.md` | You | You; `setup` tunes it | `feature`, `implement`, `audit` |
 | `context/ai-interaction.md` | You | You; `setup` tunes it | every skill, for output shape |
 | `context/project-overview.md` | Generated | `overview` only | every skill |
-| `context/current-work.md` | Generated | `feature`, `fix`, `rollback`; reset by `complete` | `implement`, `check`, `audit`, `complete` |
+| `context/current-work.md` | Generated | `feature`, `fix`, `rollback`, `refactor`; `check` writes its Evidence section; reset by `complete` | `implement`, `check`, `audit`, `complete` |
 | `context/findings.md` | Generated | `audit` appends and re-statuses; `implement` marks repairs; `complete` prunes | `complete` gate, `status`, `fix`, `auto fix` |
 | `context/handoff.md` | Generated | The session-stop hook, or `complete` where hooks are unavailable | humans, and the next session |
 | `history/**` | Archive | `complete` only | `rollback`, `status`, humans |

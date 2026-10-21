@@ -53,7 +53,14 @@ output that proves it.
 ## Step 1 - apply the configured gates
 
 Read `qualityGates`. Reuse evidence already produced during this work item rather than
-repeating it.
+repeating it, and take it from the spec's `## Evidence` section, which $check writes, not
+from memory of the session: the session may have been cleared since.
+
+The record counts only for the code it checked. Reuse it when its stamp names the current
+commit with a clean tree, and the tree is still clean apart from the workflow's own state
+files. A record from another commit, from a dirty tree, or with an outcome that failed or
+could not be checked is not evidence for this completion: run $check again, which
+replaces it. A spec with no Evidence section has not been checked.
 
 - **`audit`**: `manual` runs only on request. `when-sensitive` runs for authentication,
   authorization, payments, secrets, personal data, migrations, destructive operations,

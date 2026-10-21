@@ -607,3 +607,33 @@ test("readProjectState reads the lessons, the journal and what distill decided",
   assert.equal(learning.journal.length, 3);
   assert.equal(learning.undecided, 2);
 });
+
+test("parseSpec reads the Evidence section check writes", () => {
+  const spec = parseSpec(
+    [
+      "# Export",
+      "",
+      "## Build steps",
+      "",
+      "- [x] **Step 1 - the plan** - x",
+      "",
+      "## Evidence",
+      "",
+      "Checked 2026-10-21 at 9f73627, tree clean.",
+      "",
+      "- **Step 1 - the plan** - pass: ran `npm test`; 159 passed.",
+      "- **Step 3 - the command** - fail: exited 1",
+      "  with a wrapped line.",
+      "- **Goal** - could not check: no browser available."
+    ].join("\n")
+  );
+  assert.deepEqual(spec?.evidence, {
+    stamp: "Checked 2026-10-21 at 9f73627, tree clean.",
+    entries: [
+      { outcome: "Step 1 - the plan", verdict: "pass", detail: "ran `npm test`; 159 passed." },
+      { outcome: "Step 3 - the command", verdict: "fail", detail: "exited 1 with a wrapped line." },
+      { outcome: "Goal", verdict: "could not check", detail: "no browser available." }
+    ]
+  });
+  assert.equal(parseSpec("# Export\n\n## Build steps\n\n- [ ] **Step 1 - a** - x\n")?.evidence, null);
+});

@@ -879,3 +879,11 @@
 **Why it matters:** The step split was quadratic across blank lines, close to the hook timeout on a large spec; names without an extension and names with a line suffix were ignored; a bare basename allowed that name anywhere; sub-steps were split off their step; a root file beginning with two dots skipped the check; and notebook edits were not covered.
 **Suggested fix:** Each as named.
 **Resolution:** Repaired 2026-10-21, each tested by running the hook, the large spec within a time bound; waves' partner steps are left for when parallel steps are on by default.
+
+### F-160 [P3] open - The dashboard's selectable items have no role for assistive technology
+
+**File:** packages/create-religion/lib/dashboard.ts:930
+**Found:** 2026-10-21 while trying item 35's accessibility review on the running dashboard (lens: accessibility)
+**Why it matters:** The Deferred view's items are focusable and act on Enter, but the accessibility tree exposes them as `generic`, so a screen reader does not announce them as something to activate; the History rows are built the same way.
+**Suggested fix:** Give each selectable item `role='button'`, and `aria-pressed` or `aria-current` for the selected one.
+**Resolution:**

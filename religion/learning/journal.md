@@ -200,3 +200,10 @@ verification check, and both were found by hand first.
 **Surprised:** Every automated run in this repository had been deciding bumps without saying so; the new rule writes down what those runs did by habit, and puts the decision in front of the reviewer.
 **Went wrong:** nothing
 **Deferred:** Other release tools.
+
+## 2026-10-21 - Accessibility as evidence
+
+**Archive:** history/features/35-accessibility-as-evidence.md
+**Surprised:** The first run of the fallback, on Religion's own dashboard, found that the selectable items added two runs ago are invisible to a screen reader as controls; the dashboard had been checked by screenshot each time.
+**Went wrong:** nothing
+**Deferred:** F-160; a required-scan setting.

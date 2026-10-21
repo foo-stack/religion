@@ -81,3 +81,10 @@ verification check, and both were found by hand first.
 **Surprised:** The page's script is forbidden from writing any `href`, so even an in-page anchor has to be static markup; the network check reads the script's string literals.
 **Went wrong:** A checkpoint was committed on a failing suite because `npm test | grep ... && git commit` takes grep's exit status, the same slip archive 05 records twice. Gate commits on the test command's own exit code, never on a filtered pipe.
 **Deferred:** Marking deferred notes as done.
+
+## 2026-10-21 - Doctor confirms the hooks are wired
+
+**Archive:** history/features/13-doctor-confirms-the-hooks-are-wired.md
+**Surprised:** This repository's own Claude Code settings have never wired the injection scan, and its seeded settings template is from 0.5.0, so the seed-once rule had quietly left the project that builds Religion without one of its own hooks.
+**Went wrong:** Comparing against the project's seeded copy instead of what the package ships, and matching commands as exact strings; running the check on a real, old project caught the first, the audit the second.
+**Deferred:** Writing missing hook entries for the user.

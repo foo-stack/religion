@@ -52,6 +52,9 @@ export function computeStatus(state: ProjectState): Status {
   if (state.openQuestions.length > 0) {
     warnings.push(`open question(s) in the overview: ${state.openQuestions.join(", ")}`);
   }
+  if (state.specDrifted) {
+    warnings.push("the active spec changed since it was approved, with no amendment recording why");
+  }
   if (state.learning.undecided >= DISTILL_AFTER) {
     warnings.push(`${state.learning.undecided} journal entries are waiting for distill`);
   }

@@ -48,7 +48,7 @@ large, so split it.
   status, recording evidence or adding an amendment leave the hash unchanged; changing a step's
   wording changes it; amendments are read as dated lines; and a spec with no stamp is never
   called drifted.
-- [ ] **Step 2 - status warns on drift** - `computeStatus`. *Done when:* a unit test shows the
+- [x] **Step 2 - status warns on drift** - `computeStatus`. *Done when:* a unit test shows the
   warning for a drifted spec and none for a stamped one that matches, and `surface.json` is
   unchanged.
 - [ ] **Step 3 - `implement` stamps and amends** - the implement skill. *Done when:* the rendered

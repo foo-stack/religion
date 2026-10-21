@@ -143,6 +143,8 @@ export interface ProjectState {
   learning: Learning;
   /** Plan items a spike archive says it settled. */
   settledSpikes: string[];
+  /** The active spec changed since its approval stamp, with no renewed stamp to say it was decided. */
+  specDrifted: boolean;
 }
 
 const CHECKBOX = /^(\s*)- \[( |x|X)\]\s*(.*)$/;
@@ -651,6 +653,7 @@ export async function readProjectState(root: string): Promise<ProjectState> {
     activity: parseActivity(activity, await installedSkills(root)),
     inbox: parseInbox(inbox),
     learning: { lessons: parseLessons(lessons), journal: entries, undecided: entries.filter((e) => !e.decided).length },
-    settledSpikes
+    settledSpikes,
+    specDrifted: parseSpec(work)?.drifted ?? false
   };
 }

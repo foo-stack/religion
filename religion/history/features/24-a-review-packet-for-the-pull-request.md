@@ -95,3 +95,9 @@ Nothing.
 ### Deferred
 
 - **Nothing.**
+
+## Landed
+
+**Base:** 784e7a7f624c5a6dacb4e07ad34fab5d93057b4f
+**Commits:** f0e518618710eac591ea105fbfdeefce3e48b1be, 6eca7ca9866a019e260b44fb73eadbd61c79bc03, f9216423b0a6c4b82edf7e85f9fb326a71753de7, b938a3818c2e0e463ab79c05ee7e75a127376770
+**Product paths:** .agents/skills/auto/SKILL.md, .agents/skills/complete/SKILL.md, .changeset/review-packet.md, .claude/skills/auto/SKILL.md, .claude/skills/complete/SKILL.md, src/skills/auto/SKILL.md, src/skills/complete/SKILL.md

@@ -12,6 +12,9 @@
     },
     {
       "prompt": "Repair F-21 and F-22 together, they are in the same file"
+    },
+    {
+      "prompt": "Fix issue #42"
     }
   ],
   "negative": [

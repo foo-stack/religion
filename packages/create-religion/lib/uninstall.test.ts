@@ -8,7 +8,7 @@ import path from "node:path";
 import { HOOKS } from "./doctor.js";
 import { applyInstall, planInstall, wireHooks, writeManifest } from "./install.js";
 import { MANAGED_END, MANAGED_START } from "./merge.js";
-import { planUninstall } from "./uninstall.js";
+import { applyUninstall, planUninstall } from "./uninstall.js";
 
 const SETTINGS_TEMPLATE = JSON.stringify(
   { hooks: Object.fromEntries(HOOKS.map((h) => [h.event, [{ hooks: [{ type: "command", command: h.command }] }]])) },
@@ -105,4 +105,52 @@ test("planUninstall ignores a recorded path outside the trees, and plans nothing
 
   await fs.rm(manifestPath);
   assert.deepEqual(await planUninstall(target), []);
+});
+
+const exists = (file: string) => fs.lstat(file).then(() => true, () => false);
+
+test("applyUninstall removes the planned files, keeps the rest, and empties directories it emptied", async (t) => {
+  const target = await installed(t);
+  await write(target, ".claude/skills/fix/SKILL.md", "edited by hand\n");
+  await write(target, ".claude/notes.md", "mine\n");
+
+  const result = await applyUninstall(target, await planUninstall(target));
+  assert.equal(await exists(path.join(target, ".claude/skills/feature")), false, "an emptied skill directory goes");
+  assert.equal(await exists(path.join(target, ".claude/hooks")), false);
+  assert.equal(await fs.readFile(path.join(target, ".claude/skills/fix/SKILL.md"), "utf8"), "edited by hand\n");
+  assert.equal(await exists(path.join(target, ".claude/notes.md")), true, "a directory that still holds something stays");
+  assert.equal(await exists(path.join(target, "CLAUDE.md")), false);
+  assert.equal(await exists(path.join(target, ".claude/settings.json")), false);
+  assert.equal(await exists(path.join(target, "religion/.state/manifest.json")), false);
+  assert.equal(await fs.readFile(path.join(target, "religion/build-plan.md"), "utf8"), "## Plan\n", "the project's own record stays");
+  assert.deepEqual(result.kept.map((e) => [e.relative, e.action]), [[".claude/skills/fix/SKILL.md", "keep-edited"]]);
+});
+
+test("applyUninstall cuts the block out of an entry file and keeps the user's own hooks and settings", async (t) => {
+  const target = await installed(t);
+  await write(target, "CLAUDE.md", `# Mine\n\nMy notes.\n\n${MANAGED_START}\nours\n${MANAGED_END}\n\n## Commands\n\n- Test: npm test\n`);
+  const settings = JSON.parse(SETTINGS_TEMPLATE);
+  settings.hooks.Stop[0].hooks.push({ type: "command", command: "node scripts/mine.mjs" });
+  settings.permissions = { allow: ["Bash(npm test)"] };
+  await write(target, ".claude/settings.json", JSON.stringify(settings));
+
+  const result = await applyUninstall(target, await planUninstall(target));
+  assert.equal(await fs.readFile(path.join(target, "CLAUDE.md"), "utf8"), "# Mine\n\nMy notes.\n\n## Commands\n\n- Test: npm test\n");
+  assert.deepEqual(JSON.parse(await fs.readFile(path.join(target, ".claude/settings.json"), "utf8")), {
+    hooks: { Stop: [{ hooks: [{ type: "command", command: "node scripts/mine.mjs" }] }] },
+    permissions: { allow: ["Bash(npm test)"] }
+  });
+  assert.deepEqual(result.backups.sort(), ["religion/.state/backups/.claude/settings.json", "religion/.state/backups/CLAUDE.md"]);
+  assert.match(await fs.readFile(path.join(target, "religion/.state/backups/CLAUDE.md"), "utf8"), /religion:managed:start/);
+});
+
+test("applyUninstall refuses a state directory reached through a link, before removing anything", async (t) => {
+  const target = await installed(t);
+  const elsewhere = path.join(path.dirname(target), "elsewhere");
+  await fs.rename(path.join(target, "religion/.state"), elsewhere);
+  await fs.symlink(elsewhere, path.join(target, "religion/.state"));
+
+  const plan = await planUninstall(target);
+  await assert.rejects(applyUninstall(target, plan), /symbolic link/);
+  assert.equal(await exists(path.join(target, ".claude/skills/feature/SKILL.md")), true);
 });

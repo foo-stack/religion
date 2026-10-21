@@ -330,14 +330,14 @@ async function rebuildOrConflict(target: string, relative: string, recorded: unk
   return genuine && (await isPlainFile(target, relative)) ? "rebuild" : "conflict";
 }
 
-async function backUp(target: string, relative: string): Promise<void> {
+export async function backUp(target: string, relative: string): Promise<void> {
   const backup = path.join(target, ...`${BACKUPS}/${relative}`.split("/"));
   await fs.mkdir(path.dirname(backup), { recursive: true });
   await fs.copyFile(path.join(target, relative), backup);
 }
 
 /** Whether any existing component of a project path is a symbolic link. Missing ones are not. */
-async function throughLink(target: string, relative: string): Promise<boolean> {
+export async function throughLink(target: string, relative: string): Promise<boolean> {
   let current = target;
   for (const part of relative.split("/")) {
     current = path.join(current, part);

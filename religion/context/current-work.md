@@ -58,7 +58,7 @@ large, so split it.
   block to be cut, an unedited unmarked one for removal and an edited unmarked one kept,
   settings planned as removed, unwired or kept by the same rules, a manifest path outside
   the trees ignored, and no manifest planned as nothing to do.
-- [ ] **Step 2 - carrying it out** - `applyUninstall(target, plan)`. *Done when:* unit tests
+- [x] **Step 2 - carrying it out** - `applyUninstall(target, plan)`. *Done when:* unit tests
   show the planned files gone, the kept ones byte-for-byte unchanged, the entry file's own
   text intact around the cut, settings keeping a user's own hook, a backup of each rewritten
   file, emptied directories removed and a non-empty one kept, `religion/` other than the

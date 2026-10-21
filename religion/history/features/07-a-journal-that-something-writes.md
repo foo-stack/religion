@@ -116,3 +116,9 @@ line by line caught it, and a follow-up commit reworded it to rejected or kept f
 
 - **Entries for items finished before this one.** Item 6, finished earlier in the same run,
   has none; its archive holds what an entry would have said.
+
+## Landed
+
+**Base:** fc1423a8e8f449aec25e5f06f01b8f51237d459a
+**Commits:** 0a69c96a47062d3fff70ceff23afb555fa008719, 98c7c0e616b7d3b50cadb6e019c86b0bdff3344a, 16626a3bc962a2d566fc971bcd7ae005c9a1850a, a39c03b3481b3d7fe22e52d2787930e92f05beb0
+**Product paths:** .agents/skills/complete/SKILL.md, .agents/skills/distill/SKILL.md, .changeset/journal-writer.md, .claude/skills/complete/SKILL.md, .claude/skills/distill/SKILL.md, docs/architecture/state-model.md, src/skills/complete/SKILL.md, src/skills/distill/SKILL.md, src/state/learning/journal.md

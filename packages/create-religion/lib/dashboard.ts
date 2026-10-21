@@ -12,6 +12,7 @@ import { runDoctor } from "./doctor.js";
 import { editedSinceInstall, readManifest } from "./install.js";
 import { readIfPresent, statePath } from "./paths.js";
 import { parseInbox, parseSpec, readHistory, readProjectState } from "./state.js";
+import { describeSettings } from "./settings.js";
 import { computeStatus, DISTILL_AFTER } from "./status.js";
 
 export interface Dashboard {
@@ -104,6 +105,7 @@ async function readState(root: string, version: string | null) {
     health: {
       checks: await runDoctor(root, changes),
       config: state.config,
+      settings: describeSettings(state.config),
       install: await readInstall(root, changes),
       tool: version,
       inbox: parseInbox(await readIfPresent(statePath(root, "context", "inbox.md"))),
@@ -445,7 +447,8 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .view { display: none; scroll-margin-top: 100vh; }
 .view:target, main:not(:has(.view:target)) #overview { display: block; }
 .app:not(:has(.view:target)) .to-overview, .app:has(#overview:target) .to-overview, .app:has(#work:target) .to-work,
-.app:has(#findings:target) .to-findings, .app:has(#history:target) .to-history, .app:has(#learning:target) .to-learning,
+.app:has(#findings:target) .to-findings, .app:has(#history:target) .to-history, .app:has(#deferred:target) .to-deferred,
+.app:has(#learning:target) .to-learning,
 .app:has(#health:target) .to-health { background: var(--surface-2); color: var(--text); }
 .tile.bad .big { color: var(--block); }
 .checks span { align-items: flex-start; }
@@ -453,6 +456,7 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .checks span.bad::before { background: var(--block); }
 .checklist .bad { width: var(--dot-size); height: var(--dot-size); border-radius: 50%; background: var(--block); }
 .callout.bad { color: var(--block); }
+.rows td .bad { color: var(--block); }
 .callout.bad::before { background: var(--block); }
 .live.off { color: var(--block); }
 .live.off::before { background: var(--block); }
@@ -460,6 +464,7 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .empty { margin: 0; color: var(--text-3); font-size: var(--text-sm); }
 button.chip { font-family: inherit; cursor: pointer; }
 [data-pick] { cursor: pointer; }
+.section-label [data-pick] { color: var(--accent); } .section-label [data-pick].sel { text-decoration: underline; }
 .nowrap { white-space: nowrap; }
 :focus-visible { outline: var(--mark-ring) solid var(--accent); outline-offset: var(--space-1); }
 @media (max-width: 900px) {
@@ -476,6 +481,7 @@ button.chip { font-family: inherit; cursor: pointer; }
       <a class="to-work" href="#work">Work <span class="count" id="count-work"></span></a>
       <a class="to-findings" href="#findings">Findings <span class="count" id="count-findings"></span></a>
       <a class="to-history" href="#history">History <span class="count" id="count-history"></span></a>
+      <a class="to-deferred" href="#deferred">Deferred <span class="count" id="count-deferred"></span></a>
       <a class="to-learning" href="#learning">Learning <span class="count" id="count-learning"></span></a>
       <a class="to-health" href="#health">Health <span class="count" id="count-health"></span></a>
     </div>
@@ -521,6 +527,10 @@ button.chip { font-family: inherit; cursor: pointer; }
         </div>
         <aside class="panel sticky" id="hs-detail"></aside>
       </div>
+    </section>
+    <section class="view" id="deferred">
+      <div class="head"><h1>Deferred</h1><div class="meta"><span>history/</span></div></div>
+      <section class="panel"><header><h2>What each item set aside</h2><a href="#history">Open the chosen item in History</a></header><div class="body" id="df-body"></div></section>
     </section>
     <section class="view" id="learning">
       <div class="head"><h1>Learning</h1><div class="meta"><span>learning/lessons.md</span><span>learning/journal.md</span></div></div>
@@ -647,6 +657,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     renderWork();
     renderFindings();
     renderHistory();
+    renderDeferred();
     renderLearning();
     renderHealth();
   }
@@ -659,6 +670,8 @@ button.chip { font-family: inherit; cursor: pointer; }
     $("count-findings").textContent = pending ? String(pending) : "";
     $("count-findings").className = data.status.findings.blocking.length ? "count warn" : "count";
     $("count-history").textContent = data.history.length ? String(data.history.length) : "";
+    const deferred = sum(data.history, (a) => a.deferred.length);
+    $("count-deferred").textContent = deferred ? String(deferred) : "";
     $("count-learning").textContent = data.learning.undecided ? String(data.learning.undecided) : "";
     $("count-health").textContent = passing + "/" + data.health.checks.length;
     $("count-health").className = passing < data.health.checks.length ? "count warn" : "count";
@@ -902,13 +915,20 @@ button.chip { font-family: inherit; cursor: pointer; }
     return a[0] - b[0] < 0 || (a[0] === b[0] && (a[1] - b[1] < 0 || (a[1] === b[1] && a[2] < b[2])));
   }
 
-  function flatten(value, prefix, rows) {
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      Object.keys(value).forEach((k) => flatten(value[k], prefix ? prefix + "." + k : k, rows));
-    } else {
-      rows.push([prefix, typeof value === "string" ? value : JSON.stringify(value)]);
-    }
-    return rows;
+  // A record, not a queue: archives are never edited, so nothing here says whether a note was later done.
+  function renderDeferred() {
+    const left = data.history.filter((a) => a.deferred.length);
+    const total = sum(left, (a) => a.deferred.length);
+    $("df-body").innerHTML = left.length
+      ? "<p class='prose dim'>" + total + " notes from " + left.length + " items, newest first: what each chose to leave, as it stood when the item closed. " +
+        "A note may since have been done; the archive is not changed when it is. Choose an item to open it in History.</p>" +
+        left.map((a) =>
+          "<div class='divider'></div><div class='label section-label'><span tabindex='0' data-pick='archive' data-value='" + esc(a.kind + "/" + a.file) + "'" +
+          (ui.archive === a.kind + "/" + a.file ? " class='sel'" : "") + ">" +
+          esc((a.number ? a.number + ". " : "") + (a.title || a.file)) + "</span> <span class='faint'>" + esc(a.type || a.kind) + "</span></div>" +
+          "<ul class='list'>" + a.deferred.map((d) => "<li>" + md(d) + "</li>").join("") + "</ul>"
+        ).join("")
+      : empty("Nothing deferred yet. complete archives what each item set aside, and it gathers here.");
   }
 
   function renderLearning() {
@@ -957,10 +977,13 @@ button.chip { font-family: inherit; cursor: pointer; }
       "<li><span class='" + (c.ok ? "ok" : "bad") + "'></span><span>" + esc(c.name) + "</span><span class='detail'>" + md(c.detail) + "</span><span class='blocks'>" +
       (c.blocks === "nothing" ? "advisory" : "blocks " + esc(c.blocks)) + "</span></li>"
     ).join("");
-    const settings = flatten(config(), "", []);
-    $("hl-config").innerHTML = settings.length
-      ? "<table class='rows'><tr><th>Setting</th><th>Value</th></tr>" + settings.map((r) => "<tr><td class='file'>" + esc(r[0]) + "</td><td class='mono'>" + esc(r[1]) + "</td></tr>").join("") + "</table>"
-      : "<div class='body'>" + empty("No configuration. The built-in defaults apply.") + "</div>";
+    $("hl-config").innerHTML = "<table class='rows'><tr><th>Setting</th><th>Here</th><th>Default</th><th>Accepts</th></tr>" +
+      h.settings.map((r) =>
+        "<tr><td><span class='file'>" + esc(r.key) + "</span>" + (r.summary ? "<div class='dim'>" + esc(r.summary) + "</div>" : "") +
+        (r.problem ? "<div class='bad'>" + esc(r.problem) + "</div>" : "") + "</td>" +
+        "<td class='mono'>" + (r.value === null ? "<span class='faint'>default</span>" : esc(r.value)) + "</td>" +
+        "<td class='mono'>" + (r.default ? md(r.default) : "") + "</td><td>" + (r.accepts ? md(r.accepts) : "") + "</td></tr>"
+      ).join("") + "</table>";
     $("hl-install").innerHTML =
       (install
         ? "<dl class='kv'>" + field("Installed by", esc(install.version || "unknown"), "mono") + field("This tool", esc(h.tool || "unknown"), "mono") +

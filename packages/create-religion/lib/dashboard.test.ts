@@ -83,7 +83,7 @@ test("the dashboard's data carries every view's section", async (t) => {
   assert.equal(response.status, 200);
   assert.deepEqual(Object.keys(data), ["project", "status", "plan", "findings", "activity", "work", "history", "learning", "health"]);
   assert.deepEqual(Object.keys(data.learning as object), ["lessons", "journal", "undecided", "distillAfter"]);
-  assert.deepEqual(Object.keys(data.health as object), ["checks", "config", "install", "tool", "inbox", "questions"]);
+  assert.deepEqual(Object.keys(data.health as object), ["checks", "config", "settings", "install", "tool", "inbox", "questions"]);
   assert.equal((data.health as { tool: string }).tool, "9.9.9");
 });
 

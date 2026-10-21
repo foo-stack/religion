@@ -21,6 +21,7 @@ const STATEMENT = path.join(repoRoot, "docs", "stability.md");
 export async function statementProblems(): Promise<string[]> {
   const record = JSON.parse(await fs.readFile(SURFACE_RECORD, "utf8")) as {
     commands: Record<string, string[]>;
+    exitCodes: number[];
     skills: string[];
     adapters: Record<string, unknown>;
     config: Record<string, unknown>;
@@ -33,6 +34,7 @@ export async function statementProblems(): Promise<string[]> {
   const entries: [string, string][] = [
     ...Object.keys(record.commands).map((name): [string, string] => ["command", name]),
     ...[...new Set(Object.values(record.commands).flat())].map((name): [string, string] => ["option", name]),
+    ...record.exitCodes.map((code): [string, string] => ["exit code", String(code)]),
     ...record.skills.map((name): [string, string] => ["skill", name]),
     ...Object.keys(record.adapters).map((name): [string, string] => ["adapter", name]),
     ...Object.keys(record.config).map((name): [string, string] => ["setting", name]),
@@ -397,7 +399,8 @@ async function hookProblems(root: string): Promise<string[]> {
  *
  * No dependency of any kind, since a dependency's own install script would run; entry points
  * only in the compiled `dist/bin`; published files only the compiled output, the template,
- * and two documents; and the build compiling only the folders this check reads.
+ * and three documents, the changelog among them so `update` can say what changed offline;
+ * and the build compiling only the folders this check reads.
  */
 async function packageProblems(root: string): Promise<string[]> {
   const where = "packages/create-religion/package.json";
@@ -421,7 +424,7 @@ async function packageProblems(root: string): Promise<string[]> {
   }
   const files = (manifest.files as string[] | undefined) ?? [];
   for (const file of files) {
-    if (!["dist/", "template/", "README.md", "LICENSE"].includes(file)) problems.push(`${where} publishes ${file}`);
+    if (!["dist/", "template/", "README.md", "LICENSE", "CHANGELOG.md"].includes(file)) problems.push(`${where} publishes ${file}`);
   }
 
   const config = JSON.parse(await fs.readFile(path.join(dir, "tsconfig.json"), "utf8")) as { include?: string[] };

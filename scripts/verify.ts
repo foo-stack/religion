@@ -20,6 +20,8 @@ import type { Shape, Surface } from "./surface.js";
 import { currentOutputs, currentSurface, SURFACE_RECORD } from "./surface-current.js";
 import { upgradeProblems } from "./upgrade.js";
 import { networkProblems, statementProblems } from "./promises.js";
+import { docsProblems } from "./docs.js";
+import { HOOKS, parseHooks } from "../packages/create-religion/lib/doctor.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -240,42 +242,44 @@ const checks: Check[] = [
         path.join(repoRoot, "template")
       ];
 
+      // The changelog ships too, and `update` prints from it into whatever is reading its output.
+      const changelog = path.join(repoRoot, "packages", "create-religion", "CHANGELOG.md");
+      const shipped = [...(await Promise.all(roots.map(walkIfPresent))).flat(), changelog];
+
       const problems: string[] = [];
-      for (const root of roots) {
-        for (const file of await walkIfPresent(root)) {
-          if (EXEMPT.some((name) => file.endsWith(name))) continue;
-          const contents = await fs.readFile(file, "utf8");
-          const where = path.relative(repoRoot, file);
-          contents.split(/\r?\n/).forEach((line, index) => {
-            // One report per line: a line matching two patterns is one problem, not two.
-            const signatures = INJECTION.filter((re) => re.test(line)).length;
-            if (signatures > 0) {
+      for (const file of shipped) {
+        if (EXEMPT.some((name) => file.endsWith(name))) continue;
+        const contents = await fs.readFile(file, "utf8");
+        const where = path.relative(repoRoot, file);
+        contents.split(/\r?\n/).forEach((line, index) => {
+          // One report per line: a line matching two patterns is one problem, not two.
+          const signatures = INJECTION.filter((re) => re.test(line)).length;
+          if (signatures > 0) {
+            problems.push(
+              `${where}:${index + 1}: ${signatures} injection signature${signatures === 1 ? "" : "s"}: ` +
+              line.trim().slice(0, 80)
+            );
+          }
+          const secret = SECRETS.find(({ re }) => re.test(line));
+          if (secret) problems.push(`${where}:${index + 1}: looks like ${secret.what}`);
+
+          // A regex over the literal text is defeated by one round of base64, which is
+          // cheap enough that leaving it out would make the whole check advisory. Decode
+          // any long blob and ask the same questions of what comes out.
+          for (const blob of line.match(/[A-Za-z0-9+/]{40,}={0,2}/g) ?? []) {
+            const decoded = decodeBase64(blob);
+            if (!decoded) continue;
+            const inner = INJECTION.filter((re) => re.test(decoded)).length;
+            if (inner > 0) {
               problems.push(
-                `${where}:${index + 1}: ${signatures} injection signature${signatures === 1 ? "" : "s"}: ` +
-                line.trim().slice(0, 80)
+                `${where}:${index + 1}: base64 blob decodes to ${inner} injection ` +
+                `signature${inner === 1 ? "" : "s"}: ${decoded.trim().slice(0, 60)}`
               );
             }
-            const secret = SECRETS.find(({ re }) => re.test(line));
-            if (secret) problems.push(`${where}:${index + 1}: looks like ${secret.what}`);
-
-            // A regex over the literal text is defeated by one round of base64, which is
-            // cheap enough that leaving it out would make the whole check advisory. Decode
-            // any long blob and ask the same questions of what comes out.
-            for (const blob of line.match(/[A-Za-z0-9+/]{40,}={0,2}/g) ?? []) {
-              const decoded = decodeBase64(blob);
-              if (!decoded) continue;
-              const inner = INJECTION.filter((re) => re.test(decoded)).length;
-              if (inner > 0) {
-                problems.push(
-                  `${where}:${index + 1}: base64 blob decodes to ${inner} injection ` +
-                  `signature${inner === 1 ? "" : "s"}: ${decoded.trim().slice(0, 60)}`
-                );
-              }
-              const hidden = SECRETS.find(({ re }) => re.test(decoded));
-              if (hidden) problems.push(`${where}:${index + 1}: base64 blob decodes to ${hidden.what}`);
-            }
-          });
-        }
+            const hidden = SECRETS.find(({ re }) => re.test(decoded));
+            if (hidden) problems.push(`${where}:${index + 1}: base64 blob decodes to ${hidden.what}`);
+          }
+        });
       }
       return problems;
     }
@@ -310,6 +314,32 @@ const checks: Check[] = [
   {
     name: "the stability statement names the whole recorded surface",
     run: statementProblems
+  },
+  {
+    name: "doctor expects the hooks the settings template wires",
+    run: async () => {
+      // doctor compares a project's settings with HOOKS, so HOOKS must be what install writes.
+      const shipped = parseHooks(await fs.readFile(path.join(repoRoot, "src", "state", ".state", "settings-template.json"), "utf8")) ?? [];
+      const key = (hook: { event: string; command: string }) => `${hook.event} ${hook.command}`;
+      const expected = new Set(HOOKS.map(key));
+      const actual = new Set(shipped.map(key));
+      return [
+        ...[...actual].filter((h) => !expected.has(h)).map((h) => `settings-template.json wires ${h}, which doctor's HOOKS lacks`),
+        ...[...expected].filter((h) => !actual.has(h)).map((h) => `doctor's HOOKS expects ${h}, which settings-template.json does not wire`)
+      ];
+    }
+  },
+  {
+    name: "the documentation names only what the surface records, and its links resolve",
+    run: async () => {
+      const record = JSON.parse(await fs.readFile(SURFACE_RECORD, "utf8")) as Parameters<typeof docsProblems>[1];
+      const docs = ["README.md", "packages/create-religion/README.md", ...(await markdownUnder("docs"))];
+      const files = Object.fromEntries(await Promise.all(docs.map(async (file) => [file, await fs.readFile(path.join(repoRoot, file), "utf8")])));
+      return docsProblems(files, record, {
+        exists: (relative) => fsSync.existsSync(path.join(repoRoot, relative)),
+        read: (relative) => (fsSync.existsSync(path.join(repoRoot, relative)) ? fsSync.readFileSync(path.join(repoRoot, relative), "utf8") : null)
+      });
+    }
   },
   {
     name: "shipped code opens no network connection",
@@ -416,3 +446,12 @@ main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
 });
+
+/** Every markdown file under a directory of the repository, as repository-relative paths. */
+async function markdownUnder(directory: string): Promise<string[]> {
+  const entries = await fs.readdir(path.join(repoRoot, directory), { recursive: true, withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+    .map((entry) => path.relative(repoRoot, path.join(entry.parentPath, entry.name)).split(path.sep).join("/"))
+    .sort();
+}

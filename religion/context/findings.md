@@ -774,3 +774,43 @@
 **Why it matters:** `a..b/`, `feature//`, `a/.x/` and `x.lock/` passed, and `git check-ref-format` rejects each as a branch prefix.
 **Suggested fix:** Refuse empty components, components starting with `.` or ending in `.lock`, and `..`.
 **Resolution:** Repaired 2026-10-21 with a test of all four and `.hidden/`.
+
+### F-142 [P2] fixed - A hook wired the way Claude Code documents fails the hooks check
+
+**File:** packages/create-religion/lib/doctor.ts:225
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** Commands were compared as exact strings, so `node "$CLAUDE_PROJECT_DIR"/.claude/hooks/x.mjs`, a doubled space or a trailing argument read as not registered, and `doctor` exited 1 on a correctly wired project.
+**Suggested fix:** Compare by the hook's file, allowing the project-directory prefix, any whitespace and trailing arguments.
+**Resolution:** Repaired 2026-10-21: hooks match by file under the same event, with all three forms tested.
+
+### F-143 [P3] fixed - The hooks check misdescribes odd settings and links
+
+**File:** packages/create-religion/lib/doctor.ts:171
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** A directory at the settings path read as a link, a linked `.claude/` read as missing with advice install would not follow, linked hook files were told to run `update` which leaves links alone, `disableAllHooks` passed, and hooks in `settings.local.json` were ignored.
+**Suggested fix:** Say which of those it is, count linked hook files by existence, fail on `disableAllHooks`, and read the local settings too.
+**Resolution:** Repaired 2026-10-21 as suggested, each case tested.
+
+### F-144 [P3] fixed - Prerelease headings are mixed into what update reports
+
+**File:** packages/create-religion/lib/changelog.ts:20
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** `isNewer` ignores a prerelease tag, so a stable user was shown beta notes and a beta user updating to the release saw nothing.
+**Suggested fix:** Compare prerelease tags, or leave prerelease headings out.
+**Resolution:** Repaired 2026-10-21: prerelease headings are left out, tested.
+
+### F-145 [P3] fixed - Nested bullets fold into an entry that has no full stop
+
+**File:** packages/create-religion/lib/changelog.ts:24
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** `Patch only` followed by a nested list printed as one line with the list run into it.
+**Suggested fix:** Cut each entry at a nested bullet as well as at a blank line.
+**Resolution:** Repaired 2026-10-21 as suggested, tested.
+
+### F-146 [P3] fixed - An abbreviation ends the first sentence early
+
+**File:** packages/create-religion/lib/changelog.ts:31
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** "Adds flags, e.g. `--yes`, to install." printed as "Adds flags, e.g."; nothing in the current changelog is affected.
+**Suggested fix:** End a sentence only at a full stop before a capital or a code span, and not after a common abbreviation.
+**Resolution:** Repaired 2026-10-21 as suggested, tested.

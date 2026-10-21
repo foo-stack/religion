@@ -181,7 +181,7 @@ function retiringTree(relative: string): string | null {
 }
 
 /** Every component a real directory and the last a regular file, with no symbolic link anywhere. */
-async function isPlainFile(target: string, relative: string): Promise<boolean> {
+export async function isPlainFile(target: string, relative: string): Promise<boolean> {
   const parts = relative.split("/");
   let current = target;
   for (const [index, part] of parts.entries()) {
@@ -473,7 +473,7 @@ export function manifestRefusal(manifest: Manifest | null, packageVersion: strin
   return null;
 }
 
-function isNewer(candidate: unknown, than: string): boolean {
+export function isNewer(candidate: unknown, than: string): boolean {
   const a = parseVersion(candidate);
   const b = parseVersion(than);
   if (!a || !b) return false;

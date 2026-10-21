@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Doctor checks every documented setting** is in progress: 4 step(s) done, 0 to go.
+**Update shows what changed** is in progress: 3 step(s) done, 0 to go.
 
-Plan: 13 of 52 item(s) complete. Next up: 10. **Doctor checks every documented setting** - every key in the configuration reference validated, with its type, from one schema shared with the verification check
+Plan: 17 of 52 item(s) complete. Next up: 14. **Update shows what changed** - `update` prints the changelog entries between the installed version and the one it brings, with the changelog shipped in the package
 
 ## Read first
 

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { settingProblems } from "./settings.js";
+import { describeSettings, settingProblems } from "./settings.js";
 
 test("settingProblems accepts the shipped defaults and an empty file", () => {
   assert.deepEqual(settingProblems({}), []);
@@ -44,4 +44,27 @@ test("settingProblems refuses a prefix git would refuse as a branch name", () =>
     assert.equal(settingProblems({ git: { featureBranchPrefix: prefix } }).length, 1, prefix);
   }
   assert.deepEqual(settingProblems({ git: { featureBranchPrefix: "team.a/feature/" } }), []);
+});
+
+test("describeSettings gives every setting its meaning, what it accepts, its default and its value", () => {
+  const rows = describeSettings({ git: { mode: "pull-request", colour: "blue" }, auto: { maxRepairAttempts: 11 }, notes: "mine" });
+  const row = (key: string) => rows.find((r) => r.key === key);
+
+  assert.deepEqual(row("git.mode"), {
+    key: "git.mode",
+    summary: "Where work lands: the branch you are on, a branch merged per item, or a pull request per item.",
+    accepts: "`trunk`, `branch-per-item`, `pull-request`",
+    default: "`trunk`",
+    value: '"pull-request"',
+    problem: null
+  });
+  assert.equal(row("workflow.stepReview")?.value, null, "unset falls back to its default");
+  assert.equal(row("auto.maxRepairAttempts")?.problem, "auto.maxRepairAttempts is 11, expected an integer from 0 through 10");
+  assert.equal(row("git.colour")?.problem, "not a setting Religion reads");
+  assert.equal(row("notes")?.value, '"mine"');
+  assert.ok(rows.slice(0, -2).every((r) => r.summary), "every schema setting has a summary");
+});
+
+test("describeSettings says a setting with one allowed value accepts that value", () => {
+  assert.equal(describeSettings({}).find((r) => r.key === "schemaVersion")?.accepts, "`1`");
 });

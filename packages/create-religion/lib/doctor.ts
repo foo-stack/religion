@@ -9,7 +9,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { exists, readIfPresent, SKILL_TREES, STATE_DIR, statePath } from "./paths.js";
-import { editedSinceInstall } from "./install.js";
+import { editedSinceInstall, isPlainFile } from "./install.js";
 import { SETTINGS, settingProblems } from "./settings.js";
 import { readProjectState } from "./state.js";
 
@@ -149,8 +149,129 @@ export async function runDoctor(
   });
 
   results.push(managedFilesCheck(changes === undefined ? await editedSinceInstall(root) : changes));
+  results.push(await readHooks(root));
 
   return results;
+}
+
+const SETTINGS_FILE = ".claude/settings.json";
+const LOCAL_SETTINGS_FILE = ".claude/settings.local.json";
+
+/**
+ * The hooks this version wires, held equal to the shipped settings template by verification.
+ * Not the project's own copy of that template, which is seeded once and goes stale.
+ */
+export const HOOKS: readonly Hook[] = [
+  { event: "PreToolUse", command: "node .claude/hooks/guard-rendered-output.mjs" },
+  { event: "Stop", command: "node .claude/hooks/write-handoff.mjs" },
+  { event: "PostToolUse", command: "node .claude/hooks/scan-untrusted-input.mjs" }
+];
+
+async function readHooks(root: string): Promise<CheckResult> {
+  const files = new Set<string>();
+  for (const { command } of HOOKS) {
+    const file = hookFile(command);
+    // Existence only: a hook file is never read here, so one reached through a link still counts.
+    if (file && (await exists(path.join(root, ...file.split("/"))))) files.add(file);
+  }
+  return hooksCheck({
+    installed: await exists(path.join(root, ".claude", "skills")),
+    wanted: HOOKS,
+    settings: await readSettings(root, SETTINGS_FILE),
+    local: await readSettings(root, LOCAL_SETTINGS_FILE),
+    files
+  });
+}
+
+/** A settings file's text, read only when it is a plain file reached without a link. */
+async function readSettings(root: string, relative: string): Promise<string | "link" | "not-file" | null> {
+  if (await isPlainFile(root, relative)) return readIfPresent(path.join(root, ...relative.split("/")));
+  const parts = relative.split("/");
+  for (let i = 1; i <= parts.length; i += 1) {
+    const stat = await fs.lstat(path.join(root, ...parts.slice(0, i))).catch(() => null);
+    if (!stat) return null;
+    if (stat.isSymbolicLink()) return "link";
+  }
+  return "not-file";
+}
+
+export interface Hook {
+  event: string;
+  command: string;
+}
+
+/** Every `(event, command)` a settings file registers, or null when it does not parse. */
+export function parseHooks(source: string | null): Hook[] | null {
+  if (source === null) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(source);
+  } catch {
+    return null;
+  }
+  const hooks = parsed && typeof parsed === "object" ? (parsed as { hooks?: unknown }).hooks : undefined;
+  if (!hooks || typeof hooks !== "object") return [];
+  return Object.entries(hooks).flatMap(([event, groups]) =>
+    (Array.isArray(groups) ? groups : []).flatMap((group: unknown) => {
+      const inner = group && typeof group === "object" ? (group as { hooks?: unknown }).hooks : undefined;
+      return (Array.isArray(inner) ? inner : []).flatMap((hook: unknown) => {
+        const command = hook && typeof hook === "object" ? (hook as { command?: unknown }).command : undefined;
+        return typeof command === "string" ? [{ event, command }] : [];
+      });
+    })
+  );
+}
+
+// `node .claude/hooks/x.mjs`, or the `"$CLAUDE_PROJECT_DIR"/...` form Claude Code's own docs use.
+const HOOK_COMMAND = /\bnode\s+"?(?:\$\{?CLAUDE_PROJECT_DIR\}?"?\/)?(\.claude\/hooks\/[\w.-]+\.mjs)"?(?:\s|$)/;
+
+function hookFile(command: string): string | null {
+  return HOOK_COMMAND.exec(command)?.[1] ?? null;
+}
+
+function disablesHooks(source: string | null): boolean {
+  try {
+    return source !== null && (JSON.parse(source) as { disableAllHooks?: unknown })?.disableAllHooks === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether Claude Code's settings register every hook the wiring template names, under the same
+ * event, with each hook's file present. Matchers are not compared: a user may tune them.
+ */
+export function hooksCheck(input: {
+  installed: boolean;
+  wanted: readonly Hook[];
+  settings: string | "link" | "not-file" | null;
+  local?: string | "link" | "not-file" | null;
+  files: ReadonlySet<string>;
+}): CheckResult {
+  const result = (ok: boolean, detail: string): CheckResult => ({ name: "hooks", ok, detail, blocks: "nothing" });
+  if (!input.installed) return result(true, "Claude Code is not installed here");
+  if (input.settings === "link") return result(false, `${SETTINGS_FILE} is reached through a link, so it was not read`);
+  if (input.settings === "not-file") return result(false, `${SETTINGS_FILE} is not a regular file`);
+  const local = typeof input.local === "string" && input.local !== "link" && input.local !== "not-file" ? input.local : null;
+  if (input.settings === null && local === null) return result(false, `${SETTINGS_FILE} is missing; a fresh install writes it`);
+  const shared = input.settings === null ? [] : parseHooks(input.settings);
+  if (shared === null) return result(false, `${SETTINGS_FILE} does not parse`);
+  if (disablesHooks(input.settings) || disablesHooks(local)) return result(false, "disableAllHooks is on, so no hook runs");
+  const registered = [...shared, ...(parseHooks(local) ?? [])];
+
+  const unwired = input.wanted.filter((w) => !registered.some((r) => r.event === w.event && hookFile(r.command) === hookFile(w.command)));
+  const fileless = input.wanted.filter((w) => {
+    const file = hookFile(w.command);
+    return file !== null && !input.files.has(file);
+  });
+  if (unwired.length === 0 && fileless.length === 0) return result(true, `all ${input.wanted.length} wired`);
+
+  const name = (hook: Hook) => `${hookFile(hook.command)?.split("/").pop() ?? hook.command} (${hook.event})`;
+  const parts = [
+    unwired.length ? `not registered in ${SETTINGS_FILE} or ${LOCAL_SETTINGS_FILE}: ${unwired.map(name).join(", ")}; copy them from a fresh install's settings` : "",
+    fileless.length ? `missing hook file: ${fileless.map(name).join(", ")}; run update` : ""
+  ].filter(Boolean);
+  return result(false, parts.join("; "));
 }
 
 const LISTED = 5;

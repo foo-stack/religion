@@ -67,3 +67,38 @@ verification check, and both were found by hand first.
 **Surprised:** The surface record already carried a type for every setting, built from the shipped defaults, so a schema existed in three partial copies before this item made it one.
 **Went wrong:** The verification check was written to the spec's wording but not its aim; only planting a drift and watching it pass showed the gap. A check is proved by a case it fails on, not by passing.
 **Deferred:** Flagging keys the reference does not name.
+
+## 2026-10-21 - Documentation checked against the public surface
+
+**Archive:** history/features/11-documentation-checked-against-the-public-surface.md
+**Surprised:** Twenty-six documents and forty relative links held no mistake at all, so the value of the check is entirely in what it will catch next.
+**Went wrong:** Nothing beyond a trailing slash in a fixture; a check that passes first time needed a planted failure before it counted as evidence, the same lesson the settings check taught one item earlier.
+**Deferred:** Running the tool to compare exit codes, and external links.
+
+## 2026-10-21 - Everything deferred, in one place
+
+**Archive:** history/features/12-everything-deferred-in-one-place.md
+**Surprised:** The page's script is forbidden from writing any `href`, so even an in-page anchor has to be static markup; the network check reads the script's string literals.
+**Went wrong:** A checkpoint was committed on a failing suite because `npm test | grep ... && git commit` takes grep's exit status, the same slip archive 05 records twice. Gate commits on the test command's own exit code, never on a filtered pipe.
+**Deferred:** Marking deferred notes as done.
+
+## 2026-10-21 - Doctor confirms the hooks are wired
+
+**Archive:** history/features/13-doctor-confirms-the-hooks-are-wired.md
+**Surprised:** This repository's own Claude Code settings have never wired the injection scan, and its seeded settings template is from 0.5.0, so the seed-once rule had quietly left the project that builds Religion without one of its own hooks.
+**Went wrong:** Comparing against the project's seeded copy instead of what the package ships, and matching commands as exact strings; running the check on a real, old project caught the first, the audit the second.
+**Deferred:** Writing missing hook entries for the user.
+
+## 2026-10-21 - Update shows what changed
+
+**Archive:** history/features/14-update-shows-what-changed.md
+**Surprised:** The network check governs which files the package may publish, not only what code runs, so shipping a markdown file was a change to the promise's allowlist.
+**Went wrong:** The commit gate worked as intended this time: the red suite stopped the commit, where two items earlier a filtered pipe had let one through. A read-only reviewer still ran a stash and pop; reviewer prompts should forbid git commands that touch the working tree.
+**Deferred:** Prerelease notes.
+
+## 2026-10-21 - Settings explained in the dashboard
+
+**Archive:** history/features/15-settings-explained-in-the-dashboard.md
+**Surprised:** Item 10's schema made this item small: one field per setting and one function, because the kinds, ranges, defaults and the reference's wording already lived in one place.
+**Went wrong:** A display case the reference table never exercised, a range with one value, only showed up on the real page; looking at the rendered output caught what the tests did not ask about.
+**Deferred:** Editing settings from the page.

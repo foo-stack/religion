@@ -17,11 +17,11 @@
   - [x] 4c. **Compatibility guards** - checks that fail when the public surface changes by accident: JSON shapes, skill names, flags, config keys, and an upgrade from the last release
   - [x] 4d. **The stability statement** - what is public and what is internal, what a 1.x update guarantees, the three promises, an upgrade guide, and the major changeset that makes it 1.0
 - [x] 5. **A dashboard worth opening** - the active work as its spec defines it, analytics over findings, the plan and its history, and live activity, in a page designed rather than defaulted
-- [ ] 6. **Status shows live activity and the inbox** - `status` and its JSON report the current run from `run.json`, with its resume command when blocked, and how many notes the inbox holds
-- [ ] 7. **A journal that something writes** - `complete` appends a short entry per finished item, what surprised, what went wrong, and what was deferred and why, so `distill` has input; the journal's single writer is settled in the spec
-- [ ] 8. **Learning made visible** - a dashboard view of the lessons and the journal's size, and a `status` nudge toward `distill` once the journal has grown
-- [ ] 9. **Locally modified managed files** - the dashboard's install panel, and `doctor`, list the managed files whose contents no longer match the hash recorded at install
-- [ ] 10. **Doctor checks every documented setting** - every key in the configuration reference validated, with its type, from one schema shared with the verification check
+- [x] 6. **Status shows live activity and the inbox** - `status` and its JSON report the current run from `run.json`, with its resume command when blocked, and how many notes the inbox holds
+- [x] 7. **A journal that something writes** - `complete` appends a short entry per finished item, what surprised, what went wrong, and what was deferred and why, so `distill` has input; the journal's single writer is settled in the spec
+- [x] 8. **Learning made visible** - a dashboard view of the lessons and the journal's size, and a `status` nudge toward `distill` once the journal has grown
+- [x] 9. **Locally modified managed files** - the dashboard's install panel, and `doctor`, list the managed files whose contents no longer match the hash recorded at install
+- [x] 10. **Doctor checks every documented setting** - every key in the configuration reference validated, with its type, from one schema shared with the verification check
 - [ ] 11. **Documentation checked against the public surface** - a verification check that fails when the docs name a command, flag, or exit code the surface record lacks, or carry a broken relative link
 - [ ] 12. **Everything deferred, in one place** - a dashboard view gathering the deferred notes from every archive, each linked to the item that left it, shown as a record rather than a to-do list
 - [ ] 13. **Doctor confirms the hooks are wired** - when the Claude Code adapter is installed, check that its settings register the three hooks and that each hook file exists, and offer the fix when one is missing

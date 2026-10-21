@@ -36,7 +36,7 @@ Failures come first, worst first, each labelled with what it stops:
 | `blocks completion` | you can build, but finishing an item will fail |
 | `cosmetic` | nothing is blocked; it is untidy |
 
-Seven checks run. Six can fail. `visibility` only ever reports.
+Eight checks run. Six can fail. `visibility` and `managed files` only ever report.
 
 ## required files
 
@@ -95,15 +95,23 @@ Run `religion install` from the project root to add one.
 
 Restore it from `update` instead, or copy the shipped defaults back in.
 
-Or it parses and a value is not one of the allowed ones:
+Or it parses and a value is not one the setting accepts:
 
 ```text
   FAIL  configuration (blocks work)
           git.mode is "trunkk", expected one of trunk, branch-per-item, pull-request
 ```
 
-The message names the key, what it found, and every value that would work. Every setting and
-its allowed values are in [the configuration reference](architecture/config.md).
+Every setting is checked against what it accepts, not only the ones with a list of values:
+
+```text
+  FAIL  configuration (blocks work)
+          auto.maxRepairAttempts is 11, expected an integer from 0 through 10
+```
+
+The message names the key, what it found, and what would work. Every setting and what it
+accepts are in [the configuration reference](architecture/config.md). A key the reference does
+not name is ignored, so notes of your own in the file do not fail the check.
 
 ## adapters
 
@@ -231,6 +239,23 @@ You can install and build without git, but there is no history to review and not
 ```bash
 git init
 ```
+
+## managed files
+
+**Never fails.** It compares each installed skill and hook with the hash recorded when it was
+installed:
+
+```text
+  ok    managed files: all 32 unchanged since install
+  ok    managed files: 1 edited and 0 missing of 32 since install: .claude/skills/fix/SKILL.md
+```
+
+An edited file is yours to keep. `update` will not overwrite it; it reports the file as
+changed locally and leaves it alone, so this list is what that report will name. Anything at a
+managed path that is not the plain, readable file installed, such as a link or a directory,
+counts as edited too, since `update` will not overwrite it either. A missing file is put back
+by the next `update`. Entry files are not compared, because `update` merges
+them and an edit there is expected.
 
 ## What a healthy report does not prove
 

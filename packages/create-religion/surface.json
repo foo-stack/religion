@@ -190,6 +190,17 @@
         "present": "boolean",
         "fresh": "boolean|null"
       },
+      "activity": {
+        "recorded": "boolean",
+        "command": "string|null",
+        "status": "string|null",
+        "summary": "string|null",
+        "updatedAt": "string|null",
+        "resumeCommand": "string|null"
+      },
+      "inbox": {
+        "notes": "number"
+      },
       "warnings": [
         "string"
       ]

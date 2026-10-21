@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash b8868b2c073354de -->
+<!-- religion:source-hash ac45f34c1d8f93b4 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,21 +49,11 @@ nothing to sign into.
 
 ## Roadmap
 
-Forty-three items queued. Nineteen start with a spike, and several say which items they
+Thirty-eight items queued. Nineteen start with a spike, and several say which items they
 follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
 
 **Status, learning and health**
 
-6. **Status shows live activity and the inbox** - the current run and its resume command,
-   and the inbox's note count, in `status` and its JSON
-7. **A journal that something writes** - `complete` appends an entry per finished item so
-   `distill` has input
-8. **Learning made visible** - lessons and journal size in the dashboard, a `distill` nudge
-   in `status`
-9. **Locally modified managed files** - listed in the dashboard and `doctor` against the
-   install hashes
-10. **Doctor checks every documented setting** - every key and its type, from one schema
-    shared with verification
 11. **Documentation checked against the public surface** - commands, flags, exit codes and
     relative links
 12. **Everything deferred, in one place** - a dashboard view of every archive's deferred notes

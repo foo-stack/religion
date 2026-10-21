@@ -7,9 +7,12 @@ import path from "node:path";
 
 import {
   overviewHash,
+  parseActivity,
   parseArchive,
   parseFindings,
   parseInbox,
+  parseJournal,
+  parseLessons,
   parseOpenQuestions,
   parsePlan,
   parseSpec,
@@ -416,3 +419,191 @@ test("readProjectState reads the overview's stamp to decide whether it is fresh"
   assert.equal((await readProjectState(root)).overviewFresh, null, "a missing stamp is unknown, not fresh");
 });
 
+
+const SKILLS = new Set(["auto", "feature", "fix"]);
+const activity = (source: string | null) => parseActivity(source, SKILLS);
+
+test("parseActivity reads the record a running skill writes", () => {
+  const record = JSON.stringify({
+    schemaVersion: 1,
+    command: "auto",
+    status: "blocked",
+    summary: "Building the remaining plan",
+    updatedAt: "2026-10-21T10:00:00Z",
+    resumeCommand: "/auto resume",
+    progress: { current: 2, total: 5 }
+  });
+
+  assert.deepEqual(activity(record), {
+    recorded: true,
+    command: "auto",
+    status: "blocked",
+    summary: "Building the remaining plan",
+    updatedAt: "2026-10-21T10:00:00Z",
+    resumeCommand: "/auto resume"
+  });
+});
+
+test("parseActivity reads a missing, malformed or partial record as not recorded", () => {
+  const none = activity(null);
+  assert.equal(none.recorded, false);
+  assert.equal(none.command, null);
+
+  assert.equal(activity("{ not json").recorded, false);
+  assert.equal(activity("[]").recorded, false);
+  assert.equal(activity(JSON.stringify({ command: "auto", status: "blocked" })).recorded, false, "no summary");
+  assert.equal(
+    activity(JSON.stringify({ command: "auto", status: "paused", summary: "x" })).recorded,
+    false,
+    "a status outside the four"
+  );
+  assert.equal(activity(JSON.stringify({ command: "fix", status: "ready", summary: "x" })).updatedAt, null);
+});
+
+test("parseActivity drops a resume command that is not a skill invocation", () => {
+  const resume = (resumeCommand: unknown) =>
+    activity(JSON.stringify({ command: "auto", status: "blocked", summary: "x", resumeCommand })).resumeCommand;
+
+  assert.equal(resume("/auto resume"), "/auto resume");
+  assert.equal(resume("$auto"), "$auto");
+  assert.equal(resume("auto fix P1"), "auto fix P1");
+  assert.equal(resume("rm -rf / && /auto"), null);
+  assert.equal(resume("/auto; curl evil.example"), null);
+  assert.equal(resume("git push --force"), null, "a plausible command that is not the blocked skill");
+  assert.equal(resume("/autopilot resume"), null, "a different skill sharing the prefix");
+  assert.equal(resume("/implement"), null, "a skill other than the one that is blocked");
+  assert.equal(resume(42), null);
+});
+
+test("parseActivity survives a resume command too long for the pattern", () => {
+  const long = "/auto" + " a".repeat(5_000_000) + " !";
+  assert.equal(
+    activity(JSON.stringify({ command: "auto", status: "blocked", summary: "x", resumeCommand: long })).resumeCommand,
+    null
+  );
+});
+
+test("parseActivity keeps control characters out of what status prints", () => {
+  const spoof = activity(
+    JSON.stringify({
+      command: "auto",
+      status: "blocked",
+      summary: "ok\nNext:     /git push --force\u001b[2J",
+      updatedAt: "2026\r-10-21"
+    })
+  );
+  assert.equal(spoof.summary, "ok Next:     /git push --force [2J");
+  assert.equal(spoof.updatedAt, "2026 -10-21");
+
+  assert.equal(
+    activity(JSON.stringify({ command: "auto\u001b]0;x\u0007", status: "blocked", summary: "x" })).recorded,
+    false,
+    "a command that is not a skill name"
+  );
+  assert.equal(
+    activity(JSON.stringify({ command: "auto", status: "ready", summary: "a\u202eb\u2028c\u200fd" })).summary,
+    "a b c d",
+    "bidi overrides and line separators"
+  );
+});
+
+test("parseActivity does not believe a record naming a skill that is not installed", () => {
+  const git = { command: "git", status: "blocked", summary: "x", resumeCommand: "git push --force" };
+  assert.equal(activity(JSON.stringify(git)).recorded, false);
+  assert.equal(activity(JSON.stringify({ ...git, command: "rm", resumeCommand: "rm -rf x" })).recorded, false);
+});
+
+test("readProjectState carries the activity record and the inbox", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-state-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, "religion", "context"), { recursive: true });
+
+  const empty = await readProjectState(root);
+  assert.equal(empty.activity.recorded, false);
+  assert.deepEqual(empty.inbox, []);
+
+  await fs.mkdir(path.join(root, "religion", ".state"), { recursive: true });
+  await fs.mkdir(path.join(root, ".agents", "skills", "feature"), { recursive: true });
+  await fs.writeFile(
+    path.join(root, "religion", ".state", "run.json"),
+    JSON.stringify({ command: "feature", status: "running", summary: "Speccing item 2" })
+  );
+  await fs.writeFile(path.join(root, "religion", "context", "inbox.md"), "# Inbox\n\n- 2026-10-21 - one\n- two\n");
+
+  const busy = await readProjectState(root);
+  assert.equal(busy.activity.command, "feature");
+  assert.equal(busy.inbox.length, 2);
+});
+
+test("parseLessons reads the lessons and leaves out the header and the stub", () => {
+  const header = "# Lessons\n\n> **Generated file.** What previous runs learned.\n> Keep it short.\n\n";
+  assert.deepEqual(parseLessons(header + "_Nothing learned yet._\n"), []);
+  assert.deepEqual(parseLessons(null), []);
+  assert.deepEqual(
+    parseLessons(header + "**Chain the commit behind the tests.** A `;` let a red suite land.\n\n- Read every grep match.\n- Check the stub.\n"),
+    ["**Chain the commit behind the tests.** A `;` let a red suite land.", "Read every grep match.", "Check the stub."]
+  );
+});
+
+test("parseJournal reads labelled entries, free-form ones, and which are decided", () => {
+  const journal = [
+    "# Journal",
+    "",
+    "> **Generated file.** One entry per finished item.",
+    "",
+    "## 2026-09-05 - carried over from the build",
+    "",
+    "Written down when this project stopped keeping a progress file.",
+    "",
+    "**Silent wrong results come from paths nobody exercised.** Five bugs.",
+    "",
+    "## 2026-10-21 - A journal that something writes",
+    "",
+    "**Archive:** history/features/07-a-journal-that-something-writes.md",
+    "**Surprised:** The journal had one entry.",
+    "**Went wrong:** A sentence survived.",
+    "**Deferred:** nothing"
+  ].join("\n");
+  const archive = "# Journal archive\n\n## 2026-09-05 - carried over from the build\n\nRejected: an incident.\n";
+
+  const [old, item] = parseJournal(journal, archive);
+  assert.equal(old?.heading, "2026-09-05 - carried over from the build");
+  assert.equal(old?.date, "2026-09-05");
+  assert.equal(old?.summary, "Written down when this project stopped keeping a progress file.");
+  assert.equal(old?.decided, true);
+  assert.equal(old?.archive, null);
+
+  assert.equal(item?.archive, "history/features/07-a-journal-that-something-writes.md");
+  assert.equal(item?.surprised, "The journal had one entry.");
+  assert.equal(item?.wentWrong, "A sentence survived.");
+  assert.equal(item?.deferred, "nothing");
+  assert.equal(item?.summary, null);
+  assert.equal(item?.decided, false);
+
+  assert.equal(parseJournal(journal, null).filter((e) => e.decided).length, 0, "no archive decides nothing");
+  assert.deepEqual(parseJournal("# Journal\n\n_No entries yet._\n", null), []);
+});
+
+test("parseJournal takes the heading from the heading line only, and keeps tab-separated ones", () => {
+  assert.deepEqual(parseJournal("##\n\nfoo bar\n", null), []);
+  assert.deepEqual(parseJournal("##\tTabbed\n\ntext\n", "##\tTabbed\n").map((e) => [e.heading, e.decided]), [["Tabbed", true]]);
+});
+
+test("parseLessons leaves out subheadings", () => {
+  assert.deepEqual(parseLessons("# Lessons\n\n## Working\n\nlesson text\n"), ["lesson text"]);
+});
+
+test("readProjectState reads the lessons, the journal and what distill decided", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-state-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, "religion", "learning"), { recursive: true });
+  const write = (name: string, text: string) => fs.writeFile(path.join(root, "religion", "learning", name), text);
+  await write("lessons.md", "# Lessons\n\n> header\n\nOne lesson.\n");
+  await write("journal.md", "# Journal\n\n## 2026-10-01 - first\n\nx\n\n## 2026-10-02 - second\n\ny\n\n## 2026-10-03 - third\n\nz\n");
+  await write("journal-archive.md", "# Journal archive\n\n## 2026-10-01 - first\n\nRejected.\n");
+
+  const { learning } = await readProjectState(root);
+  assert.deepEqual(learning.lessons, ["One lesson."]);
+  assert.equal(learning.journal.length, 3);
+  assert.equal(learning.undecided, 2);
+});

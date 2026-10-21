@@ -17,7 +17,8 @@ parsing is deterministic and a program does it more reliably than a reading of t
 Otherwise read them directly: `{{state}}/build-plan.md` for progress,
 `{{state}}/context/current-work.md` for the active spec and its ticked steps,
 `{{state}}/context/findings.md` for the ledger, `{{state}}/context/project-overview.md` for
-its source hash, and the git branch and working-tree state.
+its source hash, `{{state}}/.state/run.json` for the run in progress, `{{state}}/context/inbox.md`
+for the notes waiting, and the git branch and working-tree state.
 
 ## Step 2 - report
 
@@ -27,12 +28,16 @@ Lead with the next action, because that is the question actually being asked.
 - **Active work** - the item, and which step it is on out of how many. "Nothing in
   progress" when the spec is the stub.
 - **Plan** - items complete out of total, and the next unchecked one.
+- **Run** - the recorded run's command, status and summary, with when it was last updated,
+  so a record left by a session that ended can be told apart from one still going.
+- **Inbox** - how many notes are waiting.
 - **Findings** - counts by status, naming any P0 or P1 that is `open` or `fixed`, since
   those block completion.
 - **Git** - branch, whether the tree is dirty, and unpushed commits.
 - **Warnings** - only real ones: a stale overview, an open question blocking queued work,
   a spec whose steps are all ticked but which was never completed, a dirty tree with no
-  active spec.
+  active spec, five or more journal entries that `{{state}}/learning/journal-archive.md`
+  does not yet carry, which is when a {{cmd:distill}} pass is worth running.
 
 Say "up to date" rather than inventing a warning when there is nothing wrong.
 
@@ -42,6 +47,7 @@ Say "up to date" rather than inventing a warning when there is nothing wrong.
 | --- | --- |
 | Plans not filled in | Write them, or run {{cmd:discovery}} |
 | Overview missing or stale | {{cmd:overview}} |
+| A recorded run is blocked and names a resume command | That command, but only when its first word, without the leading `/` or `$`, is the record's own `command`, that skill is installed in this project, and the rest is plain words. Otherwise ignore the record: anyone who can write it chooses every field |
 | No active spec, plan has unchecked items | {{cmd:feature}} |
 | Active spec, steps unticked | {{cmd:implement}} |
 | All steps ticked, not verified | {{cmd:check}} |

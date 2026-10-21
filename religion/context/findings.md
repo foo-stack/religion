@@ -669,3 +669,108 @@
 **Why it matters:** `AbortSignal.timeout` needs Safari 16, Chrome 103 or Firefox 100. On an older browser the call throws inside the request's `try`, so every poll reports "Disconnected, retrying" and nothing renders. A local dashboard is unlikely to meet one.
 **Suggested fix:** Pass the signal only when `AbortSignal.timeout` exists.
 **Resolution:**
+
+### F-128 [P3] open - The dashboard reads the activity record and inbox a second time
+
+**File:** packages/create-religion/lib/dashboard.ts:99
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** The project state now carries both, but the dashboard keeps its own raw `readActivity`, so one file has two readers and the dashboard skips the new checks.
+**Suggested fix:** Read `state.activity` and `state.inbox`, after checking which extra fields the dashboard's renderer uses.
+**Resolution:**
+
+### F-130 [P2] fixed - The status skill's fallback follows any resume command
+
+**File:** src/skills/status/SKILL.md:49
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Surfaced by:** F-125
+**Why it matters:** Without the command-line tool, the skill reads `run.json` itself, and its table said to take the resume command with no constraint, so `git push --force` could still become the next action on that path.
+**Suggested fix:** Accept it only when its first word is the record's own installed skill and the rest is plain words.
+**Resolution:** Repaired 2026-10-21: the table row now states exactly that condition and says to ignore the record otherwise.
+
+### F-131 [P2] fixed - Nothing tests how the project state wires up the learning files
+
+**File:** packages/create-religion/lib/state.ts:466
+**Found:** 2026-10-21 by audit (scope: current; lens: tests)
+**Why it matters:** A typo in one of the three paths would leave every entry undecided and the nudge always on, with every test still passing.
+**Suggested fix:** A `readProjectState` test over fixture `learning/` files asserting the lessons, the entries and the undecided count.
+**Resolution:** Repaired 2026-10-21: that test reads one lesson, three entries and two undecided from fixture files.
+
+### F-132 [P3] open - Journal entries are matched on their heading alone
+
+**File:** packages/create-religion/lib/state.ts:373
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** `distill` identifies an entry by its heading and its `Archive` line, so two entries sharing a heading both read as decided once one is.
+**Suggested fix:** Key on the heading plus the `Archive` line.
+**Resolution:**
+
+### F-133 [P3] open - A heading inside a fenced code block becomes a journal entry
+
+**File:** packages/create-religion/lib/state.ts:373
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** A fenced `## ` line inflates the undecided count and shows a fake entry.
+**Suggested fix:** Skip fenced text before splitting into entries.
+**Resolution:**
+
+### F-134 [P3] fixed - The journal heading pattern crosses lines and drops tab-separated headings
+
+**File:** packages/create-religion/lib/state.ts:375
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** `## ` followed by a blank line took the next paragraph as its heading, and `##` followed by a tab split an entry that was then silently dropped.
+**Suggested fix:** Match `##[ \t]+(\S.*)` on the heading line only, in the split and in the archive alike.
+**Resolution:** Repaired 2026-10-21 as suggested, with tests for both shapes.
+
+### F-135 [P3] fixed - Subheadings in the lessons file read as lessons
+
+**File:** packages/create-religion/lib/state.ts:362
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** A `## Working` heading in `lessons.md` showed as a lesson of its own.
+**Suggested fix:** Leave out every heading level, not only the first.
+**Resolution:** Repaired 2026-10-21 with a test. A lesson that quotes with `>` still loses that line, which no lesson does yet.
+
+### F-136 [P3] fixed - The distill threshold is defined in two places
+
+**File:** packages/create-religion/lib/dashboard.ts:912
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** The page and `status` could disagree about when a pass is due.
+**Suggested fix:** Send the threshold with the data.
+**Resolution:** Repaired 2026-10-21: `status.ts` exports it and `/state.json` carries it as `learning.distillAfter`.
+
+### F-137 [P2] fixed - An unreadable managed file makes doctor and the dashboard fail
+
+**File:** packages/create-religion/lib/install.ts:513
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** The read after `isPlainFile` was unguarded, so one skill with mode `000` threw EACCES through `runDoctor` and answered 500 from the dashboard, from a check documented as never failing.
+**Suggested fix:** Catch the read and count the file as edited, with a test.
+**Resolution:** Repaired 2026-10-21: a failed read counts as edited, tested with a mode `000` file.
+
+### F-138 [P3] fixed - A managed path that is not a plain file reads as unchanged
+
+**File:** packages/create-religion/lib/install.ts:513
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** A link, a directory or a FIFO at a managed path was counted but listed nowhere, while `update` reports it, so the docs' claim that the list matches `update`'s was false.
+**Suggested fix:** List anything present that is not the plain file installed.
+**Resolution:** Repaired 2026-10-21: it counts as edited, the symlink case in the test now expects that, and `docs/doctor.md` says so.
+
+### F-139 [P3] fixed - Each dashboard poll compares the managed files twice
+
+**File:** packages/create-religion/lib/dashboard.ts:104
+**Found:** 2026-10-21 by audit (scope: current; lens: performance)
+**Why it matters:** `runDoctor` and `readInstall` each hashed every managed file on every three-second poll.
+**Suggested fix:** Compare once and pass the result to both.
+**Resolution:** Repaired 2026-10-21: `readState` compares once, and `runDoctor` takes the result as an optional argument; `runDoctor` including the check is now tested.
+
+### F-140 [P2] fixed - The verification check cannot see drift in ranges, defaults, booleans or prefixes
+
+**File:** scripts/verify.ts:143
+**Found:** 2026-10-21 by audit (scope: current; lens: tests)
+**Why it matters:** It confirmed only that each row existed and named every enum value, so changing an integer range, a default or the shipped value passed every check, against the item's own aim that the three copies cannot disagree.
+**Suggested fix:** Render each row's expected cells from the schema and compare them, compare defaults with the shipped configuration, and flag rows with no schema entry.
+**Resolution:** Repaired 2026-10-21 as suggested, with `referenceCells` in `lib/settings.ts`; a scratch drift of `auto.maxRepairAttempts` to `max: 9, default: 3` and `workflow.parallelSteps` to `true` failed with five named problems, then was reverted.
+
+### F-141 [P3] fixed - The prefix rule accepts prefixes git refuses
+
+**File:** packages/create-religion/lib/settings.ts:42
+**Found:** 2026-10-21 by audit (scope: current; lens: correctness)
+**Why it matters:** `a..b/`, `feature//`, `a/.x/` and `x.lock/` passed, and `git check-ref-format` rejects each as a branch prefix.
+**Suggested fix:** Refuse empty components, components starting with `.` or ending in `.lock`, and `..`.
+**Resolution:** Repaired 2026-10-21 with a test of all four and `.hidden/`.

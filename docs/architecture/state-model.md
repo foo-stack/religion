@@ -38,7 +38,8 @@ where each tool looks for them.
     │   ├── rollbacks/       (rollback records)
     │   └── spikes/          (answered spike questions)
     ├── learning/
-    │   ├── journal.md       (raw observations)
+    │   ├── journal.md       (one entry per finished item)
+    │   ├── journal-archive.md  (what distill decided about each entry)
     │   └── lessons.md       (curated, loaded)
     ├── reference/           (images and references a spec links to)
     └── .state/
@@ -68,7 +69,8 @@ to happen, and a file with no writer is documentation nobody updates.
 | `context/findings.md` | Generated | `audit` appends and re-statuses; `implement` marks repairs; `complete` prunes | `complete` gate, `status`, `fix`, `auto fix` |
 | `context/handoff.md` | Generated | The session-stop hook, or `complete` where hooks are unavailable | humans, and the next session |
 | `history/**` | Archive | `complete` only | `rollback`, `status`, humans |
-| `learning/journal.md` | Generated | any skill, append-only | `distill` |
+| `learning/journal.md` | Generated | `complete` only, one entry per finished item | `distill` |
+| `learning/journal-archive.md` | Generated | `distill` only | `distill` |
 | `learning/lessons.md` | Generated | `distill` only | every skill |
 | `.state/manifest.json` | Machine | installer and updater only | updater, `doctor` |
 | `.state/run.json` | Machine | every mutating skill, as its first action | dashboard, `status` |

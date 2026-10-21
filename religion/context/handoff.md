@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-Nothing in progress.
+**Doctor checks every documented setting** is in progress: 4 step(s) done, 0 to go.
 
-Plan: 9 of 52 item(s) complete. Next up: 6. **Status shows live activity and the inbox** - `status` and its JSON report the current run from `run.json`, with its resume command when blocked, and how many notes the inbox holds
+Plan: 13 of 52 item(s) complete. Next up: 10. **Doctor checks every documented setting** - every key in the configuration reference validated, with its type, from one schema shared with the verification check
 
 ## Read first
 

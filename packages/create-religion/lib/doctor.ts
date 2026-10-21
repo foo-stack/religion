@@ -8,7 +8,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { exists, readIfPresent, STATE_DIR, statePath } from "./paths.js";
+import { exists, readIfPresent, SKILL_TREES, STATE_DIR, statePath } from "./paths.js";
+import { editedSinceInstall } from "./install.js";
+import { SETTINGS, settingProblems } from "./settings.js";
 import { readProjectState } from "./state.js";
 
 export interface CheckResult {
@@ -37,18 +39,16 @@ const REQUIRED = [
   "reference"
 ];
 
-/** The values each enumerated setting accepts. Other settings are not checked. */
-export const ALLOWED: Record<string, readonly string[]> = {
-  "workflow.stepReview": ["every", "item"],
-  "git.mode": ["trunk", "branch-per-item", "pull-request"],
-  "git.checkpoints": ["none", "every-step", "squash"],
-  "verification.logicTests": ["when-configured", "required"],
-  "verification.uiEvidence": ["when-available", "required"],
-  "qualityGates.audit": ["manual", "when-sensitive", "always"],
-  "qualityGates.check": ["manual", "when-behavioral", "always"]
-};
+/** The values each enumerated setting accepts, as the surface record lists them. */
+export const ALLOWED: Record<string, readonly string[]> = Object.fromEntries(
+  Object.entries(SETTINGS).flatMap(([key, setting]) => (setting.kind === "enum" ? [[key, setting.values]] : []))
+);
 
-export async function runDoctor(root: string): Promise<CheckResult[]> {
+/** `changes` lets a caller that already compared the managed files share the result. */
+export async function runDoctor(
+  root: string,
+  changes?: Awaited<ReturnType<typeof editedSinceInstall>>
+): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
   const state = await readProjectState(root);
 
@@ -66,7 +66,7 @@ export async function runDoctor(root: string): Promise<CheckResult[]> {
   if (!state.configValid) {
     results.push({ name: "configuration", ok: false, detail: "config.json does not parse", blocks: "work" });
   } else {
-    const bad = invalidSettings(state.config);
+    const bad = settingProblems(state.config);
     results.push({
       name: "configuration",
       ok: bad.length === 0,
@@ -75,7 +75,7 @@ export async function runDoctor(root: string): Promise<CheckResult[]> {
     });
   }
 
-  const trees = [".claude/skills", ".agents/skills"];
+  const trees = SKILL_TREES;
   const present: Record<string, string[]> = {};
   for (const tree of trees) {
     const dir = path.join(root, tree);
@@ -148,24 +148,23 @@ export async function runDoctor(root: string): Promise<CheckResult[]> {
     blocks: "completion"
   });
 
+  results.push(managedFilesCheck(changes === undefined ? await editedSinceInstall(root) : changes));
+
   return results;
 }
 
-function invalidSettings(config: unknown): string[] {
-  const problems: string[] = [];
-  if (config === null || typeof config !== "object") return ["not an object"];
+const LISTED = 5;
 
-  for (const [key, allowed] of Object.entries(ALLOWED)) {
-    const value = key.split(".").reduce<unknown>(
-      (node, part) => (node && typeof node === "object" ? (node as Record<string, unknown>)[part] : undefined),
-      config
-    );
-    if (value === undefined) continue;
-    if (!allowed.includes(String(value))) {
-      problems.push(`${key} is "${String(value)}", expected one of ${allowed.join(", ")}`);
-    }
-  }
-  return problems;
+/** Advisory: an edited managed file is its owner's choice, and `update` keeps it rather than overwriting it. */
+export function managedFilesCheck(changes: Awaited<ReturnType<typeof editedSinceInstall>>): CheckResult {
+  const result = (detail: string): CheckResult => ({ name: "managed files", ok: true, detail, blocks: "nothing" });
+  if (!changes) return result("no install record to compare with");
+  const { edited, missing, total } = changes;
+  if (edited.length === 0 && missing.length === 0) return result(`all ${total} unchanged since install`);
+
+  const changed = [...edited, ...missing.map((file) => `${file} (missing)`)];
+  const shown = changed.slice(0, LISTED).join(", ") + (changed.length > LISTED ? `, and ${changed.length - LISTED} more` : "");
+  return result(`${edited.length} edited and ${missing.length} missing of ${total} since install: ${shown}`);
 }
 
 /** The `doctor --json` shape, versioned so it can gain fields without breaking readers. */

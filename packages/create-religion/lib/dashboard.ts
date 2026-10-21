@@ -9,10 +9,10 @@ import http from "node:http";
 import path from "node:path";
 
 import { runDoctor } from "./doctor.js";
-import { readManifest } from "./install.js";
+import { editedSinceInstall, readManifest } from "./install.js";
 import { readIfPresent, statePath } from "./paths.js";
 import { parseInbox, parseSpec, readHistory, readProjectState } from "./state.js";
-import { computeStatus } from "./status.js";
+import { computeStatus, DISTILL_AFTER } from "./status.js";
 
 export interface Dashboard {
   url: string;
@@ -91,6 +91,7 @@ function send(response: http.ServerResponse, status: number, type: string, body:
 
 async function readState(root: string, version: string | null) {
   const state = await readProjectState(root);
+  const changes = await editedSinceInstall(root);
   return {
     project: path.basename(root),
     status: computeStatus(state),
@@ -99,10 +100,11 @@ async function readState(root: string, version: string | null) {
     activity: await readActivity(root),
     work: parseSpec(await readIfPresent(statePath(root, "context", "current-work.md"))),
     history: await readHistory(root),
+    learning: { ...state.learning, distillAfter: DISTILL_AFTER },
     health: {
-      checks: await runDoctor(root),
+      checks: await runDoctor(root, changes),
       config: state.config,
-      install: await readInstall(root),
+      install: await readInstall(root, changes),
       tool: version,
       inbox: parseInbox(await readIfPresent(statePath(root, "context", "inbox.md"))),
       questions: state.openQuestions
@@ -111,14 +113,16 @@ async function readState(root: string, version: string | null) {
 }
 
 /** The manifest is the project's file and may be hand-edited, so only well-formed parts are shown. */
-async function readInstall(root: string) {
+async function readInstall(root: string, changes: Awaited<ReturnType<typeof editedSinceInstall>>) {
   const manifest: unknown = await readManifest(root);
   if (!manifest || typeof manifest !== "object") return null;
   const { version, adapters, managed } = manifest as Record<string, unknown>;
   return {
     version: typeof version === "string" ? version : null,
     adapters: Array.isArray(adapters) ? adapters.filter((a): a is string => typeof a === "string") : [],
-    managed: managed && typeof managed === "object" ? Object.keys(managed).length : 0
+    managed: managed && typeof managed === "object" ? Object.keys(managed).length : 0,
+    edited: changes?.edited ?? [],
+    missing: changes?.missing ?? []
   };
 }
 
@@ -441,7 +445,8 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .view { display: none; scroll-margin-top: 100vh; }
 .view:target, main:not(:has(.view:target)) #overview { display: block; }
 .app:not(:has(.view:target)) .to-overview, .app:has(#overview:target) .to-overview, .app:has(#work:target) .to-work,
-.app:has(#findings:target) .to-findings, .app:has(#history:target) .to-history, .app:has(#health:target) .to-health { background: var(--surface-2); color: var(--text); }
+.app:has(#findings:target) .to-findings, .app:has(#history:target) .to-history, .app:has(#learning:target) .to-learning,
+.app:has(#health:target) .to-health { background: var(--surface-2); color: var(--text); }
 .tile.bad .big { color: var(--block); }
 .checks span { align-items: flex-start; }
 .checks span::before { flex-shrink: 0; margin-top: calc((var(--leading-base) * 1em - var(--dot-size)) / 2); }
@@ -471,6 +476,7 @@ button.chip { font-family: inherit; cursor: pointer; }
       <a class="to-work" href="#work">Work <span class="count" id="count-work"></span></a>
       <a class="to-findings" href="#findings">Findings <span class="count" id="count-findings"></span></a>
       <a class="to-history" href="#history">History <span class="count" id="count-history"></span></a>
+      <a class="to-learning" href="#learning">Learning <span class="count" id="count-learning"></span></a>
       <a class="to-health" href="#health">Health <span class="count" id="count-health"></span></a>
     </div>
     <div class="rail-foot">
@@ -514,6 +520,14 @@ button.chip { font-family: inherit; cursor: pointer; }
           <section class="panel"><header><h2>Build plan</h2><span class="count">build-plan.md</span></header><div class="body" id="hs-plan"></div></section>
         </div>
         <aside class="panel sticky" id="hs-detail"></aside>
+      </div>
+    </section>
+    <section class="view" id="learning">
+      <div class="head"><h1>Learning</h1><div class="meta"><span>learning/lessons.md</span><span>learning/journal.md</span></div></div>
+      <div class="tiles" id="ln-tiles"></div>
+      <div class="grid">
+        <section class="panel"><header><h2>Lessons</h2><span class="count">loaded every session</span></header><div class="body" id="ln-lessons"></div></section>
+        <section class="panel"><header><h2>Journal</h2><span class="count" id="ln-count"></span></header><div class="body" id="ln-journal"></div></section>
       </div>
     </section>
     <section class="view" id="health">
@@ -633,6 +647,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     renderWork();
     renderFindings();
     renderHistory();
+    renderLearning();
     renderHealth();
   }
 
@@ -644,6 +659,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     $("count-findings").textContent = pending ? String(pending) : "";
     $("count-findings").className = data.status.findings.blocking.length ? "count warn" : "count";
     $("count-history").textContent = data.history.length ? String(data.history.length) : "";
+    $("count-learning").textContent = data.learning.undecided ? String(data.learning.undecided) : "";
     $("count-health").textContent = passing + "/" + data.health.checks.length;
     $("count-health").className = passing < data.health.checks.length ? "count warn" : "count";
   }
@@ -895,6 +911,29 @@ button.chip { font-family: inherit; cursor: pointer; }
     return rows;
   }
 
+  function renderLearning() {
+    const l = data.learning;
+    const due = l.undecided >= l.distillAfter;
+    $("ln-tiles").innerHTML =
+      tile("Lessons", String(l.lessons.length), l.lessons.length ? "Loaded into every session" : "None promoted yet") +
+      tile("Journal", String(l.journal.length), l.journal.length ? "One entry per finished item" : "No entries yet") +
+      tile("Waiting for distill", String(l.undecided), due ? "Enough to be worth a distill pass" : "Too few to group yet", "", due ? "bad" : "");
+    $("ln-lessons").innerHTML = l.lessons.length
+      ? l.lessons.map((lesson) => "<p class='prose'>" + md(lesson) + "</p>").join("")
+      : empty("Nothing learned yet. distill promotes an observation here once it has recurred or been confirmed.");
+    $("ln-count").textContent = l.journal.length ? l.journal.length + " entries, newest first" : "";
+    const field = (label, value) => (value ? "<dt>" + label + "</dt><dd>" + md(value) + "</dd>" : "");
+    $("ln-journal").innerHTML = l.journal.length
+      ? l.journal.slice().reverse().map((e) =>
+          "<div class='label section-label'>" + esc(e.heading) + " <span class='tag" + (e.decided ? "" : " progress") + "'>" + (e.decided ? "decided" : "waiting") + "</span></div>" +
+          (e.surprised || e.wentWrong || e.deferred
+            ? "<dl class='kv'>" + field("Surprised", e.surprised) + field("Went wrong", e.wentWrong) + field("Deferred", e.deferred) +
+              (e.archive ? "<dt>Archive</dt><dd class='mono dim'>" + esc(e.archive) + "</dd>" : "") + "</dl>"
+            : e.summary ? "<p class='prose'>" + md(e.summary) + "</p>" : "")
+        ).join("<div class='divider'></div>")
+      : empty("No entries yet. complete appends one for every item it finishes.");
+  }
+
   function renderHealth() {
     const h = data.health;
     const a = data.activity && typeof data.activity === "object" ? data.activity : null;
@@ -925,7 +964,13 @@ button.chip { font-family: inherit; cursor: pointer; }
     $("hl-install").innerHTML =
       (install
         ? "<dl class='kv'>" + field("Installed by", esc(install.version || "unknown"), "mono") + field("This tool", esc(h.tool || "unknown"), "mono") +
-          field("Adapters", esc(install.adapters.map((x) => ADAPTER_NAMES[x] || x).join(", ") || "none")) + field("Managed", install.managed + " files") + "</dl>"
+          field("Adapters", esc(install.adapters.map((x) => ADAPTER_NAMES[x] || x).join(", ") || "none")) + field("Managed", install.managed + " files") + "</dl>" +
+          "<div class='divider'></div><div class='label section-label'>Changed since install</div>" +
+          (install.edited.length || install.missing.length
+            ? "<ul class='list'>" + install.edited.map((f) => "<li class='mono'>" + esc(f) + "</li>").join("") +
+              install.missing.map((f) => "<li class='mono'>" + esc(f) + " <span class='faint'>missing</span></li>").join("") + "</ul>" +
+              "<p class='prose dim'>update keeps edited files and reports them as changed locally; it puts missing ones back.</p>"
+            : empty("Nothing. Every skill and hook matches what was installed."))
         : empty("No install record. Installing or updating writes religion/.state/manifest.json.")) +
       "<div class='divider'></div><div class='label section-label'>Inbox</div>" +
       (h.inbox.length ? h.inbox.map((n) => "<p class='prose'>" + (n.date ? "<span class='faint mono'>" + esc(n.date) + "</span> " : "") + md(n.text) + "</p>").join("") : empty("Empty.")) +

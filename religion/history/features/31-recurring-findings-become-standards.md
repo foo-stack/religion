@@ -95,3 +95,9 @@ state; it was written as the real path.
 
 - **Running `distill` on this repository.** The archives already hold a candidate group: reads
   and writes through a link, across items 4b, 4d, 5 and 16.
+
+## Landed
+
+**Base:** 14ff599cb45d8472fc06b905a43641331de5844c
+**Commits:** d5f876febab1c23b092f5896d1692007c288eb47, c4bfb565d65bbccf857b285ed97974b1dd3ca769, 2031611a03f8099e6cf36832c9e17f816032cbac
+**Product paths:** .agents/skills/distill/SKILL.md, .changeset/findings-to-standards.md, .claude/skills/distill/SKILL.md, evals/routing/distill.json, src/skills/distill/SKILL.md

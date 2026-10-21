@@ -123,3 +123,10 @@ verification check, and both were found by hand first.
 **Surprised:** The handoff is imported into every session, which makes the hook that writes it an injection path into always-loaded context; that was the deciding fact for what it may copy.
 **Went wrong:** Unverified finding titles were copied verbatim, the least trusted text in the ledger, until the audit planted bidi and escape characters and a 3,000-entry ledger.
 **Deferred:** Refreshing this repository's own ignored hook copy.
+
+## 2026-10-21 - Backfill discrepancies kept
+
+**Archive:** history/features/19-backfill-discrepancies-kept.md
+**Surprised:** nothing
+**Went wrong:** nothing
+**Deferred:** nothing

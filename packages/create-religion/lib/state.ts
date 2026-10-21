@@ -157,14 +157,16 @@ export function parsePlan(source: string | null): PlanItem[] {
     // The template ships two placeholder items so the shape is visible. They are not work.
     if (/^\d+\.\s+\*\*(Feature one|Feature two)\*\*/.test(body)) continue;
 
-    const after = /\bafter items? (\d+[a-z]?(?:(?:,\s*(?:and\s+)?|\s+and\s+)\d+[a-z]?)*)/i.exec(body)?.[1];
+    // A line that only mentions the syntax, in a code span, does not wait on anything.
+    const prose = body.replace(/`[^`]*`/g, "");
+    const after = /\bafter items? (\d+[a-z]?(?:(?:,\s*(?:and\s+)?|\s+and\s+)\d+[a-z]?)*)/i.exec(prose)?.[1];
     items.push({
       number: /^([\dA-Za-z]+)\./.exec(body)?.[1] ?? null,
       title: body.replace(/^[\dA-Za-z]+\.\s*/, "").replace(/\*\*/g, ""),
       done: (match[2] ?? " ").toLowerCase() === "x",
       depth: Math.floor((match[1] ?? "").length / 2),
       after: after ? after.split(/,\s*(?:and\s+)?|\s+and\s+/).map((n) => n.trim()).filter(Boolean) : [],
-      spikeFirst: /\bspike first\b/i.test(body)
+      spikeFirst: /\bspike first\b/i.test(prose)
     });
   }
 

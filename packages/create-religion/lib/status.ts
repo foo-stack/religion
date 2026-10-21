@@ -5,7 +5,8 @@
  * answered the question they asked, which is almost always "what now".
  */
 
-import type { ProjectState } from "./state.js";
+import { waiting } from "./state.js";
+import type { PlanItem, ProjectState } from "./state.js";
 
 export interface Status {
   schemaVersion: 1;
@@ -27,7 +28,11 @@ export function computeStatus(state: ProjectState): Status {
     (item, index) => state.plan[index + 1] === undefined || state.plan[index + 1]!.depth <= item.depth
   );
   const done = leaves.filter((i) => i.done).length;
-  const nextItem = leaves.find((i) => !i.done) ?? null;
+  const { waits, problems } = waiting(state.plan, new Set(state.settledSpikes));
+  const waitsOn = (item: PlanItem) => (item.number ? waits.get(item.number) : undefined);
+  const nextItem = leaves.find((i) => !i.done && !waitsOn(i)) ?? null;
+  const firstOpen = leaves.find((i) => !i.done) ?? null;
+  const passedOver = leaves.slice(0, nextItem ? leaves.indexOf(nextItem) : leaves.length).filter((i) => !i.done && waitsOn(i));
 
   const byStatus: Record<string, number> = {};
   for (const finding of state.findings) {
@@ -38,6 +43,11 @@ export function computeStatus(state: ProjectState): Status {
     .map((f) => `${f.id} [${f.severity}] ${f.status} - ${f.title}`);
 
   const warnings: string[] = [];
+  if (passedOver.length > 0) {
+    const named = passedOver.map((i) => `${i.number} (${waitsOn(i)!.join(", ")})`);
+    warnings.push(`passed over plan items that are waiting: ${named.join("; ")}`);
+  }
+  warnings.push(...problems.map((p) => `the build plan: ${p}`));
   if (!state.configValid) warnings.push("config.json does not parse; workflow commands will stop rather than guess");
   if (state.overviewFresh === false) warnings.push("the plans changed after the overview was generated");
   if (state.openQuestions.length > 0) {
@@ -53,7 +63,7 @@ export function computeStatus(state: ProjectState): Status {
 
   return {
     schemaVersion: 1,
-    next: nextAction(state, nextItem?.title ?? null, blocking.length > 0),
+    next: nextAction(state, nextItem?.title ?? null, blocking.length > 0, firstOpen && waitsOn(firstOpen) ? firstOpen : null, waitsOn),
     plan: { done, total: leaves.length, nextItem: nextItem?.title ?? null },
     work: state.work,
     findings: { total: state.findings.length, blocking, byStatus },
@@ -64,7 +74,13 @@ export function computeStatus(state: ProjectState): Status {
   };
 }
 
-function nextAction(state: ProjectState, nextItem: string | null, blocked: boolean): Status["next"] {
+function nextAction(
+  state: ProjectState,
+  nextItem: string | null,
+  blocked: boolean,
+  firstWaiting: PlanItem | null,
+  waitsOn: (item: PlanItem) => string[] | undefined
+): Status["next"] {
   if (!state.configValid) return { command: "doctor", because: "configuration cannot be parsed" };
   if (!state.overviewPresent) return { command: "overview", because: "no source of truth has been generated" };
   if (state.overviewFresh === false) return { command: "overview", because: "the plans have changed since it was generated" };
@@ -85,6 +101,11 @@ function nextAction(state: ProjectState, nextItem: string | null, blocked: boole
 
   if (nextItem) return { command: "feature", because: `next in the plan: ${nextItem}` };
   if (state.plan.length === 0) return { command: "overview", because: "the build plan has no items yet" };
+  if (firstWaiting) {
+    return waitsOn(firstWaiting)!.includes("a spike")
+      ? { command: "spike", because: `every remaining item waits, and item ${firstWaiting.number} waits on a spike` }
+      : { command: "overview", because: "every remaining item waits on another; check the plan's after lines" };
+  }
   return { command: "release", because: "the build plan is complete" };
 }
 

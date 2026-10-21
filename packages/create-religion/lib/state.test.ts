@@ -650,7 +650,8 @@ test("parsePlan reads every way this plan says an item waits", () => {
       "- [ ] 39. **Several** - a major version; after item 27, spike first on whether it helps",
       "- [ ] 40. **CI** - needs a grant; after items 20, 24, and 33, spike first on headless runs",
       "- [ ] 46. **Lessons** - opt in; after items 7 and 31, spike first on how many are general",
-      "- [ ] 50. **Plain** - nothing to wait for"
+      "- [ ] 50. **Plain** - nothing to wait for",
+      "- [ ] 29. **Plan lines** - a line can say `after item N` or `spike first`, and status skips it"
     ].join("\n")
   );
   assert.deepEqual(plan.map((i) => [i.number, i.after, i.spikeFirst]), [
@@ -659,7 +660,8 @@ test("parsePlan reads every way this plan says an item waits", () => {
     ["39", ["27"], true],
     ["40", ["20", "24", "33"], true],
     ["46", ["7", "31"], true],
-    ["50", [], false]
+    ["50", [], false],
+    ["29", [], false]
   ]);
 });
 

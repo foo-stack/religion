@@ -50,7 +50,7 @@ large, so split it.
   spikes on the project state, and `waiting` in `lib/state.ts`. *Done when:* unit tests read
   every phrasing this plan uses, mark an item waiting on an unticked one or on an unsettled
   spike and ready once that is met, and report an unknown item and a two-item cycle.
-- [ ] **Step 2 - `status` takes the first ready item** - `computeStatus` in `lib/status.ts`.
+- [x] **Step 2 - `status` takes the first ready item** - `computeStatus` in `lib/status.ts`.
   *Done when:* unit tests show the next item skipping a waiting one with a warning naming it,
   warnings for an unknown reference and a cycle, `surface.json` unchanged, and `religion status`
   on this repository giving item 29 as the next plan item, with 21 to 23 and 25 to 27 passed

@@ -5,7 +5,7 @@
 
 ## Where the work sits
 
-Nothing in progress.
+**Status shows live activity and the inbox** is in progress: 6 step(s) done, 0 to go.
 
 Plan: 9 of 52 item(s) complete. Next up: 6. **Status shows live activity and the inbox** - `status` and its JSON report the current run from `run.json`, with its resume command when blocked, and how many notes the inbox holds
 

@@ -669,3 +669,20 @@
 **Why it matters:** `AbortSignal.timeout` needs Safari 16, Chrome 103 or Firefox 100. On an older browser the call throws inside the request's `try`, so every poll reports "Disconnected, retrying" and nothing renders. A local dashboard is unlikely to meet one.
 **Suggested fix:** Pass the signal only when `AbortSignal.timeout` exists.
 **Resolution:**
+
+### F-128 [P3] open - The dashboard reads the activity record and inbox a second time
+
+**File:** packages/create-religion/lib/dashboard.ts:99
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** The project state now carries both, but the dashboard keeps its own raw `readActivity`, so one file has two readers and the dashboard skips the new checks.
+**Suggested fix:** Read `state.activity` and `state.inbox`, after checking which extra fields the dashboard's renderer uses.
+**Resolution:**
+
+### F-130 [P2] fixed - The status skill's fallback follows any resume command
+
+**File:** src/skills/status/SKILL.md:49
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Surfaced by:** F-125
+**Why it matters:** Without the command-line tool, the skill reads `run.json` itself, and its table said to take the resume command with no constraint, so `git push --force` could still become the next action on that path.
+**Suggested fix:** Accept it only when its first word is the record's own installed skill and the rest is plain words.
+**Resolution:** Repaired 2026-10-21: the table row now states exactly that condition and says to ignore the record otherwise.

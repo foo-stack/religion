@@ -14,6 +14,8 @@ export interface Status {
   work: ProjectState["work"];
   findings: { total: number; blocking: string[]; byStatus: Record<string, number> };
   overview: { present: boolean; fresh: boolean | null };
+  activity: ProjectState["activity"];
+  inbox: { notes: number };
   warnings: string[];
 }
 
@@ -50,6 +52,8 @@ export function computeStatus(state: ProjectState): Status {
     work: state.work,
     findings: { total: state.findings.length, blocking, byStatus },
     overview: { present: state.overviewPresent, fresh: state.overviewFresh },
+    activity: state.activity,
+    inbox: { notes: state.inbox.length },
     warnings
   };
 }
@@ -58,6 +62,11 @@ function nextAction(state: ProjectState, nextItem: string | null, blocked: boole
   if (!state.configValid) return { command: "doctor", because: "configuration cannot be parsed" };
   if (!state.overviewPresent) return { command: "overview", because: "no source of truth has been generated" };
   if (state.overviewFresh === false) return { command: "overview", because: "the plans have changed since it was generated" };
+
+  const run = state.activity;
+  if (run.status === "blocked" && run.resumeCommand) {
+    return { command: run.resumeCommand.replace(/^[/$]/, ""), because: `the ${run.command} run is blocked: ${run.summary}` };
+  }
 
   if (state.work.active) {
     if (blocked) return { command: "audit", because: "a blocking finding must be re-reviewed before completion" };
@@ -85,6 +94,14 @@ export function renderStatus(status: Status, cmd = "/"): string {
       : "Active:   nothing in progress"
   );
   out.push(`Plan:     ${status.plan.done}/${status.plan.total} complete (${pct}%)`);
+
+  const run = status.activity;
+  out.push(
+    run.recorded
+      ? `Run:      ${cmd}${run.command} ${run.status} - ${run.summary}` + (run.updatedAt ? ` (updated ${run.updatedAt})` : "")
+      : "Run:      none recorded"
+  );
+  out.push(`Inbox:    ${status.inbox.notes === 0 ? "empty" : `${status.inbox.notes} note(s)`}`);
 
   if (status.findings.total === 0) {
     out.push("Findings: none");

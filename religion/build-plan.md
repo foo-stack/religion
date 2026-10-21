@@ -17,7 +17,7 @@
   - [x] 4c. **Compatibility guards** - checks that fail when the public surface changes by accident: JSON shapes, skill names, flags, config keys, and an upgrade from the last release
   - [x] 4d. **The stability statement** - what is public and what is internal, what a 1.x update guarantees, the three promises, an upgrade guide, and the major changeset that makes it 1.0
 - [x] 5. **A dashboard worth opening** - the active work as its spec defines it, analytics over findings, the plan and its history, and live activity, in a page designed rather than defaulted
-- [ ] 6. **Status shows live activity and the inbox** - `status` and its JSON report the current run from `run.json`, with its resume command when blocked, and how many notes the inbox holds
+- [x] 6. **Status shows live activity and the inbox** - `status` and its JSON report the current run from `run.json`, with its resume command when blocked, and how many notes the inbox holds
 - [ ] 7. **A journal that something writes** - `complete` appends a short entry per finished item, what surprised, what went wrong, and what was deferred and why, so `distill` has input; the journal's single writer is settled in the spec
 - [ ] 8. **Learning made visible** - a dashboard view of the lessons and the journal's size, and a `status` nudge toward `distill` once the journal has grown
 - [ ] 9. **Locally modified managed files** - the dashboard's install panel, and `doctor`, list the managed files whose contents no longer match the hash recorded at install

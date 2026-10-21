@@ -9,7 +9,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 
-import { readIfPresent, statePath } from "./paths.js";
+import { installedSkills, readIfPresent, statePath } from "./paths.js";
 
 export interface PlanItem {
   number: string | null;
@@ -41,6 +41,15 @@ export interface WorkItem {
   nextStep: string | null;
 }
 
+export interface Activity {
+  recorded: boolean;
+  command: string | null;
+  status: "running" | "blocked" | "ready" | "completed" | null;
+  summary: string | null;
+  updatedAt: string | null;
+  resumeCommand: string | null;
+}
+
 export interface ProjectState {
   root: string;
   config: unknown;
@@ -51,6 +60,8 @@ export interface ProjectState {
   overviewPresent: boolean;
   overviewFresh: boolean | null;
   openQuestions: string[];
+  activity: Activity;
+  inbox: InboxNote[];
 }
 
 const CHECKBOX = /^(\s*)- \[( |x|X)\]\s*(.*)$/;
@@ -274,6 +285,59 @@ export function parseInbox(source: string | null): InboxNote[] {
   }));
 }
 
+const ACTIVITY_STATUSES = new Set(["running", "blocked", "ready", "completed"]);
+
+const SKILL_NAME = /^[a-z][a-z-]{0,39}$/;
+
+// The blocked skill's own invocation and plain word arguments, such as `/auto resume`.
+// Anything else in the record could be a shell command dressed up as the next thing to run.
+// The length bound comes first: the repeated group overflows the regex stack on megabytes.
+const RESUME_ARGUMENTS = /^(?: [\w-]+)*$/;
+const RESUME_MAX = 200;
+
+// A record is written by an agent, so it must not be able to move the cursor, print lines,
+// or reorder the text around it.
+const CONTROL = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu;
+
+/**
+ * The activity record a running skill writes. Skills write it, so only its named fields are
+ * read, and a record naming a skill that is not installed is not believed at all: whoever can
+ * write the record controls every field in it.
+ */
+export function parseActivity(source: string | null, skills: ReadonlySet<string>): Activity {
+  const none: Activity = { recorded: false, command: null, status: null, summary: null, updatedAt: null, resumeCommand: null };
+  if (!source) return none;
+
+  let record: unknown;
+  try {
+    record = JSON.parse(source);
+  } catch {
+    return none;
+  }
+  if (!record || typeof record !== "object") return none;
+
+  const { command, status, summary, updatedAt, resumeCommand } = record as Record<string, unknown>;
+  if (typeof command !== "string" || !SKILL_NAME.test(command) || !skills.has(command)) return none;
+  if (typeof summary !== "string") return none;
+  if (typeof status !== "string" || !ACTIVITY_STATUSES.has(status)) return none;
+
+  return {
+    recorded: true,
+    command,
+    status: status as Activity["status"],
+    summary: summary.replace(CONTROL, " "),
+    updatedAt: typeof updatedAt === "string" ? updatedAt.replace(CONTROL, " ") : null,
+    resumeCommand: resumes(command, resumeCommand) ? resumeCommand : null
+  };
+}
+
+function resumes(command: string, resumeCommand: unknown): resumeCommand is string {
+  if (typeof resumeCommand !== "string" || resumeCommand.length > RESUME_MAX) return false;
+  const invocation = resumeCommand.replace(/^[/$]/, "");
+  return (invocation === command || invocation.startsWith(command + " ")) &&
+    RESUME_ARGUMENTS.test(invocation.slice(command.length));
+}
+
 /** Paragraphs and list items, each as one line of text. */
 function blocks(body: string | undefined): string[] {
   if (!body) return [];
@@ -334,13 +398,15 @@ export function overviewHash(projectPlan: string, buildPlan: string): string {
 }
 
 export async function readProjectState(root: string): Promise<ProjectState> {
-  const [configRaw, projectPlan, buildPlan, work, findings, overview] = await Promise.all([
+  const [configRaw, projectPlan, buildPlan, work, findings, overview, activity, inbox] = await Promise.all([
     readIfPresent(statePath(root, "config.json")),
     readIfPresent(statePath(root, "project-plan.md")),
     readIfPresent(statePath(root, "build-plan.md")),
     readIfPresent(statePath(root, "context", "current-work.md")),
     readIfPresent(statePath(root, "context", "findings.md")),
-    readIfPresent(statePath(root, "context", "project-overview.md"))
+    readIfPresent(statePath(root, "context", "project-overview.md")),
+    readIfPresent(statePath(root, ".state", "run.json")),
+    readIfPresent(statePath(root, "context", "inbox.md"))
   ]);
 
   let config: unknown = null;
@@ -368,6 +434,8 @@ export async function readProjectState(root: string): Promise<ProjectState> {
       !generated || stamped === null
         ? null
         : stamped === overviewHash(projectPlan ?? "", buildPlan ?? ""),
-    openQuestions: parseOpenQuestions(overview)
+    openQuestions: parseOpenQuestions(overview),
+    activity: parseActivity(activity, await installedSkills(root)),
+    inbox: parseInbox(inbox)
   };
 }

@@ -72,6 +72,7 @@ large, so split it.
   `npm test` exits 0.
 - [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 - [x] Repair F-147, F-148, F-149, F-150 and F-151 - every backup path checked for a link first, contents re-hashed before each removal, only the named directory uninstalled, backups that never collide, and an unfilled Commands placeholder cut with the block.
+- [x] Repair F-152 - the backup path checked again just before the copy, and a copy that cannot be made safely kept as a file left rather than an exception.
 
 ## Files and areas
 

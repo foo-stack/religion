@@ -210,3 +210,25 @@ test("uninstallRoot names only the directory given, never a parent project", asy
   assert.equal(await uninstallRoot(target), target);
   assert.equal(await uninstallRoot(path.join(target, "vendor/lib")), null);
 });
+
+test("applyUninstall keeps a file whose backup destination appeared after the plan", async (t) => {
+  const target = await installed(t);
+  await write(target, "CLAUDE.md", `# Mine\n\n${MANAGED_START}\nours\n${MANAGED_END}\n`);
+  const plan = await planUninstall(target);
+  const outside = path.join(path.dirname(target), "victim.md");
+  await fs.writeFile(outside, "not yours\n");
+  const realMkdir = fs.mkdir;
+  // Plant a link at the destination after the paths were chosen and checked.
+  t.mock.method(fs, "mkdir", async (dir: string, options: unknown) => {
+    const made = await realMkdir(dir, options as never);
+    if (dir.endsWith(path.join("backups", "uninstall"))) {
+      await fs.symlink(outside, path.join(dir, "CLAUDE.md")).catch(() => {});
+    }
+    return made;
+  });
+
+  const result = await applyUninstall(target, plan);
+  assert.equal(await fs.readFile(outside, "utf8"), "not yours\n");
+  assert.match(await fs.readFile(path.join(target, "CLAUDE.md"), "utf8"), /religion:managed:start/, "left as it was");
+  assert.ok(result.kept.some((e) => e.relative === "CLAUDE.md" && e.action === "keep-entry"));
+});

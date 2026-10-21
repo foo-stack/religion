@@ -140,7 +140,14 @@ export async function applyUninstall(target: string, plan: readonly UninstallEnt
       }
       const backup = backups.get(entry.relative)!;
       await fs.mkdir(path.dirname(file(backup)), { recursive: true });
-      await fs.copyFile(file(entry.relative), file(backup), fs.constants.COPYFILE_EXCL);
+      // Checked again here: a link swapped in after the first check would be followed by the copy.
+      const copied =
+        !(await throughLink(target, backup)) &&
+        (await fs.copyFile(file(entry.relative), file(backup), fs.constants.COPYFILE_EXCL).then(() => true, () => false));
+      if (!copied) {
+        result.kept.push({ ...entry, action: entry.action === "cut-block" ? "keep-entry" : "keep-settings", why: "its backup could not be written safely" });
+        continue;
+      }
       result.backups.push(backup);
       await fs.writeFile(file(entry.relative), after, "utf8");
       (entry.action === "cut-block" ? result.cut : result.unwired).push(entry.relative);

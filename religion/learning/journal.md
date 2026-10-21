@@ -165,3 +165,10 @@ verification check, and both were found by hand first.
 **Surprised:** This project's own archives already show the pattern the item looks for: findings about following a link recur across items 4b, 4d, 5 and 16, each repaired locally and none turned into a rule.
 **Went wrong:** A template token was written into rendered state and caught by the verification suite.
 **Deferred:** Running distill here.
+
+## 2026-10-21 - Spec from an issue
+
+**Archive:** history/features/33-spec-from-an-issue.md
+**Surprised:** The untrusted-input rule already named issue text, so the safety half of this item was a pointer rather than new prose.
+**Went wrong:** nothing
+**Deferred:** Hosts without a command-line tool.

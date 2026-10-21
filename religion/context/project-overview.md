@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 301efda73bb36514 -->
+<!-- religion:source-hash 69954827de50b69d -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,7 +49,7 @@ nothing to sign into.
 
 ## Roadmap
 
-Twenty-four items queued. Nineteen start with a spike, and several say which items they
+Twenty-three items queued. Nineteen start with a spike, and several say which items they
 follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
 
 **Status, learning and health**
@@ -69,7 +69,6 @@ follow; the plan states both in prose, so nothing enforces the order yet (item 2
     outside the step
 32. **Check the preview deployment** - outcomes run against the host's preview, one provider
     first
-33. **Spec from an issue** - `fix` and `feature` draft from an issue read as untrusted input
 34. **Complete drafts the release note** - a Changesets entry proposed for approval
 35. **Accessibility as evidence** - a scan beside `check`'s browser evidence
 36. **Built UI compared with its reference** - against saved screenshots or the prototype

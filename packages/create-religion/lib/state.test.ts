@@ -583,3 +583,27 @@ test("parseJournal reads labelled entries, free-form ones, and which are decided
   assert.equal(parseJournal(journal, null).filter((e) => e.decided).length, 0, "no archive decides nothing");
   assert.deepEqual(parseJournal("# Journal\n\n_No entries yet._\n", null), []);
 });
+
+test("parseJournal takes the heading from the heading line only, and keeps tab-separated ones", () => {
+  assert.deepEqual(parseJournal("##\n\nfoo bar\n", null), []);
+  assert.deepEqual(parseJournal("##\tTabbed\n\ntext\n", "##\tTabbed\n").map((e) => [e.heading, e.decided]), [["Tabbed", true]]);
+});
+
+test("parseLessons leaves out subheadings", () => {
+  assert.deepEqual(parseLessons("# Lessons\n\n## Working\n\nlesson text\n"), ["lesson text"]);
+});
+
+test("readProjectState reads the lessons, the journal and what distill decided", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-state-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, "religion", "learning"), { recursive: true });
+  const write = (name: string, text: string) => fs.writeFile(path.join(root, "religion", "learning", name), text);
+  await write("lessons.md", "# Lessons\n\n> header\n\nOne lesson.\n");
+  await write("journal.md", "# Journal\n\n## 2026-10-01 - first\n\nx\n\n## 2026-10-02 - second\n\ny\n\n## 2026-10-03 - third\n\nz\n");
+  await write("journal-archive.md", "# Journal archive\n\n## 2026-10-01 - first\n\nRejected.\n");
+
+  const { learning } = await readProjectState(root);
+  assert.deepEqual(learning.lessons, ["One lesson."]);
+  assert.equal(learning.journal.length, 3);
+  assert.equal(learning.undecided, 2);
+});

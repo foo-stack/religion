@@ -12,7 +12,7 @@ import { runDoctor } from "./doctor.js";
 import { readManifest } from "./install.js";
 import { readIfPresent, statePath } from "./paths.js";
 import { parseInbox, parseSpec, readHistory, readProjectState } from "./state.js";
-import { computeStatus } from "./status.js";
+import { computeStatus, DISTILL_AFTER } from "./status.js";
 
 export interface Dashboard {
   url: string;
@@ -99,7 +99,7 @@ async function readState(root: string, version: string | null) {
     activity: await readActivity(root),
     work: parseSpec(await readIfPresent(statePath(root, "context", "current-work.md"))),
     history: await readHistory(root),
-    learning: state.learning,
+    learning: { ...state.learning, distillAfter: DISTILL_AFTER },
     health: {
       checks: await runDoctor(root),
       config: state.config,
@@ -908,12 +908,9 @@ button.chip { font-family: inherit; cursor: pointer; }
     return rows;
   }
 
-  // The same threshold status warns at.
-  const DISTILL_AFTER = 5;
-
   function renderLearning() {
     const l = data.learning;
-    const due = l.undecided >= DISTILL_AFTER;
+    const due = l.undecided >= l.distillAfter;
     $("ln-tiles").innerHTML =
       tile("Lessons", String(l.lessons.length), l.lessons.length ? "Loaded into every session" : "None promoted yet") +
       tile("Journal", String(l.journal.length), l.journal.length ? "One entry per finished item" : "No entries yet") +

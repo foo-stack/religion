@@ -19,8 +19,8 @@ export interface Status {
   warnings: string[];
 }
 
-// Below this a distill pass has little to group, and recurrence is what it promotes on.
-const DISTILL_AFTER = 5;
+/** Below this a distill pass has little to group, and recurrence is what it promotes on. */
+export const DISTILL_AFTER = 5;
 
 export function computeStatus(state: ProjectState): Status {
   const leaves = state.plan.filter(

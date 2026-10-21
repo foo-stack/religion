@@ -361,7 +361,7 @@ export function parseLessons(source: string | null): string[] {
   if (!source) return [];
   const body = source
     .split(/\r?\n/)
-    .filter((line) => !/^#\s/.test(line) && !/^>/.test(line) && !/^_Nothing learned yet\._$/.test(line.trim()))
+    .filter((line) => !/^#{1,6}[ \t]/.test(line) && !/^>/.test(line) && !/^_Nothing learned yet\._$/.test(line.trim()))
     .join("\n");
   return blocks(body);
 }
@@ -369,10 +369,12 @@ export function parseLessons(source: string | null): string[] {
 /** One entry per `##` heading, each decided once `journal-archive.md` carries that heading. */
 export function parseJournal(source: string | null, archive: string | null): JournalEntry[] {
   if (!source) return [];
-  const decided = new Set((archive ?? "").split(/\r?\n/).filter((line) => /^##\s/.test(line)).map((line) => line.slice(3).trim()));
-  return source.split(/^(?=##\s)/m).flatMap((entry) => {
-    const heading = /^##\s+(.+)$/m.exec(entry)?.[1]?.trim();
-    if (!heading || !entry.startsWith("## ")) return [];
+  const decided = new Set(
+    (archive ?? "").split(/\r?\n/).flatMap((line) => /^##[ \t]+(\S.*)$/.exec(line)?.[1]?.trim() ?? [])
+  );
+  return source.split(/^(?=##[ \t])/m).flatMap((entry) => {
+    const heading = /^##[ \t]+(\S.*)$/.exec(entry.split(/\r?\n/, 1)[0] ?? "")?.[1]?.trim();
+    if (!heading) return [];
     const unlabelled = entry
       .split(/\r?\n/)
       .slice(1)

@@ -56,6 +56,7 @@ large, so split it.
   state.
 - [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in
   full.
+- [x] Repair F-131, F-134, F-135 and F-136 - the state test over real learning files, the heading pattern, subheadings in lessons, and one distill threshold.
 
 ## Files and areas
 

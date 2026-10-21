@@ -50,6 +50,23 @@ export interface Activity {
   resumeCommand: string | null;
 }
 
+export interface JournalEntry {
+  heading: string;
+  date: string | null;
+  archive: string | null;
+  surprised: string | null;
+  wentWrong: string | null;
+  deferred: string | null;
+  summary: string | null;
+  decided: boolean;
+}
+
+export interface Learning {
+  lessons: string[];
+  journal: JournalEntry[];
+  undecided: number;
+}
+
 export interface ProjectState {
   root: string;
   config: unknown;
@@ -62,6 +79,7 @@ export interface ProjectState {
   openQuestions: string[];
   activity: Activity;
   inbox: InboxNote[];
+  learning: Learning;
 }
 
 const CHECKBOX = /^(\s*)- \[( |x|X)\]\s*(.*)$/;
@@ -338,6 +356,45 @@ function resumes(command: string, resumeCommand: unknown): resumeCommand is stri
     RESUME_ARGUMENTS.test(invocation.slice(command.length));
 }
 
+/** The lessons after the file's own heading and note, or none while it holds only the stub. */
+export function parseLessons(source: string | null): string[] {
+  if (!source) return [];
+  const body = source
+    .split(/\r?\n/)
+    .filter((line) => !/^#{1,6}[ \t]/.test(line) && !/^>/.test(line) && !/^_Nothing learned yet\._$/.test(line.trim()))
+    .join("\n");
+  return blocks(body);
+}
+
+/** One entry per `##` heading, each decided once `journal-archive.md` carries that heading. */
+export function parseJournal(source: string | null, archive: string | null): JournalEntry[] {
+  if (!source) return [];
+  const decided = new Set(
+    (archive ?? "").split(/\r?\n/).flatMap((line) => /^##[ \t]+(\S.*)$/.exec(line)?.[1]?.trim() ?? [])
+  );
+  return source.split(/^(?=##[ \t])/m).flatMap((entry) => {
+    const heading = /^##[ \t]+(\S.*)$/.exec(entry.split(/\r?\n/, 1)[0] ?? "")?.[1]?.trim();
+    if (!heading) return [];
+    const unlabelled = entry
+      .split(/\r?\n/)
+      .slice(1)
+      .filter((line) => !/^\*\*[^*]+:\*\*/.test(line))
+      .join("\n");
+    return [
+      {
+        heading,
+        date: /^(\d{4}-\d{2}-\d{2})\b/.exec(heading)?.[1] ?? null,
+        archive: labelled(entry, "Archive"),
+        surprised: labelled(entry, "Surprised"),
+        wentWrong: labelled(entry, "Went wrong"),
+        deferred: labelled(entry, "Deferred"),
+        summary: blocks(unlabelled)[0] ?? null,
+        decided: decided.has(heading)
+      }
+    ];
+  });
+}
+
 /** Paragraphs and list items, each as one line of text. */
 function blocks(body: string | undefined): string[] {
   if (!body) return [];
@@ -408,6 +465,12 @@ export async function readProjectState(root: string): Promise<ProjectState> {
     readIfPresent(statePath(root, ".state", "run.json")),
     readIfPresent(statePath(root, "context", "inbox.md"))
   ]);
+  const [lessons, journal, journalArchive] = await Promise.all([
+    readIfPresent(statePath(root, "learning", "lessons.md")),
+    readIfPresent(statePath(root, "learning", "journal.md")),
+    readIfPresent(statePath(root, "learning", "journal-archive.md"))
+  ]);
+  const entries = parseJournal(journal, journalArchive);
 
   let config: unknown = null;
   let configValid = true;
@@ -436,6 +499,7 @@ export async function readProjectState(root: string): Promise<ProjectState> {
         : stamped === overviewHash(projectPlan ?? "", buildPlan ?? ""),
     openQuestions: parseOpenQuestions(overview),
     activity: parseActivity(activity, await installedSkills(root)),
-    inbox: parseInbox(inbox)
+    inbox: parseInbox(inbox),
+    learning: { lessons: parseLessons(lessons), journal: entries, undecided: entries.filter((e) => !e.decided).length }
   };
 }

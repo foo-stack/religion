@@ -19,6 +19,7 @@ function state(overrides: Partial<ProjectState> = {}): ProjectState {
     openQuestions: [],
     activity: parseActivity(null),
     inbox: [],
+    learning: { lessons: [], journal: [], undecided: 0 },
     ...overrides
   };
 }
@@ -65,4 +66,12 @@ test("the text output shows the recorded run and the inbox", () => {
   const idle = renderStatus(computeStatus(state()));
   assert.match(idle, /^Run: +none recorded$/m);
   assert.match(idle, /^Inbox: +empty$/m);
+});
+
+test("status warns once five journal entries are waiting for distill", () => {
+  const waiting = (undecided: number) =>
+    computeStatus(state({ learning: { lessons: [], journal: [], undecided } })).warnings.filter((w) => /distill/.test(w));
+
+  assert.deepEqual(waiting(4), []);
+  assert.deepEqual(waiting(5), ["5 journal entries are waiting for distill"]);
 });

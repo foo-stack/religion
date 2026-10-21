@@ -686,3 +686,51 @@
 **Why it matters:** Without the command-line tool, the skill reads `run.json` itself, and its table said to take the resume command with no constraint, so `git push --force` could still become the next action on that path.
 **Suggested fix:** Accept it only when its first word is the record's own installed skill and the rest is plain words.
 **Resolution:** Repaired 2026-10-21: the table row now states exactly that condition and says to ignore the record otherwise.
+
+### F-131 [P2] fixed - Nothing tests how the project state wires up the learning files
+
+**File:** packages/create-religion/lib/state.ts:466
+**Found:** 2026-10-21 by audit (scope: current; lens: tests)
+**Why it matters:** A typo in one of the three paths would leave every entry undecided and the nudge always on, with every test still passing.
+**Suggested fix:** A `readProjectState` test over fixture `learning/` files asserting the lessons, the entries and the undecided count.
+**Resolution:** Repaired 2026-10-21: that test reads one lesson, three entries and two undecided from fixture files.
+
+### F-132 [P3] open - Journal entries are matched on their heading alone
+
+**File:** packages/create-religion/lib/state.ts:373
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** `distill` identifies an entry by its heading and its `Archive` line, so two entries sharing a heading both read as decided once one is.
+**Suggested fix:** Key on the heading plus the `Archive` line.
+**Resolution:**
+
+### F-133 [P3] open - A heading inside a fenced code block becomes a journal entry
+
+**File:** packages/create-religion/lib/state.ts:373
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** A fenced `## ` line inflates the undecided count and shows a fake entry.
+**Suggested fix:** Skip fenced text before splitting into entries.
+**Resolution:**
+
+### F-134 [P3] fixed - The journal heading pattern crosses lines and drops tab-separated headings
+
+**File:** packages/create-religion/lib/state.ts:375
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** `## ` followed by a blank line took the next paragraph as its heading, and `##` followed by a tab split an entry that was then silently dropped.
+**Suggested fix:** Match `##[ \t]+(\S.*)` on the heading line only, in the split and in the archive alike.
+**Resolution:** Repaired 2026-10-21 as suggested, with tests for both shapes.
+
+### F-135 [P3] fixed - Subheadings in the lessons file read as lessons
+
+**File:** packages/create-religion/lib/state.ts:362
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** A `## Working` heading in `lessons.md` showed as a lesson of its own.
+**Suggested fix:** Leave out every heading level, not only the first.
+**Resolution:** Repaired 2026-10-21 with a test. A lesson that quotes with `>` still loses that line, which no lesson does yet.
+
+### F-136 [P3] fixed - The distill threshold is defined in two places
+
+**File:** packages/create-religion/lib/dashboard.ts:912
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** The page and `status` could disagree about when a pass is due.
+**Suggested fix:** Send the threshold with the data.
+**Resolution:** Repaired 2026-10-21: `status.ts` exports it and `/state.json` carries it as `learning.distillAfter`.

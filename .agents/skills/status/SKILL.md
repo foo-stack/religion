@@ -36,7 +36,8 @@ Lead with the next action, because that is the question actually being asked.
 - **Git** - branch, whether the tree is dirty, and unpushed commits.
 - **Warnings** - only real ones: a stale overview, an open question blocking queued work,
   a spec whose steps are all ticked but which was never completed, a dirty tree with no
-  active spec.
+  active spec, five or more journal entries that `religion/learning/journal-archive.md`
+  does not yet carry, which is when a $distill pass is worth running.
 
 Say "up to date" rather than inventing a warning when there is nothing wrong.
 

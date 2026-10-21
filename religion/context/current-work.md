@@ -47,7 +47,7 @@ large, so split it.
   accessibility tree and focus order otherwise, installs nothing, lists violations per outcome,
   states the method and what it does not cover, records it in Evidence, and points serious ones at
   `audit`; the routing corpus passes; `npm test` exits 0.
-- [ ] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

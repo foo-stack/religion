@@ -179,3 +179,10 @@ verification check, and both were found by hand first.
 **Surprised:** Building the feature on its own spec found its gaps faster than any test: the missing hash source, the fenced example, and a scratch edit that silently did nothing.
 **Went wrong:** A sed edit across a wrapped line did not apply and the check that followed looked like a failure of the code; confirm a scratch edit landed before reading its result.
 **Deferred:** The drift hook, item 30b.
+
+## 2026-10-21 - A hook that warns on drift
+
+**Archive:** history/features/30b-a-hook-that-warns-on-drift.md
+**Surprised:** A test that the hook allowed named files passed while the hook allowed everything, because every path looked outside the project; an allow test proves nothing without a deny test beside it run first.
+**Went wrong:** The hook would have asked about a file this very item had to change, the uninstall tests, which is the drift it exists to catch, recorded as an amendment.
+**Deferred:** Wave partners; wiring it in this repository's own settings.

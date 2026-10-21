@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Spec amendments recorded** is in progress: 4 step(s) done, 0 to go.
+**A hook that warns on drift** is in progress: 2 step(s) done, 0 to go.
 
-Plan: 29 of 54 item(s) complete. Next up: 21. **Hooks beyond Claude Code** - the rendered-output guard, the injection scan, and the handoff rewrite wired for Codex, Copilot, and OpenCode wherever each tool's hooks allow, one sub-item per tool; spike first on whether each can stop a write before it lands
+Plan: 30 of 54 item(s) complete. Next up: 21. **Hooks beyond Claude Code** - the rendered-output guard, the injection scan, and the handoff rewrite wired for Codex, Copilot, and OpenCode wherever each tool's hooks allow, one sub-item per tool; spike first on whether each can stop a write before it lands
 
 ## Read first
 

@@ -164,7 +164,8 @@ const LOCAL_SETTINGS_FILE = ".claude/settings.local.json";
 export const HOOKS: readonly Hook[] = [
   { event: "PreToolUse", command: "node .claude/hooks/guard-rendered-output.mjs" },
   { event: "Stop", command: "node .claude/hooks/write-handoff.mjs" },
-  { event: "PostToolUse", command: "node .claude/hooks/scan-untrusted-input.mjs" }
+  { event: "PostToolUse", command: "node .claude/hooks/scan-untrusted-input.mjs" },
+  { event: "PreToolUse", command: "node .claude/hooks/warn-on-drift.mjs" }
 ];
 
 async function readHooks(root: string): Promise<CheckResult> {

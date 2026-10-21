@@ -10,8 +10,15 @@ import { applyInstall, planInstall, wireHooks, writeManifest } from "./install.j
 import { MANAGED_END, MANAGED_START, spliceEntry } from "./merge.js";
 import { applyUninstall, planUninstall, uninstallRoot } from "./uninstall.js";
 
+/** Settings registering each shipped hook under its event, several to an event where they share one. */
+function byEvent(group: (hook: (typeof HOOKS)[number]) => unknown): Record<string, unknown[]> {
+  const events: Record<string, unknown[]> = {};
+  for (const hook of HOOKS) (events[hook.event] ??= []).push(group(hook));
+  return events;
+}
+
 const SETTINGS_TEMPLATE = JSON.stringify(
-  { hooks: Object.fromEntries(HOOKS.map((h) => [h.event, [{ hooks: [{ type: "command", command: h.command }] }]])) },
+  { hooks: byEvent((h) => ({ hooks: [{ type: "command", command: h.command }] })) },
   null,
   2
 );

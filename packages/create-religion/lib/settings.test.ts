@@ -64,3 +64,7 @@ test("describeSettings gives every setting its meaning, what it accepts, its def
   assert.equal(row("notes")?.value, '"mine"');
   assert.ok(rows.slice(0, -2).every((r) => r.summary), "every schema setting has a summary");
 });
+
+test("describeSettings says a setting with one allowed value accepts that value", () => {
+  assert.equal(describeSettings({}).find((r) => r.key === "schemaVersion")?.accepts, "`1`");
+});

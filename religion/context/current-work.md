@@ -43,7 +43,7 @@ large, so split it.
   in `lib/settings.ts`. *Done when:* the type requires a summary on every entry, and unit
   tests show a set value, an unset one falling back to its default, a value the schema
   refuses marked as such, and a key the schema does not name listed as not read.
-- [ ] **Step 2 - the panel** - `settings` in `/state.json`'s health section, and the
+- [x] **Step 2 - the panel** - `settings` in `/state.json`'s health section, and the
   Configuration panel in `lib/dashboard.ts`. *Done when:* the dashboard tests pass, and the
   running dashboard against this repository shows every setting with its meaning, what it
   accepts, its default and this project's value.

@@ -86,7 +86,9 @@ export function referenceCells(setting: Setting): { values: string; default: str
         ? "`true`, `false`"
         : setting.kind === "prefix"
           ? "lowercase prefix ending in `/`"
-          : (setting.min === 1 && setting.max === undefined ? "positive integer" : `integer from ${setting.min} through ${setting.max}`) +
+          : setting.min === setting.max
+            ? code(setting.min)
+            : (setting.min === 1 && setting.max === undefined ? "positive integer" : `integer from ${setting.min} through ${setting.max}`) +
             (setting.nullable ? ", or `null` for no limit" : "");
   return { values, default: code(setting.default) };
 }

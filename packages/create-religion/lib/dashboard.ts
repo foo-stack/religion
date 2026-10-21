@@ -12,6 +12,7 @@ import { runDoctor } from "./doctor.js";
 import { editedSinceInstall, readManifest } from "./install.js";
 import { readIfPresent, statePath } from "./paths.js";
 import { parseInbox, parseSpec, readHistory, readProjectState } from "./state.js";
+import { describeSettings } from "./settings.js";
 import { computeStatus, DISTILL_AFTER } from "./status.js";
 
 export interface Dashboard {
@@ -104,6 +105,7 @@ async function readState(root: string, version: string | null) {
     health: {
       checks: await runDoctor(root, changes),
       config: state.config,
+      settings: describeSettings(state.config),
       install: await readInstall(root, changes),
       tool: version,
       inbox: parseInbox(await readIfPresent(statePath(root, "context", "inbox.md"))),
@@ -454,6 +456,7 @@ code { font-family: var(--font-mono); font-size: var(--text-xs); background: var
 .checks span.bad::before { background: var(--block); }
 .checklist .bad { width: var(--dot-size); height: var(--dot-size); border-radius: 50%; background: var(--block); }
 .callout.bad { color: var(--block); }
+.rows td .bad { color: var(--block); }
 .callout.bad::before { background: var(--block); }
 .live.off { color: var(--block); }
 .live.off::before { background: var(--block); }
@@ -912,15 +915,6 @@ button.chip { font-family: inherit; cursor: pointer; }
     return a[0] - b[0] < 0 || (a[0] === b[0] && (a[1] - b[1] < 0 || (a[1] === b[1] && a[2] < b[2])));
   }
 
-  function flatten(value, prefix, rows) {
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      Object.keys(value).forEach((k) => flatten(value[k], prefix ? prefix + "." + k : k, rows));
-    } else {
-      rows.push([prefix, typeof value === "string" ? value : JSON.stringify(value)]);
-    }
-    return rows;
-  }
-
   // A record, not a queue: archives are never edited, so nothing here says whether a note was later done.
   function renderDeferred() {
     const left = data.history.filter((a) => a.deferred.length);
@@ -983,10 +977,13 @@ button.chip { font-family: inherit; cursor: pointer; }
       "<li><span class='" + (c.ok ? "ok" : "bad") + "'></span><span>" + esc(c.name) + "</span><span class='detail'>" + md(c.detail) + "</span><span class='blocks'>" +
       (c.blocks === "nothing" ? "advisory" : "blocks " + esc(c.blocks)) + "</span></li>"
     ).join("");
-    const settings = flatten(config(), "", []);
-    $("hl-config").innerHTML = settings.length
-      ? "<table class='rows'><tr><th>Setting</th><th>Value</th></tr>" + settings.map((r) => "<tr><td class='file'>" + esc(r[0]) + "</td><td class='mono'>" + esc(r[1]) + "</td></tr>").join("") + "</table>"
-      : "<div class='body'>" + empty("No configuration. The built-in defaults apply.") + "</div>";
+    $("hl-config").innerHTML = "<table class='rows'><tr><th>Setting</th><th>Here</th><th>Default</th><th>Accepts</th></tr>" +
+      h.settings.map((r) =>
+        "<tr><td><span class='file'>" + esc(r.key) + "</span>" + (r.summary ? "<div class='dim'>" + esc(r.summary) + "</div>" : "") +
+        (r.problem ? "<div class='bad'>" + esc(r.problem) + "</div>" : "") + "</td>" +
+        "<td class='mono'>" + (r.value === null ? "<span class='faint'>default</span>" : esc(r.value)) + "</td>" +
+        "<td class='mono'>" + (r.default ? md(r.default) : "") + "</td><td>" + (r.accepts ? md(r.accepts) : "") + "</td></tr>"
+      ).join("") + "</table>";
     $("hl-install").innerHTML =
       (install
         ? "<dl class='kv'>" + field("Installed by", esc(install.version || "unknown"), "mono") + field("This tool", esc(h.tool || "unknown"), "mono") +

@@ -57,7 +57,7 @@ large, so split it.
   over in its warning.
 - [x] **Step 3 - the skills read the same rule** - `feature`, `auto`, `spike` and `status`.
   *Done when:* each rendered skill states the rule in its place, and `npm test` exits 0.
-- [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

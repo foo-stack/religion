@@ -19,6 +19,9 @@ export interface Status {
   warnings: string[];
 }
 
+// Below this a distill pass has little to group, and recurrence is what it promotes on.
+const DISTILL_AFTER = 5;
+
 export function computeStatus(state: ProjectState): Status {
   const leaves = state.plan.filter(
     (item, index) => state.plan[index + 1] === undefined || state.plan[index + 1]!.depth <= item.depth
@@ -39,6 +42,9 @@ export function computeStatus(state: ProjectState): Status {
   if (state.overviewFresh === false) warnings.push("the plans changed after the overview was generated");
   if (state.openQuestions.length > 0) {
     warnings.push(`open question(s) in the overview: ${state.openQuestions.join(", ")}`);
+  }
+  if (state.learning.undecided >= DISTILL_AFTER) {
+    warnings.push(`${state.learning.undecided} journal entries are waiting for distill`);
   }
   if (state.work.active && state.work.stepsTotal > 0 && state.work.stepsDone === state.work.stepsTotal &&
       state.work.status !== "verified") {

@@ -46,7 +46,7 @@ large, so split it.
   without the header or the stub line, journal entries read with their labelled fields, a
   free-form entry read with its first paragraph, and an entry counted as decided only when
   `journal-archive.md` carries its heading.
-- [ ] **Step 2 - the status nudge** - a warning in `computeStatus` at five or more undecided
+- [x] **Step 2 - the status nudge** - a warning in `computeStatus` at five or more undecided
   entries, and the status skill's warning list. *Done when:* unit tests show no warning at
   four and the warning at five, and the rendered skill names it.
 - [ ] **Step 3 - the Learning view** - `learning` in `/state.json`, a rail link, the view's

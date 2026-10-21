@@ -190,9 +190,20 @@ The branch goes up, the pull request describes it, and the merge is the user's, 
    **That yes covers pushing this branch and nothing else.** Neither running this skill nor
    "looks good" is that yes.
 3. Open the pull request from the branch into the default branch. Title it from the work
-   commit. The body carries what changed and why, the checks that ran with the exact command
-   or output proving each, the manual walkthrough from Step 5, and anything left open:
-   unresolved findings, deliberate omissions, follow-ups.
+   commit. The body is a review packet for whoever reviews on the host, built from the
+   archive just written rather than from memory of the session:
+
+   - **Goal** - the spec's goal, in a sentence or two.
+   - **Steps and evidence** - one line per build step: what it delivered, and the verdict
+     and evidence its `## Evidence` entry records. A step with no entry says so.
+   - **Findings** - those closed with this item, by their archived identifier, and any still
+     `open` or `fixed` that touch it.
+   - **The record** - a link to the archive on this branch for the full spec, what went wrong,
+     what was deferred, and the walkthrough from Step 5.
+
+   Keep it to what can be read beside the diff: one line per step, the detail behind the
+   link. It presents the item's own record and nothing more; it is not a sign-off, and asks
+   no one to approve anything the workflow does not already gate.
 4. Report the pull request URL and stop. Do not merge it, do not wait or poll for it, and do
    not touch the default branch.
 

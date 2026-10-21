@@ -9,6 +9,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { exists, readIfPresent, SKILL_TREES, STATE_DIR, statePath } from "./paths.js";
+import { editedSinceInstall } from "./install.js";
 import { readProjectState } from "./state.js";
 
 export interface CheckResult {
@@ -148,7 +149,23 @@ export async function runDoctor(root: string): Promise<CheckResult[]> {
     blocks: "completion"
   });
 
+  results.push(managedFilesCheck(await editedSinceInstall(root)));
+
   return results;
+}
+
+const LISTED = 5;
+
+/** Advisory: an edited managed file is its owner's choice, and `update` keeps it rather than overwriting it. */
+export function managedFilesCheck(changes: Awaited<ReturnType<typeof editedSinceInstall>>): CheckResult {
+  const result = (detail: string): CheckResult => ({ name: "managed files", ok: true, detail, blocks: "nothing" });
+  if (!changes) return result("no install record to compare with");
+  const { edited, missing, total } = changes;
+  if (edited.length === 0 && missing.length === 0) return result(`all ${total} unchanged since install`);
+
+  const changed = [...edited, ...missing.map((file) => `${file} (missing)`)];
+  const shown = changed.slice(0, LISTED).join(", ") + (changed.length > LISTED ? `, and ${changed.length - LISTED} more` : "");
+  return result(`${edited.length} edited and ${missing.length} missing of ${total} since install: ${shown}`);
 }
 
 function invalidSettings(config: unknown): string[] {

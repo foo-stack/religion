@@ -42,7 +42,7 @@ large, so split it.
   `lib/install.ts`. *Done when:* unit tests show an edited skill listed, a deleted one listed
   as missing, an unedited one and an edited entry file left out, a symlinked file neither
   read nor listed, a manifest path outside the trees ignored, and no manifest read as null.
-- [ ] **Step 2 - the doctor check** - `managed files` in `lib/doctor.ts`, built by a pure
+- [x] **Step 2 - the doctor check** - `managed files` in `lib/doctor.ts`, built by a pure
   `managedFilesCheck`, and its section in `docs/doctor.md`. *Done when:* unit tests cover
   no install record, everything unchanged, and a long list cut short, and `religion doctor`
   on this repository prints the check.

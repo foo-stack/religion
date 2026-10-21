@@ -41,6 +41,15 @@ export interface WorkItem {
   nextStep: string | null;
 }
 
+export interface Activity {
+  recorded: boolean;
+  command: string | null;
+  status: "running" | "blocked" | "ready" | "completed" | null;
+  summary: string | null;
+  updatedAt: string | null;
+  resumeCommand: string | null;
+}
+
 export interface ProjectState {
   root: string;
   config: unknown;
@@ -51,6 +60,8 @@ export interface ProjectState {
   overviewPresent: boolean;
   overviewFresh: boolean | null;
   openQuestions: string[];
+  activity: Activity;
+  inbox: InboxNote[];
 }
 
 const CHECKBOX = /^(\s*)- \[( |x|X)\]\s*(.*)$/;
@@ -274,6 +285,39 @@ export function parseInbox(source: string | null): InboxNote[] {
   }));
 }
 
+const ACTIVITY_STATUSES = new Set(["running", "blocked", "ready", "completed"]);
+
+// A skill invocation and plain word arguments, such as `/auto resume`. Anything else in the
+// record could be a shell command dressed up as the next thing to run.
+const RESUME_COMMAND = /^[/$]?[a-z][a-z-]*(?: [\w-]+)*$/;
+
+/** The activity record a running skill writes. Skills write it, so only its named fields are read. */
+export function parseActivity(source: string | null): Activity {
+  const none: Activity = { recorded: false, command: null, status: null, summary: null, updatedAt: null, resumeCommand: null };
+  if (!source) return none;
+
+  let record: unknown;
+  try {
+    record = JSON.parse(source);
+  } catch {
+    return none;
+  }
+  if (!record || typeof record !== "object") return none;
+
+  const { command, status, summary, updatedAt, resumeCommand } = record as Record<string, unknown>;
+  if (typeof command !== "string" || typeof summary !== "string") return none;
+  if (typeof status !== "string" || !ACTIVITY_STATUSES.has(status)) return none;
+
+  return {
+    recorded: true,
+    command,
+    status: status as Activity["status"],
+    summary,
+    updatedAt: typeof updatedAt === "string" ? updatedAt : null,
+    resumeCommand: typeof resumeCommand === "string" && RESUME_COMMAND.test(resumeCommand) ? resumeCommand : null
+  };
+}
+
 /** Paragraphs and list items, each as one line of text. */
 function blocks(body: string | undefined): string[] {
   if (!body) return [];
@@ -334,13 +378,15 @@ export function overviewHash(projectPlan: string, buildPlan: string): string {
 }
 
 export async function readProjectState(root: string): Promise<ProjectState> {
-  const [configRaw, projectPlan, buildPlan, work, findings, overview] = await Promise.all([
+  const [configRaw, projectPlan, buildPlan, work, findings, overview, activity, inbox] = await Promise.all([
     readIfPresent(statePath(root, "config.json")),
     readIfPresent(statePath(root, "project-plan.md")),
     readIfPresent(statePath(root, "build-plan.md")),
     readIfPresent(statePath(root, "context", "current-work.md")),
     readIfPresent(statePath(root, "context", "findings.md")),
-    readIfPresent(statePath(root, "context", "project-overview.md"))
+    readIfPresent(statePath(root, "context", "project-overview.md")),
+    readIfPresent(statePath(root, ".state", "run.json")),
+    readIfPresent(statePath(root, "context", "inbox.md"))
   ]);
 
   let config: unknown = null;
@@ -368,6 +414,8 @@ export async function readProjectState(root: string): Promise<ProjectState> {
       !generated || stamped === null
         ? null
         : stamped === overviewHash(projectPlan ?? "", buildPlan ?? ""),
-    openQuestions: parseOpenQuestions(overview)
+    openQuestions: parseOpenQuestions(overview),
+    activity: parseActivity(activity),
+    inbox: parseInbox(inbox)
   };
 }

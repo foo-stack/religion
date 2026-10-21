@@ -14,6 +14,8 @@ export interface Status {
   work: ProjectState["work"];
   findings: { total: number; blocking: string[]; byStatus: Record<string, number> };
   overview: { present: boolean; fresh: boolean | null };
+  activity: ProjectState["activity"];
+  inbox: { notes: number };
   warnings: string[];
 }
 
@@ -50,6 +52,8 @@ export function computeStatus(state: ProjectState): Status {
     work: state.work,
     findings: { total: state.findings.length, blocking, byStatus },
     overview: { present: state.overviewPresent, fresh: state.overviewFresh },
+    activity: state.activity,
+    inbox: { notes: state.inbox.length },
     warnings
   };
 }

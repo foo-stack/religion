@@ -103,6 +103,10 @@ const PROJECTS: Record<string, Record<string, string>> = {
       "# Findings\n\n### F-01 [P1] open - A missing guard\n\n### F-02 [P3] closed - A cleanup\n",
     "religion/context/project-overview.md":
       "# Overview\n\n<!-- religion:source-hash 0000000000000000 -->\n\n## Open questions\n\n" +
-      "- **Storage** (affects: item 2) - undecided\n"
+      "- **Storage** (affects: item 2) - undecided\n",
+    "religion/.state/run.json":
+      '{ "command": "auto", "status": "blocked", "summary": "Building the plan", ' +
+      '"updatedAt": "2026-10-21T10:00:00Z", "resumeCommand": "/auto resume" }\n',
+    "religion/context/inbox.md": "# Inbox\n\n- 2026-10-21 - a note\n"
   }
 };

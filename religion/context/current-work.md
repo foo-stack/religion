@@ -48,7 +48,7 @@ large, so split it.
   when:* unit tests show a valid record parsed, a malformed or partial one read as
   not recorded, a resume command that is not a skill invocation dropped, and the inbox
   counted from a project with notes and one without.
-- [ ] **Step 2 - the two fields in `status --json`, recorded as public** - `Status` gains
+- [x] **Step 2 - the two fields in `status --json`, recorded as public** - `Status` gains
   `activity` and `inbox`; `surface.json`, the surface check's busy project, and
   `docs/stability.md` carry them. *Done when:* `status --json` on this repository prints
   both fields, and `npm run verify` passes, including the surface check and the stability

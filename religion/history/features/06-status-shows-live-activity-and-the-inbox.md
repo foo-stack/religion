@@ -162,6 +162,12 @@ need `npm run build:skills:link`, which the drift check caught on the first full
 - **Judging a stale record.** The output shows when it was last updated and leaves the call
   to the reader.
 
+## Landed
+
+**Base:** 7a4265e14c0a7ce06d07ebb1ba2ce5bff8a2bda0
+**Commits:** b52bd018c96162e942cd727063016afeea7437f5, fe581b928e91ee31d994b3f66237a5373545aa84, 7dd233e100cb3f5057f5349c0e6799edae0b70c1, ebe8b7bc0603a89f3c62b53be33eaaf99f454085, a427b0d4ef954bd903afd6c26767bb9e26bcf236, adde5a865b29e34478a6a5edaeefd1d778edc2c4, 97be5f2d0af04102f7972c36cb3cac13004a24a4, df6da15d87971e8307aadf0770b98d2b8d327a60
+**Product paths:** .agents/skills/status/SKILL.md, .changeset/status-activity-inbox.md, .claude/skills/status/SKILL.md, docs/stability.md, packages/create-religion/lib/doctor.ts, packages/create-religion/lib/paths.ts, packages/create-religion/lib/state.test.ts, packages/create-religion/lib/state.ts, packages/create-religion/lib/status.test.ts, packages/create-religion/lib/status.ts, packages/create-religion/surface.json, scripts/surface-current.ts, src/skills/status/SKILL.md
+
 ## Findings
 
 ### 6/F-125 [P2] closed - The resume command check accepts any command, not only a skill

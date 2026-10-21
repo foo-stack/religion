@@ -758,3 +758,19 @@
 **Why it matters:** `runDoctor` and `readInstall` each hashed every managed file on every three-second poll.
 **Suggested fix:** Compare once and pass the result to both.
 **Resolution:** Repaired 2026-10-21: `readState` compares once, and `runDoctor` takes the result as an optional argument; `runDoctor` including the check is now tested.
+
+### F-140 [P2] fixed - The verification check cannot see drift in ranges, defaults, booleans or prefixes
+
+**File:** scripts/verify.ts:143
+**Found:** 2026-10-21 by audit (scope: current; lens: tests)
+**Why it matters:** It confirmed only that each row existed and named every enum value, so changing an integer range, a default or the shipped value passed every check, against the item's own aim that the three copies cannot disagree.
+**Suggested fix:** Render each row's expected cells from the schema and compare them, compare defaults with the shipped configuration, and flag rows with no schema entry.
+**Resolution:** Repaired 2026-10-21 as suggested, with `referenceCells` in `lib/settings.ts`; a scratch drift of `auto.maxRepairAttempts` to `max: 9, default: 3` and `workflow.parallelSteps` to `true` failed with five named problems, then was reverted.
+
+### F-141 [P3] fixed - The prefix rule accepts prefixes git refuses
+
+**File:** packages/create-religion/lib/settings.ts:42
+**Found:** 2026-10-21 by audit (scope: current; lens: correctness)
+**Why it matters:** `a..b/`, `feature//`, `a/.x/` and `x.lock/` passed, and `git check-ref-format` rejects each as a branch prefix.
+**Suggested fix:** Refuse empty components, components starting with `.` or ending in `.lock`, and `..`.
+**Resolution:** Repaired 2026-10-21 with a test of all four and `.hidden/`.

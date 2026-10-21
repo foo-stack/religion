@@ -56,6 +56,7 @@ large, so split it.
   the reference loses one of its values (shown by a scratch edit, then reverted).
 - [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in
   full.
+- [x] Repair F-140 and F-141 - the reference's cells and the shipped defaults compared with the schema, and prefixes git refuses refused.
 
 ## Files and areas
 

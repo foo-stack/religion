@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 
 import { SHARED, TREES } from "../src/lib/adapters.js";
 import { PLANNED_SKILLS, readSkills } from "../src/lib/skills.js";
-import { SETTINGS, settingProblems } from "../packages/create-religion/lib/settings.js";
+import { referenceCells, SETTINGS, settingProblems } from "../packages/create-religion/lib/settings.js";
 import { compareSurface, shapeProblems } from "./surface.js";
 import type { Shape, Surface } from "./surface.js";
 import { currentOutputs, currentSurface, SURFACE_RECORD } from "./surface-current.js";
@@ -135,22 +135,34 @@ const checks: Check[] = [
       // held together here: shipped keys, schema entries, and the reference's rows and values.
       const problems: string[] = settingProblems(config).map((p) => `config.json: the shipped default fails the schema: ${p}`);
       for (const [section, value] of Object.entries(config)) {
-        const keys = typeof value === "object" && value !== null ? Object.keys(value).map((k) => `${section}.${k}`) : [section];
-        for (const setting of keys) {
-          if (!SETTINGS[setting]) problems.push(`config.json: ${setting} is not in lib/settings.ts, so doctor never checks it`);
+        const entries = typeof value === "object" && value !== null ? Object.entries(value).map(([k, v]) => [`${section}.${k}`, v]) : [[section, value]];
+        for (const [setting, shipped] of entries) {
+          const rule = SETTINGS[setting as string];
+          if (!rule) problems.push(`config.json: ${setting} is not in lib/settings.ts, so doctor never checks it`);
+          else if (JSON.stringify(rule.default) !== JSON.stringify(shipped)) {
+            problems.push(`config.json: ${setting} ships ${JSON.stringify(shipped)}, but its default in lib/settings.ts is ${JSON.stringify(rule.default)}`);
+          }
         }
       }
+      const rows = new Map(
+        docs.split("\n").flatMap((line) => {
+          const cells = /^\| `([a-zA-Z]+\.[a-zA-Z]+)` \| (.*) \| (.*) \|$/.exec(line);
+          return cells ? [[cells[1]!, { values: cells[2]!, default: cells[3]! }]] : [];
+        })
+      );
       for (const [setting, rule] of Object.entries(SETTINGS)) {
         if (!setting.includes(".")) continue;
-        const row = docs.split("\n").find((line) => line.startsWith(`| \`${setting}\` |`));
+        const row = rows.get(setting);
         if (!row) {
           problems.push(`config.md: ${setting} has no row`);
           continue;
         }
-        if (rule.kind !== "enum") continue;
-        for (const allowed of rule.values) {
-          if (!row.includes(`\`${allowed}\``)) problems.push(`config.md: ${setting}'s row does not name ${allowed}`);
-        }
+        const wanted = referenceCells(rule);
+        if (row.values !== wanted.values) problems.push(`config.md: ${setting} says ${row.values}, but the schema accepts ${wanted.values}`);
+        if (row.default !== wanted.default) problems.push(`config.md: ${setting} defaults to ${row.default}, but the schema's default is ${wanted.default}`);
+      }
+      for (const setting of rows.keys()) {
+        if (!SETTINGS[setting]) problems.push(`config.md: ${setting} has a row but no entry in lib/settings.ts`);
       }
       return problems;
     }

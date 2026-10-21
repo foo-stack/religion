@@ -39,6 +39,24 @@ export const SETTINGS: Record<string, Setting> = {
 
 const PREFIX = /^[a-z0-9][a-z0-9._/-]*\/$/;
 
+// What git refuses in a branch name, checked per path component of the prefix.
+const BAD_COMPONENT = (part: string) => part === "" || part.startsWith(".") || part.endsWith(".lock") || part.includes("..");
+
+/** The reference's Values and Default cells for a setting, as `docs/architecture/config.md` writes them. */
+export function referenceCells(setting: Setting): { values: string; default: string } {
+  const code = (value: unknown) => "`" + String(value) + "`";
+  const values =
+    setting.kind === "enum"
+      ? setting.values.map(code).join(", ")
+      : setting.kind === "boolean"
+        ? "`true`, `false`"
+        : setting.kind === "prefix"
+          ? "lowercase prefix ending in `/`"
+          : (setting.min === 1 && setting.max === undefined ? "positive integer" : `integer from ${setting.min} through ${setting.max}`) +
+            (setting.nullable ? ", or `null` for no limit" : "");
+  return { values, default: code(setting.default) };
+}
+
 /** What each setting present in `config` gets wrong, one sentence each. Absent settings take their default. */
 export function settingProblems(config: unknown): string[] {
   if (config === null || typeof config !== "object" || Array.isArray(config)) return ["not an object"];
@@ -72,7 +90,9 @@ function expected(setting: Setting, value: unknown): string | null {
     case "boolean":
       return typeof value === "boolean" ? null : "true or false";
     case "prefix":
-      return typeof value === "string" && PREFIX.test(value) ? null : "a lowercase prefix ending in /";
+      return typeof value === "string" && PREFIX.test(value) && !value.slice(0, -1).split("/").some(BAD_COMPONENT)
+        ? null
+        : "a lowercase prefix ending in /";
     case "integer": {
       if (value === null && setting.nullable) return null;
       const ok = Number.isInteger(value) && (value as number) >= setting.min && (setting.max === undefined || (value as number) <= setting.max);

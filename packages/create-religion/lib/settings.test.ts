@@ -38,3 +38,10 @@ test("settingProblems reports a section or a file that is not an object", () => 
 test("settingProblems ignores keys the reference does not name", () => {
   assert.deepEqual(settingProblems({ notes: "mine", git: { mode: "trunk", colour: "blue" } }), []);
 });
+
+test("settingProblems refuses a prefix git would refuse as a branch name", () => {
+  for (const prefix of ["a..b/", "feature//", "a/.x/", "x.lock/", ".hidden/"]) {
+    assert.equal(settingProblems({ git: { featureBranchPrefix: prefix } }).length, 1, prefix);
+  }
+  assert.deepEqual(settingProblems({ git: { featureBranchPrefix: "team.a/feature/" } }), []);
+});

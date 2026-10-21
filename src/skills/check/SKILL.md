@@ -64,6 +64,25 @@ chrome, or anything else it does not actually observe.
 Start the project the way its own commands say to. If it cannot start, that is the finding:
 report it and stop rather than reasoning about what would have happened.
 
+## Accessibility, for web outcomes
+
+A screenshot shows a page rendered, not that someone using a keyboard or a screen reader can use
+it. For each interface outcome, scan the state the outcome describes with what the project
+already has, and never install a scanner to do it; {{cmd:browser-tests}} is where one gets added.
+
+- **The project's axe**, through its browser-test harness, when it has one: run its rules on the
+  page and take the violations by rule and element.
+- **Otherwise, the page itself**, through the browser being driven: read its accessibility tree
+  for controls without a name, images without alternative text, form fields without a label, and
+  headings out of order, then move through the page with the keyboard alone and note anything that
+  cannot be reached or that hides the focus.
+
+Report violations under the outcome they belong to, and say which method ran and what it does
+not cover: the fallback sees no contrast, no motion, and nothing about reading order beyond focus.
+A clean scan is evidence that the issues that method detects are absent, never that the page is
+accessible. Record it on the outcome's Evidence line, method included. Point anything serious at
+{{cmd:audit}}, since this skill does not write findings.
+
 ## Step 3 - check each outcome
 
 For each one, state what you did, what you observed, and whether it matched.

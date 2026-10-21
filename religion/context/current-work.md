@@ -48,7 +48,7 @@ large, so split it.
   `scripts/docs.test.ts`. *Done when:* unit tests show an unknown command, a flag the
   command lacks, an unrecorded exit code, a missing file and a missing anchor each reported
   with its file and line, and an output block, an external link and a valid link ignored.
-- [ ] **Step 3 - into the suite, and the docs it catches** - the check in
+- [x] **Step 3 - into the suite, and the docs it catches** - the check in
   `scripts/verify.ts`, and any repair it calls for. *Done when:* `npm test` passes, and a
   scratch edit adding `religion status --verbose` to a doc fails the check, then is
   reverted.

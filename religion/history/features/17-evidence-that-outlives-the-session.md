@@ -102,3 +102,9 @@ output behind it is.
 ### Deferred
 
 - **Per-step evidence from `implement`**, which stays in its review packet.
+
+## Landed
+
+**Base:** f4f49827cbf35201bbe70cae080ae0e991f2633a
+**Commits:** 8ca2ad787a453ecb9b39e9f614ec040f645eff46, ead125345136b5ac46549d7efd833d6d241e6573, c6d8ecc38da5dd7a4adbf537502b308d8c08cdfa, 8ffa7af9acaf4eac3bea4ecccdfa6d901441f496, 5e0b296dae31786afefa9582caeb7978fb77467c
+**Product paths:** .agents/skills/check/SKILL.md, .agents/skills/complete/SKILL.md, .changeset/check-evidence.md, .claude/skills/check/SKILL.md, .claude/skills/complete/SKILL.md, docs/architecture/state-model.md, packages/create-religion/lib/dashboard.ts, packages/create-religion/lib/state.test.ts, packages/create-religion/lib/state.ts, src/skills/check/SKILL.md, src/skills/complete/SKILL.md

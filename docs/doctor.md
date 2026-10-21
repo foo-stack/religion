@@ -265,7 +265,7 @@ It only applies where `.claude/skills` is installed.
 
 ```text
   FAIL  hooks (cosmetic)
-          not registered in .claude/settings.json: scan-untrusted-input.mjs (PostToolUse); copy them from a fresh install's settings
+          not registered in .claude/settings.json or .claude/settings.local.json: scan-untrusted-input.mjs (PostToolUse); copy them from a fresh install's settings
 ```
 
 Nothing is blocked, because each hook backs a rule that applies without it, but the rule is
@@ -282,9 +282,11 @@ missing entry under the event named, for example:
 
 The check compares with the hooks this version of the tool ships, not with
 `religion/.state/settings-template.json`, which is copied once at install and goes stale.
-Matchers are not compared, so one you have tuned still counts. A `missing hook file` means the
-hook's script is gone from `.claude/hooks`, and `update` puts it back. The check refuses to
-read a `.claude/settings.json` that is a link.
+A hook counts as wired when its script is registered under the right event in either settings
+file, whatever its matcher, and whether the command names it directly or through
+`"$CLAUDE_PROJECT_DIR"`. `disableAllHooks` turned on fails the check, since then nothing runs. A
+`missing hook file` means the hook's script is gone from `.claude/hooks`, and `update` puts it
+back. A settings file reached through a link is not read.
 
 ## What a healthy report does not prove
 

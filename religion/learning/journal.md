@@ -95,3 +95,10 @@ verification check, and both were found by hand first.
 **Surprised:** The network check governs which files the package may publish, not only what code runs, so shipping a markdown file was a change to the promise's allowlist.
 **Went wrong:** The commit gate worked as intended this time: the red suite stopped the commit, where two items earlier a filtered pipe had let one through. A read-only reviewer still ran a stash and pop; reviewer prompts should forbid git commands that touch the working tree.
 **Deferred:** Prerelease notes.
+
+## 2026-10-21 - Settings explained in the dashboard
+
+**Archive:** history/features/15-settings-explained-in-the-dashboard.md
+**Surprised:** Item 10's schema made this item small: one field per setting and one function, because the kinds, ranges, defaults and the reference's wording already lived in one place.
+**Went wrong:** A display case the reference table never exercised, a range with one value, only showed up on the real page; looking at the rendered output caught what the tests did not ask about.
+**Deferred:** Editing settings from the page.

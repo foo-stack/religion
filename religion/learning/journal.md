@@ -137,3 +137,10 @@ verification check, and both were found by hand first.
 **Surprised:** The `blocks` field doctor already reported for ordering its output turned out to be exactly the line between what a runner can and cannot check.
 **Went wrong:** nothing
 **Deferred:** Running doctor in this repository's own workflow.
+
+## 2026-10-21 - A review packet for the pull request
+
+**Archive:** history/features/24-a-review-packet-for-the-pull-request.md
+**Surprised:** Item 17 had already done the real work: once evidence lived in the archive, the packet was a matter of reading it out.
+**Went wrong:** nothing
+**Deferred:** nothing

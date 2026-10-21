@@ -109,3 +109,9 @@ the package template, and `.claude/hooks/` here is ignored installer output.
 - **F-153 and F-154**, repaired and `fixed`, waiting for a review.
 - **This repository's own `.claude/hooks/write-handoff.mjs`**, an ignored local copy, still
   runs the previous version until it is refreshed by an install or by hand.
+
+## Landed
+
+**Base:** 725c5b2e75f5a99b6bf35f03643888ccd8ad9527
+**Commits:** 4afc477d54c2d434d856a0cb32b2baedcb85083c, a346c2e86861fd0d3b394fd2521988edc0a7014c, a9062654827183a80d597f20270b864c973fb368, e13eea162956e8a1f478062e107573cfd7062ab6
+**Product paths:** .changeset/handoff-story.md, scripts/hooks.test.ts, src/hooks/write-handoff.mjs

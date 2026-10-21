@@ -44,7 +44,7 @@ large, so split it.
   help text, read by `scripts/surface-current.ts`, recorded in `surface.json`, and named by
   the stability statement check. *Done when:* `religion help` prints byte-for-byte what it
   printed before, and `npm run verify` passes with `exitCodes` in the record.
-- [ ] **Step 2 - the documentation check** - `docsProblems` in `scripts/docs.ts`, with
+- [x] **Step 2 - the documentation check** - `docsProblems` in `scripts/docs.ts`, with
   `scripts/docs.test.ts`. *Done when:* unit tests show an unknown command, a flag the
   command lacks, an unrecorded exit code, a missing file and a missing anchor each reported
   with its file and line, and an output block, an external link and a valid link ignored.

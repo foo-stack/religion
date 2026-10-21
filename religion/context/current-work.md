@@ -40,7 +40,7 @@ large, so split it.
 - [x] **Step 1 - the offer** - Step 3 and the rules of `src/skills/tests/SKILL.md`, rendered
   into both trees. *Done when:* the rendered skill offers a capture per discrepancy, states
   the note's shape, names `capture` as the only way into the inbox, and `npm test` exits 0.
-- [ ] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 2 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

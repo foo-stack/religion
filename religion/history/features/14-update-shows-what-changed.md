@@ -113,3 +113,9 @@ restored the working tree at once, and the tree was checked afterwards: unchange
 - **Prerelease notes**, left out entirely rather than compared, until the project uses
   Changesets' prerelease mode.
 - **F-144, F-145 and F-146**, repaired and `fixed`, waiting for a review.
+
+## Landed
+
+**Base:** 62fa9283d6fedddc679a83d1e03c33fbdb411c62
+**Commits:** c38280751d8dc99546d4af67d6daf72a3f9757ec, 6d4c5891b0049a4e1aaa37af7686b07a3b1e072c, d803d0e5d871542deb71d32e4938174f36672fec, ecd31770785ec5a0bb98fdf47b7245472a21264c, 48479c38afb20f816f939115d9fce0bf10ae13c3
+**Product paths:** .changeset/update-changelog.md, docs/upgrading.md, packages/create-religion/bin/religion.ts, packages/create-religion/lib/changelog.test.ts, packages/create-religion/lib/changelog.ts, packages/create-religion/lib/install.ts, packages/create-religion/package.json, scripts/promises.ts, scripts/verify.ts

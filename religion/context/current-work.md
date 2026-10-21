@@ -49,7 +49,7 @@ large, so split it.
 - [x] **Step 3 - the Install panel** - `edited` and `missing` from `readInstall` in
   `lib/dashboard.ts`, shown in the panel. *Done when:* the dashboard tests pass and a
   screenshot of the running dashboard shows the list for this repository.
-- [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in
+- [x] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` passes in
   full.
 
 ## Files and areas

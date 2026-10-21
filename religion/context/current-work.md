@@ -61,6 +61,7 @@ large, so split it.
 - [x] **Step 4 - the skill's fallback and the release note** - `src/skills/status/SKILL.md`
   reads `run.json` and the inbox when the tool is absent, rendered into both trees, plus a
   minor changeset. *Done when:* `npm test` passes in full.
+- [x] Repair F-125, F-126 and F-127 - the activity record's command must be a skill name, the resume command must resume that skill and stay under a length bound, and control characters are stripped from what is printed.
 
 ## Files and areas
 

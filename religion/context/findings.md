@@ -669,3 +669,35 @@
 **Why it matters:** `AbortSignal.timeout` needs Safari 16, Chrome 103 or Firefox 100. On an older browser the call throws inside the request's `try`, so every poll reports "Disconnected, retrying" and nothing renders. A local dashboard is unlikely to meet one.
 **Suggested fix:** Pass the signal only when `AbortSignal.timeout` exists.
 **Resolution:**
+
+### F-125 [P2] fixed - The resume command check accepts any command, not only a skill
+
+**File:** packages/create-religion/lib/state.ts:292
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Why it matters:** `git push --force`, `npm publish` and `sudo reboot` all match the pattern, become `next.command`, and the status skill tells an agent to run that command.
+**Suggested fix:** Require the first word to equal the record's `command`, which must itself be a skill name, and test that `git push --force` is rejected.
+**Resolution:** Repaired 2026-10-21: the record's `command` must be a skill name, and the resume command must invoke that same skill with plain word arguments; `git push --force` and other skills are rejected in tests.
+
+### F-126 [P2] fixed - Control characters in the record reach the terminal and can fake the Next line
+
+**File:** packages/create-religion/lib/status.ts:68
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Why it matters:** A `summary` holding a newline and escape codes is printed whole into `next.because` and the Run line, so a crafted record can print a second, fake Next line or clear the screen.
+**Suggested fix:** Reject a `command` that is not a skill name, and strip control characters from `summary` and `updatedAt` in `parseActivity`.
+**Resolution:** Repaired 2026-10-21: a `command` that is not a skill name reads as not recorded, and control characters in `summary` and `updatedAt` become spaces; a spoofed Next line is tested.
+
+### F-127 [P2] fixed - A very long resume command overflows the regex stack and crashes status
+
+**File:** packages/create-religion/lib/state.ts:317
+**Found:** 2026-10-21 by audit (scope: current; lens: security)
+**Why it matters:** At about 10 MB the repeated group throws `RangeError: Maximum call stack size exceeded`, uncaught, from `status`, `doctor` and the dashboard, which all read the project state.
+**Suggested fix:** Bound the length before testing the pattern.
+**Resolution:** Repaired 2026-10-21: resume commands over 200 characters are dropped before the pattern runs; a 10 MB command is tested.
+
+### F-128 [P3] open - The dashboard reads the activity record and inbox a second time
+
+**File:** packages/create-religion/lib/dashboard.ts:99
+**Found:** 2026-10-21 by audit (scope: current; lens: quality)
+**Why it matters:** The project state now carries both, but the dashboard keeps its own raw `readActivity`, so one file has two readers and the dashboard skips the new checks.
+**Suggested fix:** Read `state.activity` and `state.inbox`, after checking which extra fields the dashboard's renderer uses.
+**Resolution:**

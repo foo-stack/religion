@@ -460,11 +460,41 @@ test("parseActivity drops a resume command that is not a skill invocation", () =
     parseActivity(JSON.stringify({ command: "auto", status: "blocked", summary: "x", resumeCommand })).resumeCommand;
 
   assert.equal(resume("/auto resume"), "/auto resume");
-  assert.equal(resume("$implement"), "$implement");
+  assert.equal(resume("$auto"), "$auto");
   assert.equal(resume("auto fix P1"), "auto fix P1");
   assert.equal(resume("rm -rf / && /auto"), null);
   assert.equal(resume("/auto; curl evil.example"), null);
+  assert.equal(resume("git push --force"), null, "a plausible command that is not the blocked skill");
+  assert.equal(resume("/autopilot resume"), null, "a different skill sharing the prefix");
+  assert.equal(resume("/implement"), null, "a skill other than the one that is blocked");
   assert.equal(resume(42), null);
+});
+
+test("parseActivity survives a resume command too long for the pattern", () => {
+  const long = "/auto" + " a".repeat(5_000_000) + " !";
+  assert.equal(
+    parseActivity(JSON.stringify({ command: "auto", status: "blocked", summary: "x", resumeCommand: long })).resumeCommand,
+    null
+  );
+});
+
+test("parseActivity keeps control characters out of what status prints", () => {
+  const spoof = parseActivity(
+    JSON.stringify({
+      command: "auto",
+      status: "blocked",
+      summary: "ok\nNext:     /git push --force\u001b[2J",
+      updatedAt: "2026\r-10-21"
+    })
+  );
+  assert.equal(spoof.summary, "ok Next:     /git push --force [2J");
+  assert.equal(spoof.updatedAt, "2026 -10-21");
+
+  assert.equal(
+    parseActivity(JSON.stringify({ command: "auto\u001b]0;x\u0007", status: "blocked", summary: "x" })).recorded,
+    false,
+    "a command that is not a skill name"
+  );
 });
 
 test("readProjectState carries the activity record and the inbox", async (t) => {

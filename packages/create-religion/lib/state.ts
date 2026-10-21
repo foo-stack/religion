@@ -287,9 +287,16 @@ export function parseInbox(source: string | null): InboxNote[] {
 
 const ACTIVITY_STATUSES = new Set(["running", "blocked", "ready", "completed"]);
 
-// A skill invocation and plain word arguments, such as `/auto resume`. Anything else in the
-// record could be a shell command dressed up as the next thing to run.
-const RESUME_COMMAND = /^[/$]?[a-z][a-z-]*(?: [\w-]+)*$/;
+const SKILL_NAME = /^[a-z][a-z-]{0,39}$/;
+
+// The blocked skill's own invocation and plain word arguments, such as `/auto resume`.
+// Anything else in the record could be a shell command dressed up as the next thing to run.
+// The length bound comes first: the repeated group overflows the regex stack on megabytes.
+const RESUME_ARGUMENTS = /^(?: [\w-]+)*$/;
+const RESUME_MAX = 200;
+
+// A record is written by an agent, so it must not be able to move the cursor or print lines.
+const CONTROL = /[\u0000-\u001f\u007f-\u009f]/g;
 
 /** The activity record a running skill writes. Skills write it, so only its named fields are read. */
 export function parseActivity(source: string | null): Activity {
@@ -305,17 +312,24 @@ export function parseActivity(source: string | null): Activity {
   if (!record || typeof record !== "object") return none;
 
   const { command, status, summary, updatedAt, resumeCommand } = record as Record<string, unknown>;
-  if (typeof command !== "string" || typeof summary !== "string") return none;
+  if (typeof command !== "string" || !SKILL_NAME.test(command) || typeof summary !== "string") return none;
   if (typeof status !== "string" || !ACTIVITY_STATUSES.has(status)) return none;
 
   return {
     recorded: true,
     command,
     status: status as Activity["status"],
-    summary,
-    updatedAt: typeof updatedAt === "string" ? updatedAt : null,
-    resumeCommand: typeof resumeCommand === "string" && RESUME_COMMAND.test(resumeCommand) ? resumeCommand : null
+    summary: summary.replace(CONTROL, " "),
+    updatedAt: typeof updatedAt === "string" ? updatedAt.replace(CONTROL, " ") : null,
+    resumeCommand: resumes(command, resumeCommand) ? resumeCommand : null
   };
+}
+
+function resumes(command: string, resumeCommand: unknown): resumeCommand is string {
+  if (typeof resumeCommand !== "string" || resumeCommand.length > RESUME_MAX) return false;
+  const invocation = resumeCommand.replace(/^[/$]/, "");
+  return (invocation === command || invocation.startsWith(command + " ")) &&
+    RESUME_ARGUMENTS.test(invocation.slice(command.length));
 }
 
 /** Paragraphs and list items, each as one line of text. */

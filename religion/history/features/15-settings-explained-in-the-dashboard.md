@@ -103,3 +103,9 @@ showed because its table leaves that key out. It now reads `1`, tested.
 ### Deferred
 
 - **Editing settings from the page**, which stays read-only.
+
+## Landed
+
+**Base:** a8bacf96b1605efb01f3b4b1f2ebfda84d5c5d29
+**Commits:** b502be616ac83a115b3a94f38c8ffa60bc8cdc78, de7539f5b0b1bbef2104885bd47bd0cca05fd96c, c87a4c620aff6670e57657367177bdffd9dd5277, 26ed1875fe5472a42629148fb3349ca8ae73f6d9
+**Product paths:** .changeset/settings-explained.md, packages/create-religion/lib/dashboard.test.ts, packages/create-religion/lib/dashboard.ts, packages/create-religion/lib/settings.test.ts, packages/create-religion/lib/settings.ts

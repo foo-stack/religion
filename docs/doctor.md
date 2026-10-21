@@ -259,8 +259,9 @@ them and an edit there is expected.
 
 ## hooks
 
-**Protects:** the three Claude Code hooks that back the workflow's rules: the guard against
-editing rendered output, the injection scan, and the handoff written at the end of a turn.
+**Protects:** the four Claude Code hooks that back the workflow's rules: the guard against
+editing rendered output, the injection scan, the handoff written at the end of a turn, and the
+question asked before an edit the active spec does not name.
 It only applies where `.claude/skills` is installed.
 
 ```text

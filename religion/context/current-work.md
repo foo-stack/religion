@@ -2,7 +2,7 @@
 
 **Type:** Feature
 **From build plan:** item 30b
-**Approved:** 2026-10-21, 1aaf9f1103032918
+**Approved:** 2026-10-21, 6dc8e9f8d39666ea
 **Status:** in progress
 
 ## Goal
@@ -46,7 +46,7 @@ large, so split it.
   progress, silent for a file the current step or Files and areas names (a named directory
   covering what is inside it), silent for state files and changesets, asking for an unnamed file
   with its path in the reason, and silent on a payload it cannot read.
-- [ ] **Step 2 - wired in** - `src/state/.state/settings-template.json`, `HOOKS` in
+- [x] **Step 2 - wired in** - `src/state/.state/settings-template.json`, `HOOKS` in
   `lib/doctor.ts`, the tests that count hooks, `docs/doctor.md`, `docs/upgrading.md` and
   `docs/architecture/enforcement.md`, and a minor changeset. *Done when:* the verify check that
   holds `HOOKS` to the template passes with four, `doctor` reports all four wired on a fresh
@@ -56,7 +56,7 @@ large, so split it.
 
 - `src/hooks/warn-on-drift.mjs`, `scripts/hooks.test.ts`
 - `src/state/.state/settings-template.json`, `packages/create-religion/lib/doctor.ts`,
-  `packages/create-religion/lib/doctor.test.ts`
+  `packages/create-religion/lib/doctor.test.ts`, `packages/create-religion/lib/uninstall.test.ts`
 - `docs/doctor.md`, `docs/upgrading.md`, `docs/architecture/enforcement.md`
 - `.changeset/`
 
@@ -77,3 +77,7 @@ large, so split it.
   advises, and failing a turn over advice costs more than missing one warning.
 - This repository's own `.claude/settings.json` is the user's, and is not changed.
 - The path in the reason is the agent's own requested path, printed as plain text.
+
+## Amendments
+
+- 2026-10-21 - Step 2 also changes `lib/uninstall.test.ts` - its fixture settings were built one hook per event, so a second PreToolUse hook overwrote the first; the doctor tests had the same shape.

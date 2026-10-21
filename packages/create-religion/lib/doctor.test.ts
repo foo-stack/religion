@@ -8,6 +8,13 @@ import path from "node:path";
 import { doctorReport, HOOKS, hooksCheck, managedFilesCheck, runDoctor } from "./doctor.js";
 import type { CheckResult } from "./doctor.js";
 
+/** Settings registering each shipped hook under its event, several to an event where they share one. */
+function byEvent(group: (hook: (typeof HOOKS)[number]) => unknown): Record<string, unknown[]> {
+  const events: Record<string, unknown[]> = {};
+  for (const hook of HOOKS) (events[hook.event] ??= []).push(group(hook));
+  return events;
+}
+
 const pass: CheckResult = { name: "configuration", ok: true, detail: "valid", blocks: "work" };
 const cosmetic: CheckResult = { name: "adapters", ok: false, detail: "trees differ", blocks: "nothing" };
 
@@ -40,7 +47,7 @@ test("runDoctor includes the managed files check", async (t) => {
 });
 
 const wired = JSON.stringify({
-  hooks: Object.fromEntries(HOOKS.map((h) => [h.event, [{ matcher: "anything", hooks: [{ type: "command", command: h.command }] }]]))
+  hooks: byEvent((h) => ({ matcher: "anything", hooks: [{ type: "command", command: h.command }] }))
 });
 const allFiles = new Set(HOOKS.map((h) => h.command.replace(/^node /, "")));
 
@@ -48,7 +55,7 @@ test("hooksCheck passes when every shipped hook is registered under its event an
   assert.deepEqual(hooksCheck({ installed: true, wanted: HOOKS, settings: wired, files: allFiles }), {
     name: "hooks",
     ok: true,
-    detail: "all 3 wired",
+    detail: "all 4 wired",
     blocks: "nothing"
   });
 });
@@ -84,7 +91,7 @@ test("runDoctor reads the settings and the hook files from the project", async (
   await fs.mkdir(path.join(root, ".claude", "hooks"), { recursive: true });
   for (const file of allFiles) await fs.writeFile(path.join(root, file), "");
   await fs.writeFile(path.join(root, ".claude", "settings.json"), wired);
-  assert.equal((await runDoctor(root)).find((c) => c.name === "hooks")?.detail, "all 3 wired");
+  assert.equal((await runDoctor(root)).find((c) => c.name === "hooks")?.detail, "all 4 wired");
 
   await fs.rm(path.join(root, ".claude", "settings.json"));
   await fs.symlink(path.join(root, "elsewhere.json"), path.join(root, ".claude", "settings.json"));
@@ -99,7 +106,7 @@ test("hooksCheck matches a hook by its file, in the forms Claude Code documents"
   ];
   for (const form of [0, 1, 2]) {
     const settings = JSON.stringify({
-      hooks: Object.fromEntries(HOOKS.map((h) => [h.event, [{ hooks: [{ type: "command", command: command(h.command.replace(/^node /, ""))[form] }] }]]))
+      hooks: byEvent((h) => ({ hooks: [{ type: "command", command: command(h.command.replace(/^node /, ""))[form] }] }))
     });
     assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings, files: allFiles }).ok, true, `form ${form}`);
   }
@@ -132,5 +139,5 @@ test("runDoctor tells a linked .claude, a directory at the settings path and lin
   await fs.mkdir(path.join(root, "hookfiles"));
   for (const file of allFiles) await fs.writeFile(path.join(root, "hookfiles", path.basename(file)), "");
   await fs.symlink(path.join(root, "hookfiles"), path.join(root, ".claude", "hooks"));
-  assert.equal(await hooks(), "all 3 wired");
+  assert.equal(await hooks(), "all 4 wired");
 });

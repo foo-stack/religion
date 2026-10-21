@@ -119,3 +119,9 @@ on `chmod` while the assertion itself had passed.
 
 - **F-137, F-138 and F-139**, repaired and `fixed`, waiting for a review.
 - **What changed inside an edited file**, and restoring one, both outside this item.
+
+## Landed
+
+**Base:** 7e0f690aa304aeaae9dc471597fe520a8695cd25
+**Commits:** 864a799c90e854a249723bb67c35b22012a1a90d, 6848ce47d9d77664b35f5c06d4e68536bc86ee8e, ed187f762521632de2326fc0ce6a592547796bd2, 1bb90fae649709833372116130b75f70e92588a9, c3ceb8f8f434df9b267681fc64e1c5a46d2dc7b6, 9c3ad506f052b4481ab901bc79775f0b6edeb0d6
+**Product paths:** .changeset/modified-managed-files.md, docs/doctor.md, packages/create-religion/lib/dashboard.ts, packages/create-religion/lib/doctor.test.ts, packages/create-religion/lib/doctor.ts, packages/create-religion/lib/install.test.ts, packages/create-religion/lib/install.ts

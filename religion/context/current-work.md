@@ -49,7 +49,7 @@ large, so split it.
   reporting a settings file that is missing, does not parse or is a link, and staying out of
   the way when `.claude/skills` is absent; and `religion doctor` on this repository names the
   missing scan.
-- [ ] **Step 2 - held to the shipped template** - a verification check that `HOOKS` equals
+- [x] **Step 2 - held to the shipped template** - a verification check that `HOOKS` equals
   the `(event, command)` pairs in `src/state/.state/settings-template.json`. *Done when:* it
   passes, and fails on a scratch edit to the template, then reverted.
 - [ ] **Step 3 - the docs and the release note** - a `hooks` section in `docs/doctor.md`,

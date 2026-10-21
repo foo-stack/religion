@@ -21,6 +21,7 @@ import { currentOutputs, currentSurface, SURFACE_RECORD } from "./surface-curren
 import { upgradeProblems } from "./upgrade.js";
 import { networkProblems, statementProblems } from "./promises.js";
 import { docsProblems } from "./docs.js";
+import { HOOKS, parseHooks } from "../packages/create-religion/lib/doctor.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -311,6 +312,20 @@ const checks: Check[] = [
   {
     name: "the stability statement names the whole recorded surface",
     run: statementProblems
+  },
+  {
+    name: "doctor expects the hooks the settings template wires",
+    run: async () => {
+      // doctor compares a project's settings with HOOKS, so HOOKS must be what install writes.
+      const shipped = parseHooks(await fs.readFile(path.join(repoRoot, "src", "state", ".state", "settings-template.json"), "utf8")) ?? [];
+      const key = (hook: { event: string; command: string }) => `${hook.event} ${hook.command}`;
+      const expected = new Set(HOOKS.map(key));
+      const actual = new Set(shipped.map(key));
+      return [
+        ...[...actual].filter((h) => !expected.has(h)).map((h) => `settings-template.json wires ${h}, which doctor's HOOKS lacks`),
+        ...[...expected].filter((h) => !actual.has(h)).map((h) => `doctor's HOOKS expects ${h}, which settings-template.json does not wire`)
+      ];
+    }
   },
   {
     name: "the documentation names only what the surface records, and its links resolve",

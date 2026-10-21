@@ -151,3 +151,10 @@ verification check, and both were found by hand first.
 **Surprised:** The plan line said check would keep the capture as a test, but check may not write source; the right split was check offering and tests writing, which the one-writer rule decided before any design did.
 **Went wrong:** nothing
 **Deferred:** Turning repaired findings into tests.
+
+## 2026-10-21 - Plan lines that know what they wait on
+
+**Archive:** history/features/29-plan-lines-that-know-what-they-wait-on.md
+**Surprised:** The plan's own line for this item tripped the parser, since describing a syntax and using it look the same to a regex; running against the real plan found it before any test did.
+**Went wrong:** Sub-items not inheriting their parent's wait would have defeated the feature for exactly the items it exists to hold back.
+**Deferred:** Nothing beyond the fixed findings' review.

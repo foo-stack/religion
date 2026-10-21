@@ -49,6 +49,7 @@ large, so split it.
   template by `npm run build`, and a minor changeset. This repository's own `.claude/hooks/`
   is ignored installer output, so it is not part of the change. *Done when:* the template's
   copy matches the source, and `npm test` exits 0.
+- [x] Repair F-153 and F-154 - unverified findings by identifier only, blocking titles cleaned, shortened and capped, and the inbox counted as `status` counts it.
 
 ## Files and areas
 

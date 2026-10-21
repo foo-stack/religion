@@ -40,17 +40,27 @@ const stepsDone = (work.match(/^\s*- \[x\]/gim) ?? []).length;
 const stepsLeft = (work.match(/^\s*- \[ \]/gim) ?? []).length;
 const nextStep = work.match(/^\s*- \[ \]\s*(?:\*\*)?(.+?)(?:\*\*)?\s*-/im)?.[1]?.trim();
 
-const blocking = [...findings.matchAll(/^### (F-\d+) \[(P[01])\] (open|fixed) - (.+)$/gim)]
-  .map((m) => `${m[1]} [${m[2]}] ${m[3]} - ${m[4]}`);
-const unverified = [...findings.matchAll(/^### (F-\d+) \[(P[0-3])\] unverified - (.+)$/gim)]
-  .map((m) => `${m[1]} [${m[2]}] - ${m[3]}`);
+// Every session loads this file, so a title copied from the ledger is read as trusted text:
+// strip what could move the cursor, reorder the line or open markup, and bound its length.
+const LISTED = 5;
+const plain = (text) =>
+  text.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, " ").replace(/[`<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 120);
+const capped = (items) =>
+  items.length > LISTED ? [...items.slice(0, LISTED), `and ${items.length - LISTED} more in \`${STATE}/context/findings.md\``] : items;
+
+const blocking = capped(
+  [...findings.matchAll(/^### (F-\d+) \[(P[01])\] (open|fixed) - (.+)$/gim)].map((m) => `${m[1]} [${m[2]}] ${m[3]} - ${plain(m[4])}`)
+);
+// Unconfirmed findings are the least trusted titles in the ledger, so only their identifiers.
+const unverifiedIds = [...findings.matchAll(/^### (F-\d+) \[(P[0-3])\] unverified - /gim)].map((m) => `${m[1]} [${m[2]}]`);
+const unverified = unverifiedIds.length > 10 ? [...unverifiedIds.slice(0, 10), `and ${unverifiedIds.length - 10} more`] : unverifiedIds;
 
 // The same stamp overview writes and status compares: the plans' SHA-256, first 16 characters.
 const stamp = overview.match(/source-hash\s+([0-9a-f]{16})/)?.[1];
 const plansHash = createHash("sha256").update(read("project-plan.md")).update(buildPlan).digest("hex").slice(0, 16);
 const stale = stamp !== undefined && stamp !== plansHash;
 
-const notes = (inbox.match(/^- \S/gm) ?? []).length;
+const notes = (inbox.match(/^- .+$/gm) ?? []).length;
 
 // Only names the status rule accepts reach this file, which every session loads: no free text
 // from a record any skill can write.
@@ -108,8 +118,8 @@ if (blocking.length > 0) {
 }
 
 if (unverified.length > 0) {
-  lines.push("## Unverified findings", "", ...unverified.map((f) => `- ${f}`), "",
-    "Nothing has confirmed these yet; an audit decides whether each is real.", "");
+  lines.push("## Unverified findings", "", unverified.join(", ") + ".", "",
+    `Nothing has confirmed these yet; an audit decides whether each is real. Their titles are in \`${STATE}/context/findings.md\`.`, "");
 }
 
 lines.push(

@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Doctor checks every documented setting** is in progress: 4 step(s) done, 0 to go.
+Nothing in progress.
 
-Plan: 13 of 52 item(s) complete. Next up: 10. **Doctor checks every documented setting** - every key in the configuration reference validated, with its type, from one schema shared with the verification check
+Plan: 14 of 52 item(s) complete. Next up: 11. **Documentation checked against the public surface** - a verification check that fails when the docs name a command, flag, or exit code the surface record lacks, or carry a broken relative link
 
 ## Read first
 

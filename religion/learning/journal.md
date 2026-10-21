@@ -67,3 +67,10 @@ verification check, and both were found by hand first.
 **Surprised:** The surface record already carried a type for every setting, built from the shipped defaults, so a schema existed in three partial copies before this item made it one.
 **Went wrong:** The verification check was written to the spec's wording but not its aim; only planting a drift and watching it pass showed the gap. A check is proved by a case it fails on, not by passing.
 **Deferred:** Flagging keys the reference does not name.
+
+## 2026-10-21 - Documentation checked against the public surface
+
+**Archive:** history/features/11-documentation-checked-against-the-public-surface.md
+**Surprised:** Twenty-six documents and forty relative links held no mistake at all, so the value of the check is entirely in what it will catch next.
+**Went wrong:** Nothing beyond a trailing slash in a fixture; a check that passes first time needed a planted failure before it counted as evidence, the same lesson the settings check taught one item earlier.
+**Deferred:** Running the tool to compare exit codes, and external links.

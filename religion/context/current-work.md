@@ -47,7 +47,7 @@ large, so split it.
 - [x] **Step 2 - the aggregate in `auto`** - Step 3 of the auto skill. *Done when:* the rendered
   skill takes each item's line from its archive's Evidence section and links the item's own
   pull request for the full packet; `npm test` exits 0.
-- [ ] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
+- [x] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas
 

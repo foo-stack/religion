@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Locally modified managed files** is in progress: 4 step(s) done, 0 to go.
+**Doctor checks every documented setting** is in progress: 4 step(s) done, 0 to go.
 
-Plan: 12 of 52 item(s) complete. Next up: 9. **Locally modified managed files** - the dashboard's install panel, and `doctor`, list the managed files whose contents no longer match the hash recorded at install
+Plan: 13 of 52 item(s) complete. Next up: 10. **Doctor checks every documented setting** - every key in the configuration reference validated, with its type, from one schema shared with the verification check
 
 ## Read first
 

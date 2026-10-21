@@ -134,3 +134,9 @@ across a line, so the first live check proved nothing until it was redone.
 
 - **F-158**, repaired and `fixed`, waiting for a review.
 - **The hook that warns on edits outside a step's files**, which is item 30b.
+
+## Landed
+
+**Base:** 1403a7a5bea17b8f7576d2920397d20c4e995424
+**Commits:** beea9e2ce3476ce261f144c222e25a53acf78dc0, ef81b11066e3dfe091353717809421b2c8ce0e49, 32a5e38bd6bb5f5e676b287e11f7e90adb0b7f41, 6c54938a15eb9b0963f1a7a4bfcd8fa689b9784a, e7ed3681331a4da96172d262dc11e5b450cca1a7, 15a8799c28430e13305abd16ee5e59ae40f180fd, c7203a293c010d32ec11d3b77c41d3ae4ea97bfc
+**Product paths:** .agents/skills/auto/SKILL.md, .agents/skills/implement/SKILL.md, .changeset/spec-amendments.md, .claude/skills/auto/SKILL.md, .claude/skills/implement/SKILL.md, docs/stability.md, packages/create-religion/lib/state.test.ts, packages/create-religion/lib/state.ts, packages/create-religion/lib/status.test.ts, packages/create-religion/lib/status.ts, packages/create-religion/surface.json, src/skills/auto/SKILL.md, src/skills/implement/SKILL.md

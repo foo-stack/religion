@@ -130,3 +130,10 @@ verification check, and both were found by hand first.
 **Surprised:** nothing
 **Went wrong:** nothing
 **Deferred:** nothing
+
+## 2026-10-21 - CI runs doctor
+
+**Archive:** history/features/20-ci-runs-doctor.md
+**Surprised:** The `blocks` field doctor already reported for ordering its output turned out to be exactly the line between what a runner can and cannot check.
+**Went wrong:** nothing
+**Deferred:** Running doctor in this repository's own workflow.

@@ -9,7 +9,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 
-import { readIfPresent, statePath } from "./paths.js";
+import { installedSkills, readIfPresent, statePath } from "./paths.js";
 
 export interface PlanItem {
   number: string | null;
@@ -295,11 +295,16 @@ const SKILL_NAME = /^[a-z][a-z-]{0,39}$/;
 const RESUME_ARGUMENTS = /^(?: [\w-]+)*$/;
 const RESUME_MAX = 200;
 
-// A record is written by an agent, so it must not be able to move the cursor or print lines.
-const CONTROL = /[\u0000-\u001f\u007f-\u009f]/g;
+// A record is written by an agent, so it must not be able to move the cursor, print lines,
+// or reorder the text around it.
+const CONTROL = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu;
 
-/** The activity record a running skill writes. Skills write it, so only its named fields are read. */
-export function parseActivity(source: string | null): Activity {
+/**
+ * The activity record a running skill writes. Skills write it, so only its named fields are
+ * read, and a record naming a skill that is not installed is not believed at all: whoever can
+ * write the record controls every field in it.
+ */
+export function parseActivity(source: string | null, skills: ReadonlySet<string>): Activity {
   const none: Activity = { recorded: false, command: null, status: null, summary: null, updatedAt: null, resumeCommand: null };
   if (!source) return none;
 
@@ -312,7 +317,8 @@ export function parseActivity(source: string | null): Activity {
   if (!record || typeof record !== "object") return none;
 
   const { command, status, summary, updatedAt, resumeCommand } = record as Record<string, unknown>;
-  if (typeof command !== "string" || !SKILL_NAME.test(command) || typeof summary !== "string") return none;
+  if (typeof command !== "string" || !SKILL_NAME.test(command) || !skills.has(command)) return none;
+  if (typeof summary !== "string") return none;
   if (typeof status !== "string" || !ACTIVITY_STATUSES.has(status)) return none;
 
   return {
@@ -429,7 +435,7 @@ export async function readProjectState(root: string): Promise<ProjectState> {
         ? null
         : stamped === overviewHash(projectPlan ?? "", buildPlan ?? ""),
     openQuestions: parseOpenQuestions(overview),
-    activity: parseActivity(activity),
+    activity: parseActivity(activity, await installedSkills(root)),
     inbox: parseInbox(inbox)
   };
 }

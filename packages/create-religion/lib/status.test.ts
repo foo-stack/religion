@@ -1,7 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { parseActivity, parseWork, type ProjectState } from "./state.js";
+import { parseActivity as parse, parseWork, type ProjectState } from "./state.js";
+
+const parseActivity = (source: string | null) => parse(source, new Set(["auto"]));
 import { computeStatus, renderStatus } from "./status.js";
 
 function state(overrides: Partial<ProjectState> = {}): ProjectState {

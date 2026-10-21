@@ -8,7 +8,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { exists, readIfPresent, STATE_DIR, statePath } from "./paths.js";
+import { exists, readIfPresent, SKILL_TREES, STATE_DIR, statePath } from "./paths.js";
 import { readProjectState } from "./state.js";
 
 export interface CheckResult {
@@ -75,7 +75,7 @@ export async function runDoctor(root: string): Promise<CheckResult[]> {
     });
   }
 
-  const trees = [".claude/skills", ".agents/skills"];
+  const trees = SKILL_TREES;
   const present: Record<string, string[]> = {};
   for (const tree of trees) {
     const dir = path.join(root, tree);

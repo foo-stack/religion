@@ -3,6 +3,9 @@ import path from "node:path";
 
 export const STATE_DIR = "religion";
 
+/** Where the adapters install their skills, one directory per skill. */
+export const SKILL_TREES = [".claude/skills", ".agents/skills"];
+
 /**
  * Walks up from `start` to the nearest directory holding the state directory.
  *
@@ -39,4 +42,19 @@ export async function readIfPresent(file: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/** The skill names installed in any tree, read from the directories rather than trusted from a file. */
+export async function installedSkills(root: string): Promise<Set<string>> {
+  const names = new Set<string>();
+  for (const tree of SKILL_TREES) {
+    try {
+      for (const entry of await fs.readdir(path.join(root, tree), { withFileTypes: true })) {
+        if (entry.isDirectory()) names.add(entry.name);
+      }
+    } catch {
+      // A tree that is not installed contributes nothing.
+    }
+  }
+  return names;
 }

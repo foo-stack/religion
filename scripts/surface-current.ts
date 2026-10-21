@@ -107,6 +107,7 @@ const PROJECTS: Record<string, Record<string, string>> = {
     "religion/.state/run.json":
       '{ "command": "auto", "status": "blocked", "summary": "Building the plan", ' +
       '"updatedAt": "2026-10-21T10:00:00Z", "resumeCommand": "/auto resume" }\n',
-    "religion/context/inbox.md": "# Inbox\n\n- 2026-10-21 - a note\n"
+    "religion/context/inbox.md": "# Inbox\n\n- 2026-10-21 - a note\n",
+    ".claude/skills/auto/SKILL.md": "---\nname: auto\n---\n"
   }
 };

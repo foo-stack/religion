@@ -158,3 +158,10 @@ verification check, and both were found by hand first.
 **Surprised:** The plan's own line for this item tripped the parser, since describing a syntax and using it look the same to a regex; running against the real plan found it before any test did.
 **Went wrong:** Sub-items not inheriting their parent's wait would have defeated the feature for exactly the items it exists to hold back.
 **Deferred:** Nothing beyond the fixed findings' review.
+
+## 2026-10-21 - Recurring findings become standards
+
+**Archive:** history/features/31-recurring-findings-become-standards.md
+**Surprised:** This project's own archives already show the pattern the item looks for: findings about following a link recur across items 4b, 4d, 5 and 16, each repaired locally and none turned into a rule.
+**Went wrong:** A template token was written into rendered state and caught by the verification suite.
+**Deferred:** Running distill here.

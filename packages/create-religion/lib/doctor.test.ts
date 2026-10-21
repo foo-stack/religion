@@ -88,5 +88,49 @@ test("runDoctor reads the settings and the hook files from the project", async (
 
   await fs.rm(path.join(root, ".claude", "settings.json"));
   await fs.symlink(path.join(root, "elsewhere.json"), path.join(root, ".claude", "settings.json"));
-  assert.match((await runDoctor(root)).find((c) => c.name === "hooks")?.detail ?? "", /is a link/);
+  assert.match((await runDoctor(root)).find((c) => c.name === "hooks")?.detail ?? "", /reached through a link/);
+});
+
+test("hooksCheck matches a hook by its file, in the forms Claude Code documents", () => {
+  const command = (file: string) => [
+    `node "$CLAUDE_PROJECT_DIR"/${file}`,
+    `node  ${file}`,
+    `node "\${CLAUDE_PROJECT_DIR}/${file}" --quiet`
+  ];
+  for (const form of [0, 1, 2]) {
+    const settings = JSON.stringify({
+      hooks: Object.fromEntries(HOOKS.map((h) => [h.event, [{ hooks: [{ type: "command", command: command(h.command.replace(/^node /, ""))[form] }] }]]))
+    });
+    assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings, files: allFiles }).ok, true, `form ${form}`);
+  }
+});
+
+test("hooksCheck counts settings.local.json, and fails when every hook is disabled", () => {
+  assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings: null, local: wired, files: allFiles }).ok, true);
+  const disabled = JSON.stringify({ ...JSON.parse(wired), disableAllHooks: true });
+  assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings: disabled, files: allFiles }).detail, "disableAllHooks is on, so no hook runs");
+  assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings: wired, local: JSON.stringify({ disableAllHooks: true }), files: allFiles }).ok, false);
+  assert.equal(hooksCheck({ installed: true, wanted: HOOKS, settings: JSON.stringify({ hooks: [] }), files: allFiles }).ok, false, "hooks as an array");
+});
+
+test("runDoctor tells a linked .claude, a directory at the settings path and linked hook files apart", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-doctor-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const hooks = async () => (await runDoctor(root)).find((c) => c.name === "hooks")?.detail ?? "";
+
+  await fs.mkdir(path.join(root, "real", "skills"), { recursive: true });
+  await fs.symlink(path.join(root, "real"), path.join(root, ".claude"));
+  assert.match(await hooks(), /reached through a link/);
+
+  await fs.rm(path.join(root, ".claude"));
+  await fs.mkdir(path.join(root, ".claude", "skills"), { recursive: true });
+  await fs.mkdir(path.join(root, ".claude", "settings.json"));
+  assert.match(await hooks(), /not a regular file/);
+
+  await fs.rm(path.join(root, ".claude", "settings.json"), { recursive: true });
+  await fs.writeFile(path.join(root, ".claude", "settings.json"), wired);
+  await fs.mkdir(path.join(root, "hookfiles"));
+  for (const file of allFiles) await fs.writeFile(path.join(root, "hookfiles", path.basename(file)), "");
+  await fs.symlink(path.join(root, "hookfiles"), path.join(root, ".claude", "hooks"));
+  assert.equal(await hooks(), "all 3 wired");
 });

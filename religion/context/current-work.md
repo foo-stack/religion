@@ -54,6 +54,7 @@ large, so split it.
   passes, and fails on a scratch edit to the template, then reverted.
 - [x] **Step 3 - the docs and the release note** - a `hooks` section in `docs/doctor.md`,
   the check count, and a minor changeset. *Done when:* `npm test` exits 0.
+- [x] Repair F-142 and F-143 - hooks matched by file in every documented form, the local settings and `disableAllHooks` read, and each odd path described as what it is.
 
 ## Files and areas
 

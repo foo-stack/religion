@@ -44,7 +44,7 @@ large, so split it.
   rendered skill names the packet's four parts, takes each from the archive and its Evidence
   and Findings sections rather than from memory, keeps it short with the archive linked, and
   says it is presentation only; `npm test` exits 0.
-- [ ] **Step 2 - the aggregate in `auto`** - Step 3 of the auto skill. *Done when:* the rendered
+- [x] **Step 2 - the aggregate in `auto`** - Step 3 of the auto skill. *Done when:* the rendered
   skill takes each item's line from its archive's Evidence section and links the item's own
   pull request for the full packet; `npm test` exits 0.
 - [ ] **Step 3 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.

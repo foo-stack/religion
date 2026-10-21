@@ -161,7 +161,9 @@ default branch. Title it for the run rather than for any one item. Its body is t
 review packet, and it is the artefact a person actually reads:
 
 - one section per completed item, in plan order, naming what it delivered, its merged pull
-  request, and the checks that proved it
+  request, and the checks that proved it, taken from the item's archive and its `## Evidence`
+  section rather than from memory of the run; the item's own pull request carries its full
+  packet, so link it rather than repeating it
 - findings still open or fixed, by identifier, and anything deliberately left out
 - what the run did not reach, and why it stopped
 

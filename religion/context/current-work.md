@@ -47,7 +47,7 @@ large, so split it.
   *Done when:* the rendered skill carries the workflow step, and its filter, run locally over
   `doctor --json`, exits 0 for this healthy repository, exits 0 for a project failing only an
   advisory check, exits 1 for a stale overview, and exits 1 when doctor prints nothing.
-- [ ] **Step 2 - the docs and the release note** - a section in `docs/doctor.md`, and a minor
+- [x] **Step 2 - the docs and the release note** - a section in `docs/doctor.md`, and a minor
   changeset. *Done when:* `npm test` exits 0.
 
 ## Files and areas

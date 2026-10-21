@@ -97,3 +97,9 @@ Nothing.
 
 - **Hosts without a deployments record**, checked locally only.
 - **Signing in to a protected preview.**
+
+## Landed
+
+**Base:** aa749ee9f16583515b7d1889e959281f088c5aec
+**Commits:** e27f89e8ff095a3fe886bb6d76fc4191ad0af9f5, 3d0cb152c59a8545292b37dcf8190a3d8f1c7377, a50024c0a2919777ae55360cb5cd7195312d94ef
+**Product paths:** .agents/skills/check/SKILL.md, .changeset/preview-check.md, .claude/skills/check/SKILL.md, evals/routing/check.json, src/skills/check/SKILL.md

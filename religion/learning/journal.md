@@ -39,3 +39,10 @@ bypass. This is settled and accepted here, not a problem to solve.
 described four hooks when there were three, advertising a mechanism that had no file and was
 wired nowhere. Two configuration settings shipped undocumented. Both classes now have a
 verification check, and both were found by hand first.
+
+## 2026-10-21 - A journal that something writes
+
+**Archive:** history/features/07-a-journal-that-something-writes.md
+**Surprised:** The journal had one entry, carried over on 2026-09-05, and nothing since: the learning loop was complete except for its input, and nothing reported that it was idle.
+**Went wrong:** A sentence in distill still implied it edits the journal after the rewrite, caught only by reading every grep match rather than counting them.
+**Deferred:** Entries for items finished before this one, since their archives already record the same.

@@ -76,12 +76,23 @@ become a fix. Writing the test around the bug destroys the only reason to have w
 What was covered, what was skipped and why, and every discrepancy found. Discrepancies are
 the point; coverage is the side effect.
 
+A discrepancy reported only here is lost the moment the context is cleared. Offer to note
+each one with $capture, so it reaches the inbox that $fix and $feature
+read when choosing what to do next. One note per discrepancy, naming the file and what the
+code does instead of what its name or documentation says:
+
+    src/lib/slug.ts - slugify("Ä") returns "" where its comment promises "a"
+
+Note only the ones the user agrees to. The tests stay as they are, failing, beside the note.
+
 ## Rules
 
 - Never install a runner during unrelated work. This is a deliberate setup step.
 - One runner per project.
 - Never write a test that cannot fail.
 - Never change behavior to make a backfilled test pass.
+- Never write the inbox directly. $capture is its only writer, and a discrepancy is a
+  note, not a finding: nothing has reviewed it, and the ledger belongs to $audit.
 - Setup adds one example test, not a suite.
 
 ## Formatting

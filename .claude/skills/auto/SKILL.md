@@ -88,7 +88,10 @@ State the bounds, the gates in force, and how many items are in range. Then star
 
 ## Step 2 - each item
 
-For every item, in plan order:
+For every item, in plan order, passing over any that waits on an earlier unticked item or on
+a spike, by the rule /feature uses with no argument. Each one passed over is named in
+the final report with what it waits on. When every remaining item waits, the run has
+nothing left to build and stops there.
 
 1. **Spec it**, following /feature, including the sizing and the self-critique. Do
    not skip the critique because nobody is reading: it is what catches an oversized step

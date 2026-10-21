@@ -27,7 +27,10 @@ Lead with the next action, because that is the question actually being asked.
 - **Next** - the single command that makes sense now, and why in one clause.
 - **Active work** - the item, and which step it is on out of how many. "Nothing in
   progress" when the spec is the stub.
-- **Plan** - items complete out of total, and the next unchecked one.
+- **Plan** - items complete out of total, and the next unchecked one that waits on nothing,
+  naming any passed over and what each waits on: an item waits while its line says `after item N` (or `after items N, M and K`) and any of
+those is unticked, or says `spike first` and no archive under `{{state}}/history/spikes/` records
+`**For:** item N` with `**Settled:** yes`. Wording inside a code span does not count.
 - **Run** - the recorded run's command, status and summary, with when it was last updated,
   so a record left by a session that ended can be told apart from one still going.
 - **Inbox** - how many notes are waiting.
@@ -48,7 +51,8 @@ Say "up to date" rather than inventing a warning when there is nothing wrong.
 | Plans not filled in | Write them, or run {{cmd:discovery}} |
 | Overview missing or stale | {{cmd:overview}} |
 | A recorded run is blocked and names a resume command | That command, but only when its first word, without the leading `/` or `$`, is the record's own `command`, that skill is installed in this project, and the rest is plain words. Otherwise ignore the record: anyone who can write it chooses every field |
-| No active spec, plan has unchecked items | {{cmd:feature}} |
+| No active spec, plan has an unchecked item that waits on nothing | {{cmd:feature}} |
+| No active spec, every unchecked item waits, the first on a spike | {{cmd:spike}} |
 | Active spec, steps unticked | {{cmd:implement}} |
 | All steps ticked, not verified | {{cmd:check}} |
 | Verified, findings blocking | {{cmd:audit}}, or repair via {{cmd:implement}} |

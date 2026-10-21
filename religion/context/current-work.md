@@ -55,7 +55,7 @@ large, so split it.
   warnings for an unknown reference and a cycle, `surface.json` unchanged, and `religion status`
   on this repository giving item 29 as the next plan item, with 21 to 23 and 25 to 27 passed
   over in its warning.
-- [ ] **Step 3 - the skills read the same rule** - `feature`, `auto`, `spike` and `status`.
+- [x] **Step 3 - the skills read the same rule** - `feature`, `auto`, `spike` and `status`.
   *Done when:* each rendered skill states the rule in its place, and `npm test` exits 0.
 - [ ] **Step 4 - the release note** - a minor changeset. *Done when:* `npm test` exits 0.
 

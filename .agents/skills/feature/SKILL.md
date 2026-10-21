@@ -16,8 +16,8 @@ lines into something buildable is this skill's whole job. It plans; it never bui
 
 ## Input
 
-- **No argument** - the first unchecked item in the build plan, including the first
-  unchecked sub-item under an item that was split.
+- **No argument** - the first unchecked item in the build plan that waits on nothing,
+  including the first unchecked sub-item under an item that was split.
 - **A number or name** - `$feature 3`, `$feature "login"`.
 - **A description with no match in the plan** - goes through **New work intake** below.
 - **`preview`** appended to any of the above - a read-only briefing, writing nothing.
@@ -53,8 +53,15 @@ An open question whose `affects` list does not cover this item does not block it
 ## Step 1 - pick the target
 
 Given a number or name that matches a build-plan item, use it. With no argument, read the
-plan top to bottom and take the first unchecked leaf. State which item you are spec'ing
-before going further.
+plan top to bottom and take the first unchecked leaf that waits on nothing: an item waits while its line says `after item N` (or `after items N, M and K`) and any of
+those is unticked, or says `spike first` and no archive under `religion/history/spikes/` records
+`**For:** item N` with `**Settled:** yes`. Wording inside a code span does not count.
+Name each item passed over and what it waits on, and point a spike-first one at
+$spike. State which item you are spec'ing before going further.
+
+Asked by number for an item that waits, say what it waits on and stop: speccing it now
+builds on an answer nobody has yet. A reference to an item the plan does not have, or items
+that wait on each other, is a mistake in the plan to report, not a reason to wait forever.
 
 If the build plan is not a checklist yet, treat every item as unchecked, take the first,
 and offer to convert the list so progress can be tracked from here on. Proceed either way.

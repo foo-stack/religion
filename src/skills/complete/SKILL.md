@@ -112,6 +112,22 @@ stay, with their identifiers, so nothing is silently dropped. A `fixed` P2 does 
 completion but must survive verbatim for a later review. Reset the ledger to its stub only
 when nothing unresolved remains.
 
+**Write the journal entry.** Append one entry to `{{state}}/learning/journal.md` for the item
+just archived, whatever its kind. This skill is the journal's only writer, and an entry per
+item is what {{cmd:distill}} has to work from:
+
+    ## 2026-10-21 - Export reports as CSV
+
+    **Archive:** history/features/12-export-reports-as-csv.md
+    **Surprised:** one or two sentences, or "nothing".
+    **Went wrong:** one or two sentences, or "nothing".
+    **Deferred:** what was left, and why, or "nothing".
+
+Write it from what the work actually went through, not from the spec: a repair that took two
+attempts, an assumption that proved wrong, a check that caught something late. The heading
+is the date and the item's title. If the file is missing, from a project installed before it
+existed, create it with the shipped journal's header first.
+
 **Reset the active spec** to its stub, exactly as shipped.
 
 **Discard consumed prototypes.** If this work built its look from throwaway static mockups

@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 69954827de50b69d -->
+<!-- religion:source-hash 9344f11b75113d0e -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,8 +49,8 @@ nothing to sign into.
 
 ## Roadmap
 
-Twenty-three items queued. Nineteen start with a spike, and several say which items they
-follow; the plan states both in prose, so nothing enforces the order yet (item 29 would).
+Nineteen items queued, and every one waits on a spike, so `status` points at `spike` until one
+is settled. Several also say which items they follow; item 29 made the tooling honour both.
 
 **Status, learning and health**
 
@@ -65,12 +65,6 @@ follow; the plan states both in prose, so nothing enforces the order yet (item 2
 26. **Scanner results in the ledger** - SARIF ingested as unverified findings, matched
     across runs
 27. **Waves built in isolation** - one worktree per wave step, joined into one packet
-30. **Scope drift made visible** - spec amendments recorded, and a hook warning on edits
-    outside the step
-32. **Check the preview deployment** - outcomes run against the host's preview, one provider
-    first
-34. **Complete drafts the release note** - a Changesets entry proposed for approval
-35. **Accessibility as evidence** - a scan beside `check`'s browser evidence
 36. **Built UI compared with its reference** - against saved screenshots or the prototype
 37. **A first work item that teaches the loop** - a tiny real change walked through by `setup`
 38. **Dependency changes made visible in review** - lockfile changes listed per step, offline
@@ -144,7 +138,7 @@ The single thing in progress, in `context/current-work.md`.
   rendered tree
 - `src/entry/` - the entry-file sources and the partials shared between them
 - `src/state/` - the state files a project is seeded with, written once and never re-rendered
-- `src/hooks/` - three Claude Code hooks, copied rather than rendered
+- `src/hooks/` - four Claude Code hooks, copied rather than rendered
 - `src/lib/` - the token vocabulary and adapter definitions, and the skill frontmatter reader
 - `scripts/` - the renderer, the package staging step, and the verification suite
 - `evals/routing/` - the routing corpus, one file per skill, positive and negative cases

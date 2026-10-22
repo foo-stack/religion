@@ -123,3 +123,97 @@ test("write-handoff bounds and cleans what it copies from the ledger, and counts
   assert.doesNotMatch(text, /F-6 |F-7 /);
   assert.match(text, new RegExp(`Inbox:\\*\\* ${parseInbox(inbox).length} note`));
 });
+
+const DRIFT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "hooks", "warn-on-drift.mjs");
+
+function drift(cwd: string, input: string): string {
+  return spawnSync(process.execPath, [DRIFT], { cwd, input, encoding: "utf8" }).stdout;
+}
+const editing = (file: string) => JSON.stringify({ tool_name: "Edit", tool_input: { file_path: file } });
+
+const SPEC = [
+  "# Export",
+  "",
+  "**Status:** in progress",
+  "",
+  "## Build steps",
+  "",
+  "- [x] **Step 1 - done** - `src/old.ts`.",
+  "- [ ] **Step 2 - the route** - `src/routes/export.ts`, and",
+  "  `lib/format.ts`.",
+  "- [ ] **Step 3 - later** - `src/later.ts`.",
+  "",
+  "## Files and areas",
+  "",
+  "- `docs/`",
+  "- `packages/app/README.md`",
+  ""
+].join("\n");
+
+test("warn-on-drift is silent with no spec in progress", async (t) => {
+  const { root } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), "# Current Work\n\n_Nothing in progress._\n");
+  assert.equal(drift(root, editing(path.join(root, "anything.ts"))), "");
+});
+
+test("warn-on-drift allows what the current step and Files and areas name, and the workflow's own files", async (t) => {
+  const { root } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), SPEC);
+  for (const file of ["src/routes/export.ts", "packages/app/lib/format.ts", "docs/guide/start.md", "packages/app/README.md", "religion/context/current-work.md", ".changeset/x.md", ".claude/skills/a/SKILL.md"]) {
+    assert.equal(drift(root, editing(path.join(root, file))), "", file);
+  }
+});
+
+test("warn-on-drift asks before an edit the spec does not name, a later step's file included", async (t) => {
+  const { root } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), SPEC);
+  for (const file of ["src/unrelated.ts", "src/later.ts", "src/old.ts"]) {
+    const out = JSON.parse(drift(root, editing(path.join(root, file))));
+    assert.equal(out.hookSpecificOutput.permissionDecision, "ask", file);
+    assert.match(out.hookSpecificOutput.permissionDecisionReason, new RegExp(`^${file.replace(/[.]/g, "\\.")} is not named`));
+  }
+});
+
+test("warn-on-drift stays silent on a payload it cannot read or a path outside the project", async (t) => {
+  const { root, outside } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), SPEC);
+  assert.equal(drift(root, "{ not json"), "");
+  assert.equal(drift(root, JSON.stringify({ tool_input: {} })), "");
+  assert.equal(drift(root, editing(path.join(outside, "victim.md"))), "");
+});
+
+test("warn-on-drift reads names the way specs write them, without letting a bare basename stand for any file", async (t) => {
+  const { root } = await project(t);
+  const spec = [
+    "# Export",
+    "",
+    "## Build steps",
+    "",
+    "- [ ] **Step 1 - the route** - `lib/state.ts:42`, `index.ts`, and",
+    "  - [ ] a sub-step touching `lib/sub.ts`",
+    "",
+    "## Files and areas",
+    "",
+    "- `Makefile`",
+    "- `notes/run.ipynb`",
+    ""
+  ].join("\n");
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), spec);
+  const asks = (input: string) => drift(root, input) !== "";
+  assert.equal(asks(editing(path.join(root, "packages/app/lib/state.ts"))), false, "a line suffix is dropped");
+  assert.equal(asks(editing(path.join(root, "packages/app/lib/sub.ts"))), false, "a sub-step belongs to its step");
+  assert.equal(asks(editing(path.join(root, "Makefile"))), false, "a name with no extension in Files and areas");
+  assert.equal(asks(editing(path.join(root, "index.ts"))), false, "a bare name is the file at the root");
+  assert.equal(asks(editing(path.join(root, "deep/a/index.ts"))), true, "a bare name is not any file of that name");
+  assert.equal(asks(editing(path.join(root, "..config.ts"))), true, "a root file whose name starts with two dots");
+  assert.equal(asks(JSON.stringify({ tool_name: "NotebookEdit", tool_input: { notebook_path: path.join(root, "notes/run.ipynb") } })), false);
+  assert.equal(asks(JSON.stringify({ tool_name: "NotebookEdit", tool_input: { notebook_path: path.join(root, "other.ipynb") } })), true);
+});
+
+test("warn-on-drift stays quick on a spec with a very long build steps section", async (t) => {
+  const { root } = await project(t);
+  await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), "# X\n\n## Build steps\n\n" + "   \n".repeat(200_000) + "- [ ] **Step 1 - a** - `a.ts`\n");
+  const started = Date.now();
+  drift(root, editing(path.join(root, "b.ts")));
+  assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+});

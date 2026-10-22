@@ -226,7 +226,7 @@ Every skill and hook nobody edited is removed, along with any directory that lea
 An edited one is kept and named, since it is yours now. The entry file loses only its
 managed block, with everything you wrote around it left where it was; if it is still exactly
 what was installed, it goes entirely, and if you edited one that has no markers, it is kept
-for you to tidy by hand. `.claude/settings.json` loses only Religion's three hook entries,
+for you to tidy by hand. `.claude/settings.json` loses only Religion's own hook entries,
 keeping every other setting and hook, or goes entirely if it is still the installed copy.
 The install record goes last.
 

@@ -172,3 +172,38 @@ verification check, and both were found by hand first.
 **Surprised:** The untrusted-input rule already named issue text, so the safety half of this item was a pointer rather than new prose.
 **Went wrong:** nothing
 **Deferred:** Hosts without a command-line tool.
+
+## 2026-10-21 - Spec amendments recorded
+
+**Archive:** history/features/30a-spec-amendments-recorded.md
+**Surprised:** Building the feature on its own spec found its gaps faster than any test: the missing hash source, the fenced example, and a scratch edit that silently did nothing.
+**Went wrong:** A sed edit across a wrapped line did not apply and the check that followed looked like a failure of the code; confirm a scratch edit landed before reading its result.
+**Deferred:** The drift hook, item 30b.
+
+## 2026-10-21 - A hook that warns on drift
+
+**Archive:** history/features/30b-a-hook-that-warns-on-drift.md
+**Surprised:** A test that the hook allowed named files passed while the hook allowed everything, because every path looked outside the project; an allow test proves nothing without a deny test beside it run first.
+**Went wrong:** The hook would have asked about a file this very item had to change, the uninstall tests, which is the drift it exists to catch, recorded as an amendment.
+**Deferred:** Wave partners; wiring it in this repository's own settings.
+
+## 2026-10-21 - Check the preview deployment
+
+**Archive:** history/features/32-check-the-preview-deployment.md
+**Surprised:** "One provider first" turned out to be the host rather than a provider: Vercel, Netlify and Render all publish previews to the pull request's deployments, so reading those covers all three.
+**Went wrong:** nothing
+**Deferred:** Hosts without deployments; protected previews.
+
+## 2026-10-21 - Complete drafts the release note
+
+**Archive:** history/features/34-complete-drafts-the-release-note.md
+**Surprised:** Every automated run in this repository had been deciding bumps without saying so; the new rule writes down what those runs did by habit, and puts the decision in front of the reviewer.
+**Went wrong:** nothing
+**Deferred:** Other release tools.
+
+## 2026-10-21 - Accessibility as evidence
+
+**Archive:** history/features/35-accessibility-as-evidence.md
+**Surprised:** The first run of the fallback, on Religion's own dashboard, found that the selectable items added two runs ago are invisible to a screen reader as controls; the dashboard had been checked by screenshot each time.
+**Went wrong:** nothing
+**Deferred:** F-160; a required-scan setting.

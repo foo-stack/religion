@@ -18,15 +18,16 @@ the same Religion with a safety net.
 
 ## The hooks
 
-Three, matched to the prose they back up.
+Four, matched to the prose they back up.
 
 | Hook | Fires on | Enforces | Prose it backs |
 | --- | --- | --- | --- |
 | `Stop` | end of a turn | regenerates `religion/context/handoff.md` from the state files | the handoff contract |
 | `PreToolUse` on Edit and Write | a write to a rendered adapter tree in a Religion source checkout | blocks it, pointing at the authored source instead | the never-edit-rendered-output rule |
 | `PostToolUse` on Read, WebFetch and WebSearch | content carrying known prompt-injection signatures | warns, naming the file and what it tried to do | the untrusted-input rule |
+| `PreToolUse` on Edit, Write, MultiEdit and NotebookEdit | while a spec is active, drafted or in progress, an edit to a file neither its current step nor its Files and areas names | asks, pointing at an amendment if the spec is what should change | build only what the spec says |
 
-The third applies only when working on Religion itself, not to installed projects.
+The rendered-output guard applies only when working on Religion itself, not to installed projects.
 
 ## What ships is scanned before it ships
 
@@ -84,7 +85,8 @@ that the next build silently discards, which is the outcome it exists to prevent
 absence of the check would be invisible. Failing closed is no better: one malformed payload
 would block every edit until somebody changed a hook.
 
-The handoff writer and the injection scanner **fail open**. Both are advisory. A missing
+The handoff writer, the injection scanner and the drift question **fail open**. All three are
+advisory. A missing
 handoff file costs a re-read, and a lost injection warning is cheaper than blocking a read
 that already happened.
 

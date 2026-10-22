@@ -9,6 +9,12 @@
     },
     {
       "prompt": "Does this actually work in the browser"
+    },
+    {
+      "prompt": "Check the outcomes against the preview deployment for this pull request"
+    },
+    {
+      "prompt": "Check the new form is accessible in the running app"
     }
   ],
   "negative": [

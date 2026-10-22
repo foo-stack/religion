@@ -143,6 +143,33 @@ part of this work. Prototypes that are real components are not throwaway: leave 
 
 Do not commit yet.
 
+## Step 2b - draft the release note
+
+Where the project uses Changesets, which `.changeset/config.json` shows, and no changeset in
+`.changeset/` already describes this item, draft one from the archive:
+
+- **Packages** - for each product path in the archive's `## Landed` record, the nearest
+  `package.json` with a `name`, leaving out any the Changesets config ignores and any marked
+  `private` that the config does not version.
+- **Bump** - proposed, never decided: `major` when the item removes, renames or narrows anything
+  public, `minor` when it adds something, `patch` when it only repairs. Where the project has a
+  stability statement, that is what defines public and breaking; where it has none, say what was
+  assumed.
+- **Summary** - from the archive's Outcome, rewritten for someone reading the changelog: what
+  they can now do or what behaves differently, in a short paragraph, with no plan numbers.
+
+    ---
+    "create-religion": minor
+    ---
+
+    `religion status` reports the run in progress and how many notes the inbox holds.
+
+Interactively, show the draft and ask before writing it. In an automated run there is nobody to
+ask, so write it under a name made from the item's title, and name it and its bump in the pull
+request's packet, where the reviewer approves or changes it before anything is released. A
+project without Changesets gets nothing, and versioning or publishing stays the release
+workflow's.
+
 ## Step 3 - the work commit
 
 Stage everything: any uncommitted step work, plus the archive, plan, and ledger changes
@@ -200,6 +227,8 @@ The branch goes up, the pull request describes it, and the merge is the user's, 
      `open` or `fixed` that touch it.
    - **The record** - a link to the archive on this branch for the full spec, what went wrong,
      what was deferred, and the walkthrough from Step 5.
+   - **The release note** - a changeset drafted in Step 2b, by file, with its proposed bump and
+     the packages it names, for the reviewer to approve or change.
    - **The issue** - when the spec carries `**From issue:**`, name it: with the host's closing
      keyword for a fix (`Closes #42`), so merging closes it, and as a plain reference for a
      feature (`Refs #12`), since one feature rarely settles everything an issue asked.

@@ -143,6 +143,8 @@ export interface ProjectState {
   learning: Learning;
   /** Plan items a spike archive says it settled. */
   settledSpikes: string[];
+  /** The active spec's hash, its approval stamp, and whether it drifted from that stamp. */
+  spec: { hash: string | null; approved: string | null; drifted: boolean };
 }
 
 const CHECKBOX = /^(\s*)- \[( |x|X)\]\s*(.*)$/;
@@ -237,6 +239,12 @@ export interface Spec {
   files: string[];
   steps: SpecStep[];
   evidence: Evidence | null;
+  /** The stamp implementation wrote when it started: when, and the hash of what was approved. */
+  approved: { date: string; hash: string } | null;
+  /** Dated changes to what the spec asks for, each with its reason. */
+  amendments: string[];
+  /** True only when a stamp exists and the spec no longer matches it. */
+  drifted: boolean;
 }
 
 /** What `check` recorded: its stamp, and one verdict per outcome. */
@@ -248,7 +256,8 @@ export interface Evidence {
 /** The active spec as written, for showing rather than deciding. Null when nothing is in progress. */
 export function parseSpec(source: string | null): Spec | null {
   if (!source || /_Nothing in progress\./.test(source)) return null;
-  const section = sections(source);
+  // A heading inside a code fence is an example, not a section of the spec.
+  const section = sections(outsideFences(source));
 
   return {
     title: field(source, "#"),
@@ -260,8 +269,66 @@ export function parseSpec(source: string | null): Spec | null {
     outOfScope: bullets(section.get("out of scope")),
     files: bullets(section.get("files and areas")),
     steps: bullets(section.get("build steps"), true).map(parseStep),
-    evidence: parseEvidence(section.get("evidence"))
+    evidence: parseEvidence(section.get("evidence")),
+    ...approval(source)
   };
+}
+
+function approval(source: string): Pick<Spec, "approved" | "amendments" | "drifted"> {
+  // An example of the stamp or the section inside a code fence is documentation, not the record.
+  const prose = outsideFences(source);
+  const line = /^\*\*Approved:\*\*.*$/m.exec(prose)?.[0];
+  const stamp = line ? /^\*\*Approved:\*\*\s*(\d{4}-\d{2}-\d{2})\s*,\s*([0-9a-f]{16})\s*$/i.exec(line) : null;
+  const approved = stamp ? { date: stamp[1]!, hash: stamp[2]!.toLowerCase() } : null;
+  return {
+    approved,
+    amendments: bullets(sections(prose).get("amendments")),
+    // A stamp line that cannot be read proves nothing, so it counts as drift rather than hiding it.
+    drifted: line !== undefined && (approved === null || approved.hash !== specHash(source))
+  };
+}
+
+function specState(work: string | null): ProjectState["spec"] {
+  const spec = parseSpec(work);
+  if (!spec || !work) return { hash: null, approved: null, drifted: false };
+  return { hash: specHash(work), approved: spec.approved?.hash ?? null, drifted: spec.drifted };
+}
+
+const FENCE = /^\s*(```|~~~)/;
+
+/** The source with every line inside a ``` or ~~~ fence blanked, so line structure stays but nothing inside is read. */
+function outsideFences(source: string): string {
+  let fenced = false;
+  return source
+    .split("\n")
+    .map((line) => {
+      if (FENCE.test(line)) {
+        fenced = !fenced;
+        return "";
+      }
+      return fenced ? "" : line;
+    })
+    .join("\n");
+}
+
+/**
+ * The hash of what a spec asks for. Ticks, the status, the stamp, and the Evidence and
+ * Amendments sections change as work proceeds without changing what was approved, so they are
+ * left out; anything else that changes is a change to the spec.
+ */
+export function specHash(source: string): string {
+  const kept: string[] = [];
+  let fenced = false;
+  let skipping = false;
+  for (const line of source.replace(/\r\n/g, "\n").split("\n")) {
+    if (FENCE.test(line)) fenced = !fenced;
+    else if (!fenced && /^##\s/.test(line)) skipping = /^##\s+(evidence|amendments)\s*$/i.test(line);
+    if (skipping) continue;
+    if (!fenced && /^\*\*(Status|Approved):\*\*/.test(line)) continue;
+    kept.push((fenced ? line : line.replace(/^(\s*- \[)[xX](\])/, "$1 $2")).replace(/\s+$/, ""));
+  }
+  const text = kept.join("\n").replace(/\s+$/, "");
+  return crypto.createHash("sha256").update(text).digest("hex").slice(0, 16);
 }
 
 function parseEvidence(body: string | undefined): Evidence | null {
@@ -597,6 +664,7 @@ export async function readProjectState(root: string): Promise<ProjectState> {
     activity: parseActivity(activity, await installedSkills(root)),
     inbox: parseInbox(inbox),
     learning: { lessons: parseLessons(lessons), journal: entries, undecided: entries.filter((e) => !e.decided).length },
-    settledSpikes
+    settledSpikes,
+    spec: specState(work)
   };
 }

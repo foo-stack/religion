@@ -142,7 +142,8 @@ context, whatever `qualityGates.audit` says. Only that review closes a finding.
 
 **Folding.** When that review raises a new finding in code the fix changed, the audit records
 it under its own identifier with a `**Surfaced by:**` line naming the finding whose repair
-exposed it, and it joins the current fix as another repair step, whatever its class. The
+exposed it, and it joins the current fix as another repair step, whatever its class, recorded as an
+amendment to the fix's spec with the stamp renewed, as {{cmd:implement}} does for any repair step. The
 finding that surfaced it cannot close while it is `open` or `fixed`. A defect a repair
 introduced belongs with that repair: left for a later fix, it loses the context that
 explains it.

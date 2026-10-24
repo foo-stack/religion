@@ -175,6 +175,26 @@ test("parseSpec returns null for the stub and degrades on a mangled spec", () =>
   assert.deepEqual(mangled.steps, [{ label: "", title: "just words", what: "", doneWhen: null, done: true }]);
 });
 
+test("parseFindings keeps an item prefix, still reads bare identifiers, and skips a stray slash", () => {
+  const ledger = [
+    "# Findings",
+    "",
+    "### F-07 [P2] open - Raised before prefixes",
+    "",
+    "### 39a/F-1 [P1] open - Raised during an item",
+    "",
+    "### /F-2 [P1] open - Not an identifier"
+  ].join("\n");
+
+  assert.deepEqual(
+    parseFindings(ledger).map((f) => [f.id, f.severity, f.status]),
+    [
+      ["F-07", "P2", "open"],
+      ["39a/F-1", "P1", "open"]
+    ]
+  );
+});
+
 test("parseFindings reads identifier, severity and status", () => {
   const ledger = [
     "# Findings",

@@ -782,7 +782,8 @@ button.chip { font-family: inherit; cursor: pointer; }
   }
 
   const STATUS_ORDER = ["open", "fixed", "unverified", "accepted", "closed", "invalid"];
-  const idNumber = (f) => Number(String(f.id).slice(2)) || 0;
+  // The ledger only appends, so a finding's place in it is its age; identifiers restart per item prefix.
+  const age = (f) => data.findings.indexOf(f);
   const pill = (status) => "<span class='status " + (["open", "fixed", "closed"].indexOf(status) >= 0 ? status : "unverified") + "'>" + esc(status) + "</span>";
   const stacked = (parts, max) => "<span class='track'>" + parts.map((p) => "<i style='width:" + share(p[0], max) + "%;background:var(--sev-" + p[1].toLowerCase() + ")'></i>").join("") + "</span>";
 
@@ -847,7 +848,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     const shown = all
       .filter((f) => (ui.status === "all" ? true : ui.status === "unresolved" ? UNRESOLVED.indexOf(f.status) >= 0 : f.status === ui.status))
       .filter((f) => !ui.severity || f.severity === ui.severity)
-      .sort((a, b) => a.severity.localeCompare(b.severity) || STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || idNumber(a) - idNumber(b));
+      .sort((a, b) => a.severity.localeCompare(b.severity) || STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || age(a) - age(b));
     const picked = shown.find((f) => f.id === ui.finding) || shown[0] || null;
     $("fd-table").innerHTML = shown.length
       ? "<table class='rows'><tr><th>ID</th><th>Sev</th><th>Finding</th><th>Status</th><th>File</th><th>Lens</th></tr>" +
@@ -1024,7 +1025,7 @@ button.chip { font-family: inherit; cursor: pointer; }
     const count = (severity, status) => data.findings.filter((f) => f.severity === severity && (!status || f.status === status)).length;
     const max = Math.max(1, ...SEVERITIES.flatMap((s) => columns.map((c) => count(s, c))));
     const blocking = data.status.findings.blocking.length;
-    const oldest = pending.slice().sort((a, b) => idNumber(a) - idNumber(b)).slice(0, 3);
+    const oldest = pending.slice().sort((a, b) => age(a) - age(b)).slice(0, 3);
     return "<table><tr><th>Severity</th><th>Open</th><th>Fixed</th><th>Unverified</th><th>Total</th></tr>" +
       SEVERITIES.map((s) =>
         "<tr><td><span class='sev " + s.toLowerCase() + "'>" + s + "</span></td>" + columns.map((c) => "<td class='" + heat(count(s, c), max) + "'>" + count(s, c) + "</td>").join("") +

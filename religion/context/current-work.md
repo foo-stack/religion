@@ -58,7 +58,7 @@ large, so split it.
   `src/hooks/write-handoff.mjs` accept the optional prefix; cases in `scripts/hooks.test.ts`.
   *Done when:* a ledger holding `39a/F-1 [P1] open` and `39a/F-2 [P2] unverified` produces a
   handoff naming both, bare entries are listed as before, and `npm test` exits 0.
-- [ ] **Step 3 - the dashboard orders by ledger position** - in
+- [x] **Step 3 - the dashboard orders by ledger position** - in
   `packages/create-religion/lib/dashboard.ts`, the findings table's tie-break and the "oldest
   pending" tile order by each finding's position in the ledger instead of
   `Number(String(f.id).slice(2))`, which reads `39a/F-1` as 0. *Done when:* with a ledger of

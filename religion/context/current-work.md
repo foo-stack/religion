@@ -74,7 +74,7 @@ large, so split it.
   ledger prune prefixes only bare identifiers; an entry already carrying a prefix moves to the
   archive under it unchanged. *Done when:* the rendered complete skill says so, with an example
   of each, and `npm test` exits 0.
-- [ ] **Step 6 - fix, implement and distill take the prefixed form** - examples and wording in
+- [x] **Step 6 - fix, implement and distill take the prefixed form** - examples and wording in
   `src/skills/fix/SKILL.md`, `src/skills/implement/SKILL.md` and `src/skills/distill/SKILL.md`
   show `39a/F-2` beside the bare form; no `description` changes. *Done when:* each rendered skill
   shows the prefixed form, the routing corpus passes unchanged, and `npm test` exits 0.

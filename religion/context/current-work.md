@@ -78,7 +78,7 @@ large, so split it.
   `src/skills/fix/SKILL.md`, `src/skills/implement/SKILL.md` and `src/skills/distill/SKILL.md`
   show `39a/F-2` beside the bare form; no `description` changes. *Done when:* each rendered skill
   shows the prefixed form, the routing corpus passes unchanged, and `npm test` exits 0.
-- [ ] **Step 7 - the stability statement** - `docs/stability.md`'s state-format promise says
+- [x] **Step 7 - the stability statement** - `docs/stability.md`'s state-format promise says
   ledger headings may carry an item prefix and that bare ones keep parsing. *Done when:* the
   sentence is there and the docs check passes as part of `npm test`.
 

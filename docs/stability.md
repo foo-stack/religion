@@ -142,7 +142,9 @@ checked; see [Known limitations](#known-limitations).
 
 The state files keep their names and locations within 1.x, and the formats the tool reads
 from them (the build plan's checkboxes, the active spec's steps, the findings ledger's
-headings, the overview's source stamp) keep parsing.
+headings, the overview's source stamp) keep parsing. A ledger heading may carry an item
+prefix, `### 39a/F-2 [P1] open - ...`, and one without a prefix, `### F-07 [P2] open - ...`,
+keeps parsing beside it.
 
 **Held by:** the parser tests in `packages/create-religion/lib/state.test.ts`, for the build
 plan, the spec, the ledger and the overview's stamp; the install tests in `packages/create-religion/lib/install.test.ts`; and the upgrade check

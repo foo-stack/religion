@@ -49,10 +49,10 @@ const capped = (items) =>
   items.length > LISTED ? [...items.slice(0, LISTED), `and ${items.length - LISTED} more in \`${STATE}/context/findings.md\``] : items;
 
 const blocking = capped(
-  [...findings.matchAll(/^### (F-\d+) \[(P[01])\] (open|fixed) - (.+)$/gim)].map((m) => `${m[1]} [${m[2]}] ${m[3]} - ${plain(m[4])}`)
+  [...findings.matchAll(/^### ((?:[\w-]+\/)?F-\d+) \[(P[01])\] (open|fixed) - (.+)$/gim)].map((m) => `${m[1]} [${m[2]}] ${m[3]} - ${plain(m[4])}`)
 );
 // Unconfirmed findings are the least trusted titles in the ledger, so only their identifiers.
-const unverifiedIds = [...findings.matchAll(/^### (F-\d+) \[(P[0-3])\] unverified - /gim)].map((m) => `${m[1]} [${m[2]}]`);
+const unverifiedIds = [...findings.matchAll(/^### ((?:[\w-]+\/)?F-\d+) \[(P[0-3])\] unverified - /gim)].map((m) => `${m[1]} [${m[2]}]`);
 const unverified = unverifiedIds.length > 10 ? [...unverifiedIds.slice(0, 10), `and ${unverifiedIds.length - 10} more`] : unverifiedIds;
 
 // The same stamp overview writes and status compares: the plans' SHA-256, first 16 characters.

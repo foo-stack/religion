@@ -214,3 +214,10 @@ verification check, and both were found by hand first.
 **Surprised:** The spike's clean answer hid most of the work: a shell routine an agent runs one command at a time, from wherever its directory happens to be, failed in ways no single run showed, and five rounds of independent review each found a smaller gap in what the last repair added.
 **Went wrong:** `check` caught the untracked-file and untracked-link defects only on its second and third runs, and the completion audit found two P1s in the join, a subdirectory cwd and a pipe hiding a missing patch, either of which would have deleted step work.
 **Deferred:** F-163 to F-178, F-180, F-182, F-186 and F-188 in the ledger; Windows; the other three tools' shells.
+
+## 2026-10-25 - Finding identifiers scoped to their item
+
+**Archive:** history/features/39a-finding-identifiers-scoped-to-their-item.md
+**Surprised:** The dashboard had quietly assumed every identifier was `F-` followed by a number, reading `39a/F-1` as 0; only red-teaming the spec against the code caught it, since nothing tests the page script.
+**Went wrong:** A "fails without the fix" check stashed the test along with the fix and proved nothing until redone.
+**Deferred:** Prefixes for unplanned work, until item 39c.

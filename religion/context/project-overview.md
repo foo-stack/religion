@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 408640bc26d17547 -->
+<!-- religion:source-hash c52126da907728bf -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -72,7 +72,8 @@ items they follow; item 29 made the tooling honour both.
 
 **Direction changes, all spike-first**
 
-39. **Several work items at once** - one spec per active item; after 27, a major version
+39. **Several work items at once** - one worktree per active item, landed one at a time;
+    39a done, 39b to 39d queued; backward compatible
 40. **Religion runs in CI** - a labelled issue to a pull request nothing merges; after 20,
     24 and 33
 41. **One tool builds, another reviews** - review handed to a different installed tool
@@ -167,8 +168,6 @@ The single thing in progress, in `context/current-work.md`.
 Each is deferred to its item's spike, which can run while the item is blocked. The spike's
 answer decides whether the project plan changes.
 
-- **Parallel work items** (affects: item 39, the work item shape) - the non-goals settle "no
-  parallel execution across work items", and item 39 builds it. Decided by item 39's spike.
 - **Independent review** (affects: item 41) - the non-goals settle "no independent-review
   mechanism", and item 41 hands review to a second tool. Decided by item 41's spike.
 - **Closed extensibility** (affects: item 42, the skill shape) - skill sources, tokens and

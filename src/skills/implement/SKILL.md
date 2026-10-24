@@ -194,7 +194,8 @@ block completion, so close the loop now rather than discovering it later.
 
 For each `open` P0 or P1:
 
-1. **Append it to the spec's build steps** first (`- [ ] Repair F-03 - <title>`), so the
+1. **Append it to the spec's build steps** first (`- [ ] Repair 39a/F-2 - <title>`, using
+   the identifier exactly as the ledger heads it), so the
    repair is on the record and survives a cleared context. That changes what the spec asks
    for, so record it as an amendment naming the finding, and renew the stamp.
 2. Build it through the same loop as Step 2: smallest change, diff, explanation, evidence.

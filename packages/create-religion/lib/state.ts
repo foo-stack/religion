@@ -566,7 +566,8 @@ export function parseFindings(source: string | null): Finding[] {
   if (!source) return [];
   const entries = source.split(/^(?=###\s)/m);
   return entries.flatMap((entry) => {
-    const m = /^###\s+(F-\d+)\s+\[(P[0-3])\]\s+(\w+)\s+-\s+(.+)$/im.exec(entry);
+    // A finding raised during a planned item carries the item's prefix, `39a/F-1`; older ones are bare.
+    const m = /^###\s+((?:[\w-]+\/)?F-\d+)\s+\[(P[0-3])\]\s+(\w+)\s+-\s+(.+)$/im.exec(entry);
     if (!m) return [];
     // A finding raised while building has no lens: "2026-09-26 while writing the guide".
     // Matching from the last parenthesis, with no two parts able to take the same spaces, keeps this linear.

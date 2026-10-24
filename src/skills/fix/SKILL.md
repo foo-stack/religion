@@ -14,8 +14,9 @@ numbered, it ticks nothing, and it archives on its own.
 - **A description** - `{{cmd}} "password reset email never sends"`. A problem stated in the
   conversation already counts; this skill does not scan the project hoping to find
   something wrong.
-- **Finding identifiers** - `{{cmd}} F-03` specs the repair of that ledger entry, and
-  `{{cmd}} F-03 F-07` repairs several together. Group findings only when they share a file
+- **Finding identifiers** - `{{cmd}} 39a/F-2` specs the repair of that ledger entry, and
+  `{{cmd}} 39a/F-2 F-07` repairs several together. An identifier is used exactly as the
+  ledger heads it, with an item prefix when it has one, bare when it does not. Group findings only when they share a file
   and a severity, as {{cmd:auto}}'s fix mode does: one fix then stays one reviewable diff.
 
 - **An issue** - `{{cmd}} #42` or its link. Read it through the host's own command-line tool, for example `gh issue view 42 --json title,body,url` on

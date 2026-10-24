@@ -92,7 +92,8 @@ Already settled, with the reasoning in `docs/architecture/decisions/`:
 
 - no monorepo awareness: predictably simple beats usually clever
 - no independent-review mechanism
-- no parallel execution across work items, which would need a different state shape
+- parallel work items only one per git worktree, landed one at a time: the shared plan,
+  overview, ledger and journal are never merged as text
 
 **Settled ahead of 1.0**, so the stability statement can make each promise:
 

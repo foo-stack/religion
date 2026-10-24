@@ -154,16 +154,30 @@ Two waves of one, then a wave of two, then a wave of one.
 **Refuse a wave rather than guess at one.** Run the wave sequentially, and say why, when:
 
 - a marker names a later step, itself, or a step that does not exist
-- two steps in the wave would change the same file, which is a conflict the spec did not
-  intend and the author is better placed to resolve than a merge
+- two steps in the wave would change the same authored file, which is a conflict the spec
+  did not intend and the author is better placed to resolve than a merge. Output the
+  project's build generates from those files does not count; it is rendered once after
+  the join
 - the wave is larger than three steps, which usually means the spec is describing one step
   badly rather than three independent ones
 
-**Building a wave.** Each step runs in its own subagent with the step, the spec, the
-standards, and nothing else. They build and **return**; they do not tick, do not write the
-spec, and do not touch the ledger. The parent applies what comes back, runs the gate for each
-step, and performs every write. This is the same rule audit's lenses follow, for the same
-reason: concurrent writers to one file is the one thing waves must never introduce.
+**Building a wave.** Each step builds in its own detached git worktree outside the project,
+set up and torn down by `reference/worktrees.md`, so a step cannot see or change another
+step's files. Each runs in its own subagent with the step, the spec, the standards, the path
+of its worktree, and nothing else. They build there and **return** their evidence; they do
+not tick, do not write the spec, and do not touch the ledger. The parent extracts each
+step's patch and performs every write. This is the same rule audit's lenses follow, for the
+same reason: concurrent writers to one file is the one thing waves must never introduce.
+
+**Joining a wave.** The parent concatenates the patches in step order and applies them with
+one `git apply`, which lands all of them or none. Then it renders generated output once,
+when any was left out of the patches, and runs each step's gate on the joined tree. A step
+that fails its gate there leaves its patch applied for review, as a failed step always does.
+
+**A join that does not apply stops the wave** with the project exactly as it was. Report the
+paths `git apply` named and where each worktree is, keep the worktrees, tick nothing, and
+leave the conflict for review. Never retry with a three-way apply, merge, or edit to make it
+fit.
 
 **A failure stops the wave.** Report which steps passed and which did not, tick only what
 passed, and stop. Do not retry the wave; the next run resumes at the first unticked step,

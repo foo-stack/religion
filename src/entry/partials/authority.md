@@ -11,6 +11,10 @@ carry to a later instance.
 - deleting files or data, and any rewrite of existing history
 - changing a remote service, its configuration, or its secrets
 
+Removing a detached worktree that the current run created for a wave, outside the project,
+once that wave's join has succeeded, is not deleting files or data. Removing any other
+worktree still asks.
+
 Pushing a branch that a run created itself is the single action that may be granted ahead
 of time, and only in the narrow way set out below. Every other push is first tier.
 

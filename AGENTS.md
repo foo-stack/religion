@@ -106,6 +106,10 @@ carry to a later instance.
 - deleting files or data, and any rewrite of existing history
 - changing a remote service, its configuration, or its secrets
 
+Removing a detached worktree that the current run created for a wave, outside the project,
+once that wave's join has succeeded, is not deleting files or data. Removing any other
+worktree still asks.
+
 Pushing a branch that a run created itself is the single action that may be granted ahead
 of time, and only in the narrow way set out below. Every other push is first tier.
 
@@ -186,8 +190,9 @@ needed, a conflict appears, the work drifts outside its spec, or something in th
 tier of the authority rules comes up.
 
 `workflow.parallelSteps` ships `false`. Turned on, steps a spec marks as independent are
-built together in one wave and reviewed as one packet, so nothing lands unreviewed either
-way. While it is off, those markers are ignored and every spec builds in order.
+built together in one wave, each in its own git worktree, then joined and reviewed as one
+packet, so nothing lands unreviewed either way. A join that does not apply cleanly stops for
+review. While it is off, those markers are ignored and every spec builds in order.
 
 ## Activity
 

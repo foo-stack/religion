@@ -887,3 +887,163 @@
 **Why it matters:** The Deferred view's items are focusable and act on Enter, but the accessibility tree exposes them as `generic`, so a screen reader does not announce them as something to activate; the History rows are built the same way.
 **Suggested fix:** Give each selectable item `role='button'`, and `aria-pressed` or `aria-current` for the selected one.
 **Resolution:**
+
+### F-163 [P2] open - Teardown's forced removal destroys ignored and excluded files that never reached the project
+
+**File:** src/skills/implement/reference/worktrees.md:109
+**Found:** 2026-10-24 by audit (scope: current; lens: security)
+**Why it matters:** A step that creates an ignored file (`.env.local`, local config) or changes a path dropped by the generated-path exclusions loses it at `git worktree remove --force`, which the security pass reproduced. The authority carve-out calls this "not deleting files or data", yet that data exists nowhere else.
+**Suggested fix:** Before teardown, compare `git -C <wt> status --porcelain --ignored` with what was applied; anything beyond the phase-3 links and declared generated paths keeps the worktree and asks.
+**Resolution:**
+
+### F-164 [P2] open - Links into the project let a wave step write to real locations, outside the patch and the join
+
+**File:** src/skills/implement/reference/worktrees.md:58
+**Found:** 2026-10-24 by audit (scope: current; lens: security)
+**Why it matters:** The `node_modules` link is the project's real directory, so a step's `npm i`, cache write or patch-package lands in the project immediately, from several steps at once. `cp -RPp` (:37) also keeps an untracked absolute link as a link, so an edit through it changes the real target and the patch records only the link. The "never install" rule (:64) is addressed to the parent; the wave subagent's brief in `SKILL.md` does not carry it.
+**Suggested fix:** Put "do not install, and do not write through links or into linked directories" in each wave subagent's brief, and refuse the wave, or ask, when the untracked files include a link whose target is absolute or leaves the project.
+**Resolution:**
+
+### F-165 [P2] open - Concurrent step builds share one real node_modules and its tool caches
+
+**File:** src/skills/implement/reference/worktrees.md:58
+**Found:** 2026-10-24 by audit (scope: current; lens: performance)
+**Why it matters:** Tools that cache under `node_modules` (`.vite`, `.cache` for babel and webpack) get up to three builds writing the same cache, keyed to different worktree roots, at once: thrashed or corrupt caches, and the project's own `node_modules` changes during a wave. This repository is unaffected (tsx caches in the OS temp directory); web projects are not.
+**Suggested fix:** In phase 4, point such caches at a per-worktree path, or build the steps one at a time when the gate's tool caches under `node_modules`.
+**Resolution:**
+
+### F-166 [P2] open - The carve-out redefines deletion rather than excepting it, and nothing records which worktrees a run made
+
+**File:** src/entry/partials/authority.md:14
+**Found:** 2026-10-24 by audit (scope: current; lens: security, quality)
+**Why it matters:** "is not deleting files or data" can be read more widely than the narrow exception intended, and it names only the worktree while teardown also removes links, `.patch` and `.base` files and the `mktemp` directory (worktrees.md:108-111). "that the current run created" has nothing on disk behind it, so an agent rebuilding the list from `git worktree list` could match a user's own detached worktree.
+**Suggested fix:** Phrase it as "may be removed without asking", name the scratch directory and its files, and have phase 2 record each created path in a file that teardown removes only from.
+**Resolution:**
+
+### F-167 [P2] open - Teardown removes only node_modules though phase 3 links any dependency directory
+
+**File:** src/skills/implement/reference/worktrees.md:108
+**Found:** 2026-10-24 by audit (scope: current; lens: quality, security)
+**Why it matters:** In a project with no `node_modules`, the hardcoded `rm` fails, which under :7 stops a cleanly joined wave and strands its worktrees; other links (`.venv`, `vendor`) are left to `git worktree remove`, which unlinks them safely but breaks the stated "remove each link first".
+**Suggested fix:** "Remove each link made in phase 3", with `node_modules` only as the example, as phase 3 already reads.
+**Resolution:**
+
+### F-168 [P2] open - The docs and the spec's contract say a step hands back its patch; the skill says the parent extracts it
+
+**File:** docs/architecture/config.md:64
+**Found:** 2026-10-24 by audit (scope: current; lens: quality)
+**Why it matters:** `SKILL.md:167-169` and phase 5 have the subagent return evidence only and the parent take the patch, while `config.md:64` and the spec's load-bearing "Wave step output" contract (current-work.md:113) say the subagent returns it. Later wave work gets two answers.
+**Suggested fix:** "the parent takes a patch of the files each step authored" in the docs, and "returns its evidence; the parent extracts its patch" in the contract.
+**Resolution:**
+
+### F-169 [P3] open - The join and failed-join mechanics are written out in both the skill and the routine
+
+**File:** src/skills/implement/SKILL.md:172
+**Found:** 2026-10-24 by audit (scope: current; lens: quality)
+**Why it matters:** `SKILL.md:172-180` restates phase 6 nearly word for word, which the spike said should be one shared routine; a later change has to land twice.
+**Suggested fix:** Keep the outcome rules in the skill (all or nothing, stop unchanged, tick nothing) and point to phase 6 for the commands.
+**Resolution:**
+
+### F-170 [P3] open - The docs say generated output is rendered once, without the condition
+
+**File:** docs/architecture/config.md:66
+**Found:** 2026-10-24 by audit (scope: current; lens: quality)
+**Why it matters:** `SKILL.md:174` and the routine render only when a path was excluded.
+**Suggested fix:** Add "when any was left out of the patches".
+**Resolution:**
+
+### F-171 [P3] open - feature still defines a wave marker as touching different files
+
+**File:** src/skills/feature/SKILL.md:152
+**Found:** 2026-10-24 by audit (scope: current; lens: quality)
+**Why it matters:** implement now refuses only on shared authored files, and in this repository two skill edits always both rewrite `AGENTS.md`, so `feature` followed literally never marks the waves implement accepts.
+**Suggested fix:** "touch different authored files (output the build generates does not count)".
+**Resolution:**
+
+### F-172 [P3] open - An untracked path starting with a dash is read as an option by the copy
+
+**File:** src/skills/implement/reference/worktrees.md:37
+**Found:** 2026-10-24 by audit (scope: current; lens: security)
+**Why it matters:** `dirname`, `mkdir -p` and `cp -RPp` treat `-n` or `-foo/bar` as flags, so the copy fails or misbehaves; no escape was found.
+**Suggested fix:** `dirname -- "$f"`, `mkdir -p -- ...`, `cp -RPp -- "./$f" ...`.
+**Resolution:**
+
+### F-173 [P3] open - The untracked copy is unbounded and spawns three processes per file
+
+**File:** src/skills/implement/reference/worktrees.md:35
+**Found:** 2026-10-24 by audit (scope: current; lens: performance)
+**Why it matters:** An untracked nested repository is listed as one directory entry (`inner/`) and copied whole, `.git` included, into every step; large untracked files are copied per step and hashed by `add -A` into loose objects; thousands of untracked files mean about three process spawns each, per step.
+**Suggested fix:** Skip or refuse directory entries, and copy with one `tar --null -T -` pipe, which also keeps links as links.
+**Resolution:**
+
+### F-174 [P3] open - Worktrees kept by failed waves accumulate with nothing pointing at them
+
+**File:** src/skills/implement/reference/worktrees.md:26
+**Found:** 2026-10-24 by audit (scope: current; lens: performance)
+**Why it matters:** Every failed wave keeps full checkouts, untracked copies, build output and `.git/worktrees` entries, and the next wave makes a fresh `mktemp -d`; if the OS clears its temp directory, the admin entries linger until `git worktree prune`.
+**Suggested fix:** At phase 1, list earlier waves' worktrees from `git worktree list --porcelain` and offer their removal in the same question that already asks.
+**Resolution:**
+
+### F-175 [P3] open - Nothing checks that a reference file a skill names exists
+
+**File:** src/skills/implement/SKILL.md:165
+**Found:** 2026-10-24 by audit (scope: current; lens: tests)
+**Why it matters:** Renaming or deleting `reference/worktrees.md` while the skill still names it renders, passes the drift check and ships. The gap predates this item (`setup`, `feature` and `overview` name reference files the same way).
+**Suggested fix:** One `verify.ts` check: every `` `reference/<file>.md` `` named in a skill exists under that skill's directory.
+**Resolution:**
+
+### F-176 [P3] open - A wave whose patches are all empty stops as a failed join
+
+**File:** src/skills/implement/reference/worktrees.md:92
+**Found:** 2026-10-24 by audit (scope: current; lens: quality)
+**Why it matters:** Reproduced: two empty patches through `git apply` exit 128 with `No valid patches in input`, so a wave whose steps changed only generated paths keeps its worktrees and reports a conflict that is not one.
+**Suggested fix:** Skip empty patches before the join, and treat a wave with none as joined.
+**Resolution:**
+
+### F-177 [P2] unverified - The joined-tree gate runs several unreviewed patches before anyone reads them
+
+**File:** src/skills/implement/SKILL.md:174
+**Found:** 2026-10-24 by audit (scope: current; lens: security)
+**Why it matters:** A patch may change `.claude/settings.json` or `.claude/hooks/*`, and the gate executes the joined code before the wave's diff is shown. Sequential steps do the same one at a time; whether a wave widens it meaningfully was not established. `git apply` refuses `..`, `.git` and paths beyond a symlink.
+**Suggested fix:** Decide whether wave patches touching hook configuration stop for review before the gate.
+**Resolution:**
+
+### F-178 [P3] unverified - The failed-join evidence never exercised atomicity across different files
+
+**File:** religion/context/current-work.md:140
+**Found:** 2026-10-24 by audit (scope: current; lens: tests)
+**Why it matters:** The recorded clash put both patches on one file, a pair implement refuses up front; that patch A to file X does not land when patch B to file Y fails was measured only in a scratch repository while writing the spec.
+**Suggested fix:** Have check run a wave whose second patch fails on a different file.
+**Resolution:**
+
+### F-180 [P3] open - A failed extract leaves an empty patch that passes the join's existence check
+
+**File:** src/skills/implement/reference/worktrees.md:105
+**Found:** 2026-10-24 by audit (scope: current; lens: security)
+**Why it matters:** Reproduced by the re-review: with `step-<n>.base` missing, `git diff --cached --binary ""` exits 128 but the redirect still creates a 0-byte patch, so only the routine's "a failed command stops the wave" rule prevents a partial join. The same was true before the join's repair.
+**Suggested fix:** Write the patch to `step-<n>.patch.tmp` and move it into place only when `git diff` succeeds.
+**Resolution:**
+
+### F-182 [P3] open - Teardown's worktree removal is not run against the root
+
+**File:** src/skills/implement/reference/worktrees.md:128
+**Found:** 2026-10-24 by audit (scope: current; lens: quality)
+**Why it matters:** It contradicts the routine's own rule that every project-side command runs against `$root`; from outside any repository it fails with `not a git repository` and strands the teardown.
+**Suggested fix:** `git -C "$root" worktree remove --force ...`.
+**Resolution:**
+
+### F-186 [P3] unverified - A step that writes workflow state puts it in its patch and fails the join
+
+**File:** src/skills/implement/reference/worktrees.md:108
+**Found:** 2026-10-24 by audit (scope: current; lens: quality)
+**Why it matters:** With the state directory skipped in the copy, a step subagent that writes the activity record creates a new file under it, which the join then refuses with `already exists`. Not reproduced: whether a wave subagent writes that file is not settled.
+**Suggested fix:** Add the state directory to the phase 5 exclusions.
+**Resolution:**
+
+### F-188 [P3] open - The guards stop without saying why, and nothing says how to clear a saved wave
+
+**File:** src/skills/implement/reference/worktrees.md:17
+**Found:** 2026-10-24 by audit (scope: current; lens: quality)
+**Why it matters:** A project at `.../step-app` with a `base` file beside it is refused silently (reproduced); an empty state file prints a blank line and refuses; a stale one names a directory the OS already cleared. The routine says "deal with them first" without pointing at teardown, so a later wave in the same spec is refused with no cause given.
+**Suggested fix:** An `echo` on each of the three exits, and one sentence saying that clearing a kept wave is the teardown, which asks after a failed join, and that a state file naming nothing or a missing directory is stale and removing it also asks.
+**Resolution:** 2026-10-24, the narrow re-review of F-187 to F-190 raised the same false refusal again from the guard pattern, matching `/step-` anywhere in the path; suggested renaming the wave marker to something like `wave-base`.

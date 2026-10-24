@@ -311,3 +311,9 @@ has joined; removing anything else still asks.
 **Why it matters:** Reproduced with a `chpwd` hook that echoes: its output is captured into the wave path, the save then fails, and the block exits 1, leaving an empty temp directory; no wave can start in that shell.
 **Suggested fix:** `cd -- "$wave" >/dev/null && pwd -P`.
 **Resolution:** 2026-10-24, repaired in implement: the `cd` that resolves the wave path is `cd -- "$wave" >/dev/null`. In zsh with a `chpwd` hook that echoes, the block saved a valid wave with no hook output in the path. Closed 2026-10-24 by a narrow re-review: with a printing `chpwd` hook, and in bash with `CDPATH` set, the saved wave path was clean.
+
+## Landed
+
+**Base:** 4a5c387fc665900248be4621367c96cadc5fec80
+**Commits:** f458e1e6e10ca72d9f35d204e328227678d489d2, 80e0476645d6143a8d61624045e3ec57620f046a, dea21bb7914e18c30c9aaf90ecbf29bd974506d0, a15784b33b4845e868410874efb8a3ff37b2ad04, bb9577b3410aeadf5edcc32a1e39f3c65dabca9b
+**Product paths:** .agents/skills/implement/SKILL.md, .agents/skills/implement/reference/worktrees.md, .changeset/waves-in-isolation.md, .claude/skills/implement/SKILL.md, .claude/skills/implement/reference/worktrees.md, AGENTS.md, CLAUDE.md, docs/architecture/config.md, src/entry/partials/authority.md, src/entry/partials/review-cadence.md, src/skills/implement/SKILL.md, src/skills/implement/reference/worktrees.md

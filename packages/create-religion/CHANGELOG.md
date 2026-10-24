@@ -1,5 +1,130 @@
 # create-religion
 
+## 1.3.0
+
+### Minor Changes
+
+- 0731bce: For web work, `check` now scans each interface outcome for accessibility beside its browser
+  evidence: with the project's own axe through its browser-test harness when it has one, and
+  otherwise by reviewing the page's accessibility tree and keyboard focus. It reports violations per
+  outcome, names the method and what it does not cover, records it in the Evidence section, installs
+  nothing, and points anything serious at `audit`.
+- 72cd015: `tests backfill` now offers to note each discrepancy it finds with `capture`, one line naming
+  the file and what the code does instead of what it should, so the mismatch reaches the inbox
+  that `fix` and `feature` read rather than being lost when the context is cleared. The failing
+  tests stay as they are, and the skill never writes the inbox itself.
+- 8ffa7af: `check` now records its verdict for each outcome, and what decided it, in an `## Evidence`
+  section of the spec, stamped with the commit and whether the tree was clean, so the proof
+  survives a cleared context and travels into the archive. `complete` reuses that record only
+  when it names the current commit with a clean tree, and runs `check` again otherwise. The
+  dashboard's Work view shows the section.
+- ee85f1c: The workflow `ci` writes also runs `religion doctor --json` on every pull request, pinned to the
+  installed major version, and fails the build for any failed check that blocks work or
+  completion, such as a stale overview or invalid configuration. Advisory checks a runner cannot
+  pass honestly, like `hooks` without a committed `.claude/settings.json`, appear as warnings. A
+  doctor that prints no report fails the build.
+- 02ba42a: In a project that uses Changesets, `complete` now drafts the finished item's changeset: the
+  packages it touched, a proposed bump, and a summary written for the changelog's readers. It asks
+  before writing when someone is there, and in an automated run writes the proposal and names it in
+  the pull request for the reviewer to approve or change. An item that already has a changeset keeps
+  it.
+- 97e5ee0: The dashboard gains a Deferred view: every note each archive left under its Deferred
+  heading, newest item first, each item linking to its archive in History. It is a record of
+  what was set aside and why, not a to-do list, since an archive is never edited when a note
+  is later done.
+- 135f781: `religion doctor` checks every setting in the configuration reference with its type, not only
+  the enumerated ones: booleans, branch prefixes, bounded integers such as
+  `auto.maxRepairAttempts`, `auto.maxItems` (a positive integer or `null`), and the schema
+  version. A failure names the key, the value it found, and what it accepts. Keys the reference
+  does not name are still ignored.
+- 6cd5493: A fourth Claude Code hook, `warn-on-drift.mjs`, asks before an edit to a file that neither the
+  active spec's current step nor its Files and areas names, pointing at an amendment when the
+  spec is what should change. The workflow's own state, changesets and rendered skill trees are
+  always allowed, and it stays silent with no spec in progress. New installs wire it; on an
+  existing project, `religion doctor`'s hooks check reports it until it is added to
+  `.claude/settings.json`.
+- c4bfb56: `distill` now reads the findings archived with each finished item as a second input. Where the
+  same kind of finding has recurred across at least two different items, it proposes the
+  coding-standard rule that would have prevented them, citing the findings, and waits for
+  approval; each decided group is recorded so it is not proposed again.
+- a346c2e: The handoff written at the end of each turn also says when the overview is stale, how many
+  notes are waiting in the inbox, which findings are unverified, and when a recorded run is
+  blocked, with the command that resumes it. Because every session loads the handoff, nothing
+  free-form is copied into it from the activity record: only a skill name and a resume command
+  that invokes that skill.
+- 60f58ec: `religion doctor` gains a `hooks` check where Claude Code is installed: it confirms that
+  `.claude/settings.json` registers each hook this version ships, under the right event, and
+  that each hook's file exists, and names any that are missing with how to add them. Matchers
+  you have tuned still count, and a settings file that is a link is not read. Since `update`
+  never rewrites the settings, this is how a hook added by a later version gets noticed.
+- 98c7c0e: `complete` now appends one entry to `religion/learning/journal.md` for every item it
+  finishes, with what surprised, what went wrong, and what was deferred and why, so `distill`
+  has something to read. `complete` is the journal's only writer: `distill` no longer moves
+  entries out of it, and instead records what it decided about each one in
+  `journal-archive.md`, skipping entries it has already decided on the next pass.
+- 223f2e8: The dashboard gains a Learning view: the lessons every session loads, and the journal's
+  entries, newest first, each marked waiting until `distill` has recorded a decision on it in
+  `journal-archive.md`. `religion status` warns once five or more entries are waiting, which is
+  when a `distill` pass is worth running.
+- 1bb90fa: `religion doctor` gains an advisory `managed files` check, and the dashboard's Install panel
+  a list, naming every installed skill or hook whose contents no longer match what was
+  installed, and any that are missing. That is the list `update` will report as changed
+  locally. Entry files are not compared, since `update` merges them, and a recorded path
+  outside the skill and hook trees, or one that is a link, is never read.
+- b4c6167: `check` now names the passing command-line and API outcomes that could become regression
+  tests and, where a test command is declared, offers `tests evidence` to keep them. The new
+  `evidence` mode of `tests` reads the spec's Evidence section, re-runs each capture, and writes
+  one reviewed test per outcome, asserting the exit status and the stable parts of the output.
+  Interface outcomes stay browser evidence.
+- 68f41cd: A build-plan line that says `after item N` (or `after items N, M and K`) waits until those are
+  ticked, and one that says `spike first` waits until a spike archive records `**For:** item N`
+  and `**Settled:** yes`. `religion status`, `feature` with no argument, and `auto` take the first
+  item that waits on nothing and name the ones passed over; when every remaining item waits on a
+  spike, `status` points at `spike`. A reference to an item the plan does not have, or items that
+  wait on each other, is reported as a warning. `status --json` keeps its shape.
+- 3d0cb15: `check preview` runs the spec's outcomes against the preview deployment the host built for the
+  pull request, as well as locally. It finds the address from the deployments recorded for the
+  head commit through the host's own tool (`gh` on GitHub), asking before each network read
+  outside an automated run, stamps the address in the Evidence section, and treats a missing,
+  unfinished or protected preview as could not check. It never deploys.
+- f921642: Under `pull-request` mode, the pull request `complete` opens carries a review packet built
+  from the item's archive: the goal, each step with the verdict and evidence `check` recorded,
+  the findings closed with it, and a link to the archive for the rest. `auto`'s aggregate pull
+  request takes each item's line from the same record and links the item's own pull request.
+  The packet only presents; it adds no gate.
+- c87a4c6: The dashboard's Configuration panel lists every setting, not only the ones a project has
+  set: what it means in one line, its value here or that the default applies, the default,
+  and what it accepts, with any value `doctor` would refuse marked and any key Religion does
+  not read named as such.
+- e7ed368: `implement` now stamps a spec before its first change with `**Approved:** <date>, <hash>` and
+  records any later change to what the spec asks for as a dated amendment with its reason,
+  renewing the stamp. `religion status` warns when the spec has changed without a renewed stamp,
+  and `status --json` gains `spec` (`hash`, `approved`, `drifted`). Ticks, the status line, and
+  the Evidence and Amendments sections never count as changes, and examples inside code fences
+  are ignored.
+- 7981ee6: `fix` and `feature` take an issue number or link, read it through the host's own command-line
+  tool (a network read that needs a yes outside an automated run), and draft the spec from it,
+  treating the issue's text as untrusted input and stopping for review as usual. The spec records
+  `**From issue:**`, and the pull request `complete` opens closes the issue for a fix and refers
+  to it for a feature, taking effect only when its owner merges.
+- ebe8b7b: `religion status` reports the run recorded in `religion/.state/run.json` and how many notes
+  the inbox holds, and `status --json` gains `activity` and `inbox` fields. When the recorded
+  run is blocked and names a resume command, that command becomes the next action. A record is believed only when it names a skill installed
+  in the project, and its resume command only when it invokes that same skill with plain
+  word arguments; control and format characters in what it prints are replaced with spaces.
+- 844a68f: `religion uninstall` takes Religion back out of a project. It removes every installed skill
+  and hook nobody edited, and any directory that leaves empty; keeps and names the edited
+  ones; cuts only the managed block from the entry file, or removes it when it is still
+  exactly what was installed; takes only Religion's hook entries out of
+  `.claude/settings.json`; and removes the install record last. The plans, history and the rest
+  of `religion/` stay, and every file it changes rather than removes is backed up first. It
+  shows its plan and asks, defaulting to no; `--yes` skips the question, `--dry-run` only
+  plans, and outside a terminal it removes nothing without `--yes`.
+- d803d0e: `religion update` on a project an older version installed starts by saying what changed in
+  between: each release, newest first, with the first sentence of each change, and where the
+  full changelog is. The package now ships its `CHANGELOG.md`, so this needs no network. It
+  prints on `--dry-run` too, and nothing when the project is already current.
+
 ## 1.2.0
 
 ### Minor Changes

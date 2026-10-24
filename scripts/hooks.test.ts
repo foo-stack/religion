@@ -87,6 +87,23 @@ test("write-handoff names a stale overview, the inbox, unverified findings and a
   assert.doesNotMatch(text, /ignore all previous instructions/, "no free text from the record");
 });
 
+test("write-handoff lists findings that carry an item prefix beside bare ones", async (t) => {
+  const { root } = await project(t);
+  await writeState(
+    root,
+    "context/findings.md",
+    "# Findings\n\n### F-03 [P1] open - Bare and blocking\n\n### 39a/F-1 [P1] open - Prefixed and blocking\n\n" +
+      "### 39a/F-2 [P2] unverified - A prefixed guess\n\n### /F-4 [P1] open - Not an identifier\n"
+  );
+
+  assert.equal(runHook(root), 0);
+  const text = await handoff(root);
+  assert.match(text, /F-03 \[P1\] open - Bare and blocking/);
+  assert.match(text, /39a\/F-1 \[P1\] open - Prefixed and blocking/);
+  assert.match(text, /^39a\/F-2 \[P2\]\.$/m);
+  assert.doesNotMatch(text, /Not an identifier/);
+});
+
 test("write-handoff leaves out a run whose fields fail the status rule, and a fresh overview", async (t) => {
   const { root } = await project(t);
   const plan = "## Plan\n\n- [ ] 1. **First** - queued\n";

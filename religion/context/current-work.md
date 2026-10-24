@@ -54,7 +54,7 @@ large, so split it.
   before `F-<n>` and keeps it in `id`; tests in `state.test.ts` beside the existing
   `parseFindings` test. *Done when:* `39a/F-1` parses with `id` `39a/F-1`, a bare `F-07` still
   parses as before, a header starting `/F-1` is not read as a finding, and `npm test` exits 0.
-- [ ] **Step 2 - the handoff hook lists prefixed findings** - both identifier patterns in
+- [x] **Step 2 - the handoff hook lists prefixed findings** - both identifier patterns in
   `src/hooks/write-handoff.mjs` accept the optional prefix; cases in `scripts/hooks.test.ts`.
   *Done when:* a ledger holding `39a/F-1 [P1] open` and `39a/F-2 [P2] unverified` produces a
   handoff naming both, bare entries are listed as before, and `npm test` exits 0.

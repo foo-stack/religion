@@ -64,7 +64,7 @@ large, so split it.
   `Number(String(f.id).slice(2))`, which reads `39a/F-1` as 0. *Done when:* with a ledger of
   `F-07`, then `39a/F-2`, then `39a/F-1`, all P2 and open, the dashboard lists them in that
   order and names them as the three oldest, and `npm test` exits 0.
-- [ ] **Step 4 - audit raises prefixed findings** - in `src/skills/audit/SKILL.md`, the
+- [x] **Step 4 - audit raises prefixed findings** - in `src/skills/audit/SKILL.md`, the
   identifier rule: while the active spec carries `**From build plan:** item <n>`, a new finding
   is `<n>/F-<k>`, with `k` one past the highest present with that prefix, starting at 1;
   otherwise it is bare and sequential, as today. The header example and `**Surfaced by:**` use

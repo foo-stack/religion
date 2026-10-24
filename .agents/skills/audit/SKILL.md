@@ -96,7 +96,7 @@ context; this does. Create it with a `# Findings` heading if it is missing.
 One block per finding. The header line is the machine-readable part and keeps this exact
 shape; the prose below it is for people.
 
-    ### F-03 [P0] open - Retained auth volumes carry the run label
+    ### 12/F-3 [P0] open - Retained auth volumes carry the run label
 
     **File:** ops/compose.yaml:86
     **Found:** 2026-09-04 by audit (scope: current; lens: security)
@@ -105,12 +105,18 @@ shape; the prose below it is for people.
     **Resolution:**
 
 When the pass is re-reviewing a repair and finds a new problem in the code that repair
-changed, add `**Surfaced by:** F-NN` after **Found**, naming the finding whose repair exposed
-it. That link is what keeps a defect a repair introduced attached to the repair.
+changed, add `**Surfaced by:** <identifier>` after **Found**, naming the finding whose repair
+exposed it, in full: `**Surfaced by:** 12/F-3`. That link is what keeps a defect a repair
+introduced attached to the repair.
 
-Identifiers are sequential within the ledger, one past the highest present, never reused
-and never renumbered while their entries live there. Completion archives resolved entries
-under a work-item prefix, and that prefixed form is the permanent reference.
+**Identifiers carry the item they were raised in.** While the active spec has a
+`**From build plan:** item <n>` line, a new finding is `<n>/F-<k>`: item 12's first is
+`12/F-1`, and `k` is one past the highest present with that prefix. Two items built in
+separate worktrees then never hand out the same identifier. With no active planned item, a
+finding is bare, `F-<k>`, one past the highest bare identifier present, as entries raised
+before prefixes are. Either way an identifier is never reused and never renumbered while its
+entry lives in the ledger. Completion archives resolved entries under the item's prefix, and
+that prefixed form is the permanent reference.
 
 | Status | Meaning | Blocks completion at P0/P1 |
 | --- | --- | --- |

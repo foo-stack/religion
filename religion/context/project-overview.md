@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 65695bbff63940e5 -->
+<!-- religion:source-hash c52126da907728bf -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -72,8 +72,8 @@ items they follow; item 29 made the tooling honour both.
 
 **Direction changes, all spike-first**
 
-39. **Several work items at once** - one worktree per active item, landed one at a time,
-    split into 39a to 39d; backward compatible
+39. **Several work items at once** - one worktree per active item, landed one at a time;
+    39a done, 39b to 39d queued; backward compatible
 40. **Religion runs in CI** - a labelled issue to a pull request nothing merges; after 20,
     24 and 33
 41. **One tool builds, another reviews** - review handed to a different installed tool

@@ -110,9 +110,10 @@ commits sit among others on the same branch, so this record is the only reliable
 
 **Prune the ledger.** Append every `closed`, `accepted`, and `invalid` entry to a
 `## Findings` section in the archive just written, at its final status, with the reason
-preserved for accepted entries. Prefix each identifier with the archive name so it is
-globally unique: item 12's `F-03` becomes `12/F-03`, and that prefixed form is the
-permanent reference.
+preserved for accepted entries. Every archived identifier carries a prefix, so it is
+globally unique, and that prefixed form is the permanent reference. One raised under the
+item's prefix already has it and moves across unchanged: item 12's `12/F-3` stays `12/F-3`.
+Prefix only a bare one, with the archive name: item 12's `F-03` becomes `12/F-03`.
 
 Then remove only those entries from the ledger. `open`, `fixed`, and `unverified` entries
 stay, with their identifiers, so nothing is silently dropped. A `fixed` P2 does not block

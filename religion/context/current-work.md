@@ -70,7 +70,7 @@ large, so split it.
   otherwise it is bare and sequential, as today. The header example and `**Surfaced by:**` use
   the full identifier. *Done when:* the rendered audit skill states the rule and shows a
   prefixed example, and `npm test` exits 0.
-- [ ] **Step 5 - complete keeps a prefix it finds** - in `src/skills/complete/SKILL.md`, the
+- [x] **Step 5 - complete keeps a prefix it finds** - in `src/skills/complete/SKILL.md`, the
   ledger prune prefixes only bare identifiers; an entry already carrying a prefix moves to the
   archive under it unchanged. *Done when:* the rendered complete skill says so, with an example
   of each, and `npm test` exits 0.

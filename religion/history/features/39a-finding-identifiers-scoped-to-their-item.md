@@ -165,3 +165,9 @@ when archiving, and `fix`, `implement` and `distill` show it.
 ### Deferred
 
 - Prefixes for fixes, refactors and rollbacks, until item 39c lets them run beside other work.
+
+## Landed
+
+**Base:** 8cb6f73df675547ad7390b8c4bf9ec41a73bc95a
+**Commits:** 2a37c249c42a03a128b9e839bc15a935f57829a8, c90bf55e4eff806f8096b95dd5060ddb2a5b9e49, 056d73c5ef4529dba69d0cd3df6dade3217e8c47, 93b1e90e5983ad7cb1cc5a01851705df44318ea7, 0cd735df04ceb0b7b359604bb852cd0273a21b3c, f21cb1fc878995cbb18a8a5f2d5ea1cf9ba6d045, 9b7e9e65880a15515094fa26aee0f40ea61b92bd, 3e8d23f3fec2550d02a9f71ef9ab3a2f0da28ae6, d9a91997384de274d48846824397ffb672e11c6c, 419f78b2ba468819d80316c2e6393c7779b8d60e, 093d137f5add3237651663067c772646d52b2a55
+**Product paths:** .agents/skills/audit/SKILL.md, .agents/skills/complete/SKILL.md, .agents/skills/distill/SKILL.md, .agents/skills/fix/SKILL.md, .agents/skills/implement/SKILL.md, .changeset/finding-identifiers-scoped.md, .claude/skills/audit/SKILL.md, .claude/skills/complete/SKILL.md, .claude/skills/distill/SKILL.md, .claude/skills/fix/SKILL.md, .claude/skills/implement/SKILL.md, docs/stability.md, packages/create-religion/lib/dashboard.ts, packages/create-religion/lib/state.test.ts, packages/create-religion/lib/state.ts, scripts/hooks.test.ts, src/hooks/write-handoff.mjs, src/skills/audit/SKILL.md, src/skills/complete/SKILL.md, src/skills/distill/SKILL.md, src/skills/fix/SKILL.md, src/skills/implement/SKILL.md

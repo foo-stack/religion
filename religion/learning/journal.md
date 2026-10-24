@@ -207,3 +207,10 @@ verification check, and both were found by hand first.
 **Surprised:** The first run of the fallback, on Religion's own dashboard, found that the selectable items added two runs ago are invisible to a screen reader as controls; the dashboard had been checked by screenshot each time.
 **Went wrong:** nothing
 **Deferred:** F-160; a required-scan setting.
+
+## 2026-10-24 - Waves built in isolation
+
+**Archive:** history/features/27-waves-built-in-isolation.md
+**Surprised:** The spike's clean answer hid most of the work: a shell routine an agent runs one command at a time, from wherever its directory happens to be, failed in ways no single run showed, and five rounds of independent review each found a smaller gap in what the last repair added.
+**Went wrong:** `check` caught the untracked-file and untracked-link defects only on its second and third runs, and the completion audit found two P1s in the join, a subdirectory cwd and a pipe hiding a missing patch, either of which would have deleted step work.
+**Deferred:** F-163 to F-178, F-180, F-182, F-186 and F-188 in the ledger; Windows; the other three tools' shells.

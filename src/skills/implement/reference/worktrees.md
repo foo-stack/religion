@@ -9,10 +9,37 @@ failed step.
 
 ## 1. Base
 
-Take the base once per wave, after every earlier step has landed:
+Once per wave, after every earlier step has landed, take the base, make the wave's directory,
+and save the values every later phase needs. Run these lines as **one** command: the save
+needs the values the first lines produce, and a fresh shell would have none of them.
 
-    base=$(git stash create)
-    [ -n "$base" ] || base=$(git rev-parse HEAD)
+    (
+      root=$(git rev-parse --show-toplevel) || exit 1
+      case "$root" in */step-*) [ ! -f "${root%/*}/base" ] || exit 1;; esac
+      [ ! -e "$root/{{state}}/.state/wave" ] || { cat "$root/{{state}}/.state/wave"; exit 1; }
+      base=$(git -C "$root" stash create) || exit 1
+      [ -n "$base" ] || base=$(git -C "$root" rev-parse HEAD) || exit 1
+      wave=$(mktemp -d) && wave=$(cd -- "$wave" >/dev/null && pwd -P) || exit 1
+      printf '%s\n' "$base" > "$wave/base" || exit 1
+      mkdir -p "$root/{{state}}/.state" && printf '%s\n' "$wave" > "$root/{{state}}/.state/wave" || exit 1
+    )
+
+Each line that can fail stops the block, rather than `set -e`, which would stay on in a tool
+that keeps one shell between commands. The block runs in a subshell, so its exits end only
+the subshell and never that shell; it hands nothing back, since every later phase reads the
+saved values. The `cd` sends its output away so a shell hook that prints on a directory change
+cannot end up in the saved path. Without the stops, a failed `mktemp` leaves `wave`
+empty, `cd ""` stays in the project, and the block saves the project itself as the wave; a
+failed `git stash create` falls back to `HEAD` and drops uncommitted earlier steps.
+
+A saved wave that already exists means an earlier one was not torn down, which is what a
+failed join leaves. The block prints the directory it names and stops, so the record of where
+those worktrees are is never overwritten; deal with them first.
+
+Every command that touches the project runs against `$root`, never the current directory.
+From a subdirectory, `git apply` skips every path outside it and still exits 0, and
+`git ls-files` lists only what is below it, so a wave started there would join nothing and
+then tear down the work as if it had landed.
 
 `git stash create` makes a commit of the working tree without touching the stash list, any
 ref, or the working tree, so uncommitted earlier steps are part of the base. An empty result
@@ -23,18 +50,38 @@ are not the wave's to change.
 
 ## 2. Create
 
-    wave=$(mktemp -d)
-    git worktree add --detach "$wave/step-<n>" "$base"
+`pwd -P` saves the resolved path, the form `git rev-parse` reports, so the check below can
+compare the two. A shell that does not keep variables between commands starts each later
+phase by reading the values back, and stops if the current directory has drifted into one of
+the wave's own worktrees:
 
-One `mktemp -d` per wave, one worktree per step, named for the step's number. `--detach`
-creates no branch, whatever `git.mode` says. Keeping the worktrees outside the project keeps
-a second copy of the source out of the project's own tests, linters and file watchers.
+    root=$(git rev-parse --show-toplevel)
+    case "$root" in */step-*) [ ! -f "${root%/*}/base" ] || exit 1;; esac
+    wave=$(cat "$root/{{state}}/.state/wave")
+    base=$(cat "$wave/base")
+    case "$root/" in "$wave"/*) exit 1;; esac
 
-The stash commit leaves untracked files out, so copy them in:
+From inside a worktree, `root` would be that worktree, and the join would land there and
+report success while the project stayed unchanged. The first `case` stops in a step worktree
+of any wave, including one kept by an earlier failed join, recognised by the `base` file in
+the wave directory beside it; the second stops in one of this wave's own. A linked worktree
+the user works from is neither, so it is not refused.
 
-    git ls-files --others --exclude-standard -z |
+Then, once per step, named for the step's number:
+
+    git -C "$root" worktree add --detach "$wave/step-<n>" "$base"
+
+`--detach` creates no branch, whatever `git.mode` says. Keeping the worktrees outside the
+project keeps a second copy of the source out of the project's own tests, linters and file
+watchers.
+
+The stash commit leaves untracked files out, so copy them in, all but the workflow's own
+state, which would carry the saved wave path into the worktree:
+
+    git -C "$root" ls-files --others --exclude-standard -z |
       while IFS= read -r -d '' f; do
-        mkdir -p "$wave/step-<n>/$(dirname "$f")" && cp -RPp "$f" "$wave/step-<n>/$f"
+        case "$f" in {{state}}/.state/*) continue;; esac
+        mkdir -p "$wave/step-<n>/$(dirname "$f")" && cp -RPp "$root/$f" "$wave/step-<n>/$f"
       done
 
 `-RP` copies an untracked link as a link. Plain `cp` refuses a link to a directory, and
@@ -55,7 +102,7 @@ A fresh worktree has none of the project's installed dependencies. Symlink each 
 dependency directory at the project root that the gate needs, such as `node_modules`:
 
     [ -e "$wave/step-<n>/node_modules" ] || [ -L "$wave/step-<n>/node_modules" ] ||
-      ln -s "$PWD/node_modules" "$wave/step-<n>/node_modules"
+      ln -s "$root/node_modules" "$wave/step-<n>/node_modules"
 
 Skip the link when anything already sits at that path, such as an untracked link copied in
 phase 2. `ln -s` onto an existing link to a directory does not replace it: it creates a new
@@ -69,6 +116,8 @@ been run against.
 
 When the project's gate reads build output that is not committed, run the project's build in
 the worktree before handing it to the subagent, so the step's checks can run there at all.
+Run it in a subshell, `(cd "$wave/step-<n>" && <build>)`, so the current directory never
+moves into the worktree.
 
 ## 5. Extract
 
@@ -87,9 +136,15 @@ a generated file that both steps touched then fails the join and stops it.
 
 ## 6. Join
 
-All patches, in step order, through **one** `git apply`:
+All patches, in step order, through **one** `git apply` of one file:
 
-    cat "$wave"/step-<n>.patch "$wave"/step-<m>.patch | git apply
+    for p in "$wave"/step-<n>.patch "$wave"/step-<m>.patch; do [ -f "$p" ] || exit 1; done
+    cat "$wave"/step-<n>.patch "$wave"/step-<m>.patch > "$wave/join.patch"
+    git -C "$root" apply "$wave/join.patch"
+
+Check that every step's patch exists first, and never pipe into `git apply`: without
+`pipefail` a pipe reports `git apply`'s status alone, so a missing patch would land the
+others as a success and teardown would delete the step that never applied.
 
 One concatenated input applies all or nothing, including two patches to the same file.
 Separate patch files given to one `git apply` do not: the first lands even when a later one
@@ -103,12 +158,18 @@ rendered from the joined sources, then run each step's gate on the joined tree.
 
 ## 7. Teardown
 
-Only after a successful join, and only for worktrees this run created for this wave:
+Only after a successful join, and only for worktrees this run created for this wave. Once per
+step:
 
     rm "$wave/step-<n>/node_modules"
     git worktree remove --force "$wave/step-<n>"
     rm "$wave/step-<n>.patch" "$wave/step-<n>.base"
+
+Then once for the wave:
+
+    rm "$wave/join.patch" "$wave/base"
     rmdir "$wave"
+    rm "$root/{{state}}/.state/wave"
 
 Remove each link first, so nothing follows it into the project's real dependencies. Removing
 any other worktree, or these after a failed join, still asks.

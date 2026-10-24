@@ -34,8 +34,11 @@ The stash commit leaves untracked files out, so copy them in:
 
     git ls-files --others --exclude-standard -z |
       while IFS= read -r -d '' f; do
-        mkdir -p "$wave/step-<n>/$(dirname "$f")" && cp -p "$f" "$wave/step-<n>/$f"
+        mkdir -p "$wave/step-<n>/$(dirname "$f")" && cp -RPp "$f" "$wave/step-<n>/$f"
       done
+
+`-RP` copies an untracked link as a link. Plain `cp` refuses a link to a directory, and
+following it would copy whatever it points at.
 
 Then make the copies part of the step's base, so they are not handed back as new files:
 
@@ -51,7 +54,12 @@ commands.
 A fresh worktree has none of the project's installed dependencies. Symlink each installed
 dependency directory at the project root that the gate needs, such as `node_modules`:
 
-    ln -s "$PWD/node_modules" "$wave/step-<n>/node_modules"
+    [ -e "$wave/step-<n>/node_modules" ] || [ -L "$wave/step-<n>/node_modules" ] ||
+      ln -s "$PWD/node_modules" "$wave/step-<n>/node_modules"
+
+Skip the link when anything already sits at that path, such as an untracked link copied in
+phase 2. `ln -s` onto an existing link to a directory does not replace it: it creates a new
+link inside the directory it points at, which here is the project's real dependencies.
 
 Never install into a worktree. That is a dependency install, which the Authority section
 does not grant a wave. On Windows the link would be a junction, which this routine has not

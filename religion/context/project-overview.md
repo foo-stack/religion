@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 9344f11b75113d0e -->
+<!-- religion:source-hash 62ceaff8cd03d378 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,15 +49,17 @@ nothing to sign into.
 
 ## Roadmap
 
-Nineteen items queued, and every one waits on a spike, so `status` points at `spike` until one
-is settled. Several also say which items they follow; item 29 made the tooling honour both.
+Nineteen items queued. Item 21's spike is settled and it is split into 21a to 21c, one per
+tool, built in that order; every other item still waits on a spike. Several also say which
+items they follow; item 29 made the tooling honour both.
 
 **Status, learning and health**
 
 
 **Bigger capabilities, mostly spike-first**
 
-21. **Hooks beyond Claude Code** - the three hooks for Codex, Copilot and OpenCode, per tool
+21. **Hooks beyond Claude Code** - the four hooks for Codex (21a), then Copilot (21b), then
+    OpenCode (21c), sharing scripts under `.agents/hooks/`
 22. **Update merges edits** - three-way merge against a stored copy of what was installed
 23. **Adopt from another workflow** - `setup` converts another workflow's plans and specs,
     landing them unverified

@@ -7,5 +7,6 @@ needed, a conflict appears, the work drifts outside its spec, or something in th
 tier of the authority rules comes up.
 
 `workflow.parallelSteps` ships `false`. Turned on, steps a spec marks as independent are
-built together in one wave and reviewed as one packet, so nothing lands unreviewed either
-way. While it is off, those markers are ignored and every spec builds in order.
+built together in one wave, each in its own git worktree, then joined and reviewed as one
+packet, so nothing lands unreviewed either way. A join that does not apply cleanly stops for
+review. While it is off, those markers are ignored and every spec builds in order.

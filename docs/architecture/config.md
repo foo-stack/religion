@@ -60,9 +60,13 @@ project that never opted in, or the markers become a way to change how somebody 
 project executes.
 
 Turned on, steps marked as running with an earlier step form a wave and are built
-concurrently, each in its own subagent that returns rather than writes. The parent performs
-every write, and the wave is reviewed as one packet. `workflow.stepReview` still decides
-when that review happens.
+concurrently, each in its own subagent working in its own detached git worktree outside the
+project, so independence is enforced rather than asserted. Each step hands back a patch of
+the files it authored. The parent applies every patch in one `git apply`, which lands all of
+them or none, renders generated output once, and gates each step on the joined tree. A join
+that does not apply stops for review with the project unchanged. The parent performs every
+write, and the wave is reviewed as one packet. `workflow.stepReview` still decides when that
+review happens.
 
 ## Branch prefixes
 

@@ -65,7 +65,10 @@ plan top to bottom and take the first unchecked leaf that waits on nothing: an i
 those is unticked, or says `spike first` and no archive under `{{state}}/history/spikes/` records
 `**For:** item N` with `**Settled:** yes`. Wording inside a code span does not count.
 Name each item passed over and what it waits on, and point a spike-first one at
-{{cmd:spike}}. State which item you are spec'ing before going further.
+{{cmd:spike}}. An item another worktree is already building is passed over too: one that
+`religion status --json` lists under `inFlight` with `here` false, or, without the `religion`
+command, one the handoff lists as in flight in another worktree. Name it with its branch.
+State which item you are spec'ing before going further.
 
 Asked by number for an item that waits, say what it waits on and stop: speccing it now
 builds on an answer nobody has yet. A reference to an item the plan does not have, or items

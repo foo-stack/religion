@@ -122,6 +122,7 @@ both archives with the one range they share, each saying it is shared.
 
     (
       root=$(git rev-parse --show-toplevel) || exit 1
+      git -C "$root" rev-parse -q --verify MERGE_HEAD >/dev/null || { echo "no merge open"; exit 0; }
       for f in build-plan.md context/findings.md learning/journal.md context/project-overview.md context/handoff.md; do
         [ -e "$root/{{state}}/$f" ] || continue
         if git -C "$root" ls-files --error-unmatch -- "{{state}}/$f" >/dev/null 2>&1; then
@@ -130,6 +131,7 @@ both archives with the one range they share, each saying it is shared.
           rm -f -- "$root/{{state}}/$f" || exit 1
         fi
       done
+      git -C "$root" checkout -q -- . || exit 1
       git -C "$root" merge --abort || exit 1
       echo "back at the work commit"
     )
@@ -139,6 +141,9 @@ share redone by hand, or a handoff the hook rewrote at the end of a turn. Stagin
 the index tracks first, as block 3 does, lets it return the branch to its work commit. A shared
 file the target removed is not tracked; when something rewrote it since, such as the hook, the
 abort would refuse to overwrite it, so that copy is removed, since `HEAD` holds this item's own.
+Anything else a run of `Verify` rewrote, generated output say, is set back to the merge's staged
+copy: the tree was clean when block 1 started, so nothing there is this item's. With no merge
+open, the block does nothing.
 
 ## 4. Record what landed
 
@@ -153,7 +158,8 @@ record: in a worktree, an uncommitted file goes when the worktree is removed.
 Then none of these files are in git, and the merge carries none of them: this item's archive,
 plan tick, journal entry and ledger exist only in its worktree's copy of `{{state}}/`. Before
 the worktree can be removed, redo this item's share, as the table in block 2 lists it, in the
-main checkout's own `{{state}}/` files, and copy this item's archive there. With no `HEAD` copy
+main checkout's own `{{state}}/` files, and copy this item's archive there. When this landing
+follows a failed `Verify`, that is the share and the archive of both, the item's and the fix's. With no `HEAD` copy
 or merge base in git, the worktree's own files are this item's part, and the ledger saved when
 the worktree was made, `{{state}}/.state/findings-at-start.md` in it, is the base: an entry the
 worktree's ledger holds that the saved one did not is this item's. Comparing the two also shows

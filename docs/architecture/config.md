@@ -14,6 +14,7 @@ deletion, waived check, or accepted finding.
 | --- | --- | --- |
 | `workflow.stepReview` | `every`, `item` | `every` |
 | `workflow.parallelSteps` | `true`, `false` | `false` |
+| `workflow.parallelItems` | `true`, `false` | `false` |
 | `git.mode` | `trunk`, `branch-per-item`, `pull-request` | `trunk` |
 | `git.checkpoints` | `none`, `every-step`, `squash` | `every-step` |
 | `git.featureBranchPrefix` | lowercase prefix ending in `/` | `feature/` |
@@ -67,6 +68,15 @@ them or none, renders generated output once, and gates each step on the joined t
 that does not apply stops for review with the project unchanged. The parent performs every
 write, and the wave is reviewed as one packet. `workflow.stepReview` still decides when that
 review happens.
+
+## Parallel items
+
+`workflow.parallelItems` ships `false`. Turned on, `implement` starts each planned item in its
+own git worktree beside the project, on the item's branch, and moves the spec there, so the main
+checkout is idle and can spec the next item while that one is built. A session resumes an item by
+working from its worktree, and `religion status` lists every item in flight from any worktree.
+It needs a branch per item, so `doctor` refuses it under `git.mode: trunk`. Fixes, rollbacks and
+refactor campaigns keep building where they are.
 
 ## Branch prefixes
 

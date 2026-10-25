@@ -682,8 +682,8 @@ const SPEC_MAX = 256 * 1024;
  * following a link or blocking, checked through the open handle, and read up to the cap.
  */
 async function readPlain(file: string, within: string): Promise<string | null> {
-  // A linked directory on the way would lead outside that worktree.
-  // Only the folder is resolved, so the open below still refuses a spec that is itself a link.
+  // The folder is resolved so a linked directory cannot lead outside that worktree; the spec
+  // itself is not, so a spec that is a link is refused below.
   const folder = await fs.realpath(path.dirname(file)).catch(() => null);
   if (!folder || !(folder + path.sep).startsWith(within + path.sep)) return null;
   const resolved = path.join(folder, path.basename(file));
@@ -693,6 +693,9 @@ async function readPlain(file: string, within: string): Promise<string | null> {
   try {
     const stat = await handle.stat();
     if (!stat.isFile() || stat.size > SPEC_MAX) return null;
+    // Windows has no O_NOFOLLOW: the name must still be a plain file, the one that was opened.
+    const named = await fs.lstat(resolved);
+    if (!named.isFile() || named.ino !== stat.ino || named.dev !== stat.dev) return null;
     const buffer = Buffer.alloc(stat.size);
     const { bytesRead } = await handle.read(buffer, 0, stat.size, 0);
     return buffer.subarray(0, bytesRead).toString("utf8");

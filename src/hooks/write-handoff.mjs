@@ -85,8 +85,8 @@ const headBranch = (git) => quiet(() => readFileSync(path.join(git, "HEAD"), "ut
 // following a link or blocking, checked through the open handle, and read up to a cap.
 const readPlain = (file, within) =>
   quiet(() => {
-    // A linked directory on the way would lead outside that worktree.
-    // Only the folder is resolved, so the open below still refuses a spec that is itself a link.
+    // The folder is resolved so a linked directory cannot lead outside that worktree; the spec
+    // itself is not, so a spec that is a link is refused below.
     const folder = realpathSync(path.dirname(file));
     if (!(folder + path.sep).startsWith(within + path.sep)) return null;
     const resolved = path.join(folder, path.basename(file));
@@ -94,6 +94,9 @@ const readPlain = (file, within) =>
     try {
       const stat = fstatSync(fd);
       if (!stat.isFile() || stat.size > 256 * 1024) return null;
+      // Windows has no O_NOFOLLOW: the name must still be a plain file, the one that was opened.
+      const named = lstatSync(resolved);
+      if (!named.isFile() || named.ino !== stat.ino || named.dev !== stat.dev) return null;
       const buffer = Buffer.alloc(stat.size);
       return buffer.subarray(0, readSync(fd, buffer, 0, stat.size, 0)).toString("utf8");
     } finally {

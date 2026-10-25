@@ -256,3 +256,9 @@ Checked 2026-10-25 at 17a5832, tree clean.
 **Why it matters:** The list written instead of a pipe is removed only by a later successful run.
 **Suggested fix:** Say so in the routine.
 **Resolution:** 2026-10-25, the routine says a stopped block leaves `<worktree>.files` and the rerun removes it. Re-reviewed 2026-10-25: a stopped run left the list and the successful rerun removed it.
+
+## Landed
+
+**Base:** e0547b59c6e7d446c01e54a030b59a38f6c975d1
+**Commits:** 7421bcf55417a67f48dfd7b7e59eab3ed1c33c0a, 89de1eaef0417ecddd2b83fca8d9aa84fe66d234, 27cbf505875b5278827558dd3221cde9b7897dd8, 36c836cc43cb12789bb4fca215f635c54d3dcf81, cd87e137382d77329d8ca57d6ac92fcbb6b50c94, 17a5832337843a1e236aa9c34ef0f596690cb013, 47279890aa02417afdf4a1ad27d6063d3e2176ed
+**Product paths:** .agents/skills/implement/SKILL.md, .agents/skills/implement/reference/item-worktree.md, .changeset/items-start-in-own-worktree.md, .claude/skills/implement/SKILL.md, .claude/skills/implement/reference/item-worktree.md, docs/architecture/config.md, docs/doctor.md, docs/stability.md, packages/create-religion/lib/doctor.test.ts, packages/create-religion/lib/doctor.ts, packages/create-religion/lib/settings.test.ts, packages/create-religion/lib/settings.ts, packages/create-religion/lib/state.ts, packages/create-religion/surface.json, src/skills/implement/SKILL.md, src/skills/implement/reference/item-worktree.md, src/state/config.json

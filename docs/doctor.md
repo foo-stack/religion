@@ -109,6 +109,16 @@ Every setting is checked against what it accepts, not only the ones with a list 
           auto.maxRepairAttempts is 11, expected an integer from 0 through 10
 ```
 
+One combination is refused although each value is valid on its own:
+
+```text
+  FAIL  configuration (blocks work)
+          workflow.parallelItems needs a branch per item, which git.mode trunk never makes
+```
+
+An item started in its own worktree needs a branch of its own. Turn the setting off, or choose
+`branch-per-item` or `pull-request`.
+
 The message names the key, what it found, and what would work. Every setting and what it
 accepts are in [the configuration reference](architecture/config.md). A key the reference does
 not name is ignored, so notes of your own in the file do not fail the check.
@@ -240,6 +250,12 @@ You can install and build without git, but there is no history to review and not
 git init
 ```
 
+Inside a linked worktree, such as one an item was started in, the check passes and says whose:
+
+```text
+  ok    git: linked worktree of /path/to/project
+```
+
 ## managed files
 
 **Never fails.** It compares each installed skill and hook with the hash recorded when it was
@@ -288,6 +304,9 @@ file, whatever its matcher, and whether the command names it directly or through
 `"$CLAUDE_PROJECT_DIR"`. `disableAllHooks` turned on fails the check, since then nothing runs. A
 `missing hook file` means the hook's script is gone from `.claude/hooks`, and `update` puts it
 back. A settings file reached through a link is not read.
+
+In a linked worktree `.claude/settings.json` is usually missing, because git ignores it and a new
+worktree only has what git tracks. The detail then names the main checkout to copy it from.
 
 ## In continuous integration
 

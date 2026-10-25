@@ -628,12 +628,12 @@ async function gitDir(dotgit: string): Promise<string | null> {
 }
 
 /**
- * The repository's worktrees and the one holding `root`, read from git's own records under
+ * The repository's worktrees, the one holding `root` and the main checkout, read from git's own records under
  * `worktrees/` rather than by running git, which shipped code may not do. A worktree whose
  * directory is gone is left out, and so is the main entry of a bare repository. Null outside
  * a repository.
  */
-export async function listWorktrees(root: string): Promise<{ home: string; trees: Worktree[] } | null> {
+export async function listWorktrees(root: string): Promise<{ home: string; main: string | null; trees: Worktree[] } | null> {
   let home = await fs.realpath(root).catch(() => null);
   let own: string | null = null;
   while (home && !(own = await gitDir(path.join(home, ".git")))) {
@@ -657,7 +657,8 @@ export async function listWorktrees(root: string): Promise<{ home: string; trees
     if (resolved) trees.push({ path: resolved, branch: headBranch(await readIfPresent(path.join(git, "HEAD"))) });
   }
   if (!trees.some((t) => t.path === home)) trees.unshift({ path: home, branch: headBranch(await readIfPresent(path.join(own, "HEAD"))) });
-  return { home, trees };
+  const main = records[0]!.dir ? await fs.realpath(records[0]!.dir).catch(() => null) : null;
+  return { home, main, trees };
 }
 
 export interface InFlight {

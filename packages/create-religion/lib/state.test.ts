@@ -27,6 +27,13 @@ import {
   waiting
 } from "./state.js";
 
+/** Git for test repositories only: nothing from the caller's environment or config reaches it. */
+const GIT_ENV = {
+  ...Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_"))),
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_NOSYSTEM: "1"
+};
+
 test("parsePlan reads numbers, titles and tick state", () => {
   const plan = parsePlan(
     ["## Plan", "", "- [x] 1. **Done thing** - what it delivered", "- [ ] 2. **Next thing** - what it will"].join("\n")
@@ -815,7 +822,7 @@ test("specHash and the stamp hold against whitespace, heading case, tilde fences
 test("listWorktrees reads git's worktree records, resolved, without running git", async () => {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "religion-trees-"));
   const dir = await fs.realpath(tmp);
-  const git = (cwd: string, ...args: string[]) => execFileSync("git", ["-C", cwd, ...args], { stdio: "pipe" });
+  const git = (cwd: string, ...args: string[]) => execFileSync("git", ["-C", cwd, ...args], { stdio: "pipe", env: GIT_ENV });
   const commit = (cwd: string) => git(cwd, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "base");
   try {
     const main = path.join(dir, "main");
@@ -841,7 +848,7 @@ test("listWorktrees reads git's worktree records, resolved, without running git"
     assert.equal((await listWorktrees(path.join(dir, "item b")))?.home, path.join(dir, "item b"));
 
     const bare = path.join(dir, "bare.git");
-    execFileSync("git", ["init", "-q", "--bare", "-b", "main", bare]);
+    execFileSync("git", ["init", "-q", "--bare", "-b", "main", bare], { env: GIT_ENV });
     git(main, "push", "-q", bare, "main");
     git(bare, "worktree", "add", "-q", path.join(dir, "from-bare"), "main");
     assert.deepEqual((await listWorktrees(path.join(dir, "from-bare")))?.trees, [{ path: path.join(dir, "from-bare"), branch: "main" }]);
@@ -855,7 +862,7 @@ test("listWorktrees reads git's worktree records, resolved, without running git"
 
 test("readInFlight lists active specs across worktrees, skipping wave steps and idle checkouts", async () => {
   const dir = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "religion-inflight-")));
-  const git = (...args: string[]) => execFileSync("git", ["-C", path.join(dir, "main"), ...args], { stdio: "pipe" });
+  const git = (...args: string[]) => execFileSync("git", ["-C", path.join(dir, "main"), ...args], { stdio: "pipe", env: GIT_ENV });
   const spec = async (tree: string, body: string) => {
     await fs.mkdir(path.join(dir, tree, "religion", "context"), { recursive: true });
     await fs.writeFile(path.join(dir, tree, "religion", "context", "current-work.md"), body);

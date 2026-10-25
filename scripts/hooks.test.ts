@@ -9,6 +9,13 @@ import { fileURLToPath } from "node:url";
 
 import { overviewHash, parseInbox } from "../packages/create-religion/lib/state.js";
 
+/** Git for test repositories only: nothing from the caller's environment or config reaches it. */
+const GIT_ENV = {
+  ...Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_"))),
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_NOSYSTEM: "1"
+};
+
 const HOOK = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "hooks", "write-handoff.mjs");
 
 /** A project with the state the hook reads, and a directory beside it standing in for anywhere else. */
@@ -240,7 +247,7 @@ test("write-handoff lists items in flight in other worktrees, cleaned, and nothi
   const before = (assert.equal(runHook(root), 0), await handoff(root));
   assert.doesNotMatch(before, /In flight/);
 
-  const git = (...args: string[]) => execFileSync("git", ["-C", root, ...args], { stdio: "pipe" });
+  const git = (...args: string[]) => execFileSync("git", ["-C", root, ...args], { stdio: "pipe", env: GIT_ENV });
   git("init", "-q", "-b", "main");
   git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "base");
   const other = path.join(path.dirname(root), "other tree");

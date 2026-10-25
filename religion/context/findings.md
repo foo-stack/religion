@@ -1119,3 +1119,21 @@
 **Why it matters:** Status and feature pass over it, so the handoff now disagrees with both. Recorded by the check as outside the spec.
 **Suggested fix:** Pass over items listed in flight elsewhere when choosing the next-up line.
 **Resolution:**
+
+### 39c/F-11 [P2] fixed - A rerun of the copy block after the move puts the stub over the moved spec
+
+**File:** src/skills/implement/reference/item-worktree.md:45
+**Found:** 2026-10-25 by audit (scope: current; lens: security)
+**Surfaced by:** 39c/F-5
+**Why it matters:** Block 2 said it was safe to repeat with no condition, so once block 3 reset the main checkout's spec a rerun copied the stub over the only copy of the spec, or the next item's spec over this one's; with an ignored state directory it also overwrote the worktree's other state files. Reproduced.
+**Suggested fix:** Refuse when the main checkout holds no spec, or the worktree already holds a different one.
+**Resolution:** 2026-10-25, block 2 refuses `the main checkout holds no spec to move` and `the worktree already holds another spec` before copying anything; both reproduced cases now stop with the worktree's spec and findings intact, in bash and zsh. Re-reviewed 2026-10-25: both refusals reproduced with the worktree's spec and findings intact; it stays fixed while 39c/F-15, surfaced by this repair, is open.
+
+### 39c/F-15 [P3] open - The copy block refuses its first run when the commit holds an active spec
+
+**File:** src/skills/implement/reference/item-worktree.md:55
+**Found:** 2026-10-25 by audit (scope: current; lens: quality)
+**Surfaced by:** 39c/F-11
+**Why it matters:** A worktree made from a commit whose spec is active checks that spec out, and the guard reads it as work already started, so block 2 always refuses and the start dead-ends with nothing lost; with an ignored state directory, a block that stopped after its state copy and a later edit to the main spec does the same. Both reproduced.
+**Suggested fix:** Treat a tracked worktree spec unchanged from its checkout as fresh, and leave the spec out of the state copy so only the final copy writes it.
+**Resolution:**

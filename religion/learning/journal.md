@@ -229,3 +229,10 @@ verification check, and both were found by hand first.
 **Went wrong:** Reading another worktree's spec safely took six repair rounds: each fix for a symlinked spec (a hang on `/dev/zero`, a leaked heading, a race, a linked directory, whole-path resolution, Windows without `O_NOFOLLOW`) opened a narrower gap that the next independent review found, and the run stopped once on its repair bound.
 **Deferred:** 39b/F-7 to F-15, all P3, including the handoff's next-up line not passing over items in flight and the two readers living in two copies.
 
+## 2026-10-25 - Each item starts in its own worktree
+
+**Archive:** history/features/39c-each-item-starts-in-its-own-worktree.md
+**Surprised:** A shell routine an agent runs one block at a time cannot share variables between blocks; the check passed only because the test harness set them itself, and the audit, running each block in a fresh shell, found the routine did nothing past its first block.
+**Went wrong:** Two repair rounds: the first made the copy block safe to repeat and so let a rerun put the stub over the moved spec; the second guarded that and, in turn, refuses a first run when the base commit carries an active spec.
+**Deferred:** 39c/F-15 (P3) and 39c/F-11 behind it; Windows; landing items one at a time and removing their worktrees.
+

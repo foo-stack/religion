@@ -676,6 +676,26 @@ export interface InFlight {
 /** Far above any real spec; a larger file in another worktree is not read. */
 const SPEC_MAX = 256 * 1024;
 
+/**
+ * A file another worktree's branch controls: a link could point at a device that never ends,
+ * or at a file whose first heading would be reported as a title. So it is opened without
+ * following a link or blocking, checked through the open handle, and read up to the cap.
+ */
+async function readPlain(file: string): Promise<string | null> {
+  const flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0);
+  const handle = await fs.open(file, flags).catch(() => null);
+  if (!handle) return null;
+  try {
+    const stat = await handle.stat();
+    if (!stat.isFile() || stat.size > SPEC_MAX) return null;
+    const buffer = Buffer.alloc(stat.size);
+    const { bytesRead } = await handle.read(buffer, 0, stat.size, 0);
+    return buffer.subarray(0, bytesRead).toString("utf8");
+  } finally {
+    await handle.close();
+  }
+}
+
 /** Active specs across the repository's worktrees; empty outside a repository. */
 export async function readInFlight(root: string): Promise<InFlight[]> {
   const listed = await listWorktrees(root);
@@ -688,11 +708,8 @@ export async function readInFlight(root: string): Promise<InFlight[]> {
     // A wave's step worktree holds a copy of its parent item's spec, not an item of its own.
     if (/^step-\d+$/.test(path.basename(worktree)) && (await readIfPresent(path.join(path.dirname(worktree), "base"))) !== null) continue;
     const spec = statePath(path.join(worktree, offset), "context", "current-work.md");
-    // Another worktree's branch decides what sits here: a link could point at a device that
-    // never ends, or at a file whose first heading would be reported as a title.
-    const stat = await fs.lstat(spec).catch(() => null);
-    if (!stat?.isFile() || stat.size > SPEC_MAX) continue;
-    const source = await readIfPresent(spec);
+    // This worktree's spec is read as `work` reads it; another's comes from someone else's branch.
+    const source = worktree === listed.home ? await readIfPresent(spec) : await readPlain(spec);
     const work = parseWork(source);
     if (!source || !work.active) continue;
     const plan = field(source, "From build plan");

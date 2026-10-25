@@ -8,7 +8,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readdirSync, readFileSync, readSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const STATE = "religion";
@@ -80,6 +80,21 @@ const gitDir = (dotgit) => {
   return target ? path.resolve(path.dirname(dotgit), target) : null;
 };
 const headBranch = (git) => quiet(() => readFileSync(path.join(git, "HEAD"), "utf8"))?.match(/^ref:\s*refs\/heads\/(.+)$/m)?.[1]?.trim() ?? null;
+// Another worktree's branch decides what its spec is: a link could point at a device that never
+// ends, or at a file whose first heading would be copied in as a title. So it is opened without
+// following a link or blocking, checked through the open handle, and read up to a cap.
+const readPlain = (file) =>
+  quiet(() => {
+    const fd = openSync(file, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
+    try {
+      const stat = fstatSync(fd);
+      if (!stat.isFile() || stat.size > 256 * 1024) return null;
+      const buffer = Buffer.alloc(stat.size);
+      return buffer.subarray(0, readSync(fd, buffer, 0, stat.size, 0)).toString("utf8");
+    } finally {
+      closeSync(fd);
+    }
+  });
 const elsewhere = (() => {
   const self = quiet(() => realpathSync(root));
   let home = self;
@@ -101,12 +116,7 @@ const elsewhere = (() => {
     if (!tree || tree === home) return [];
     // A wave's step worktree holds a copy of its parent item's spec, not an item of its own.
     if (/^step-\d+$/.test(path.basename(tree)) && existsSync(path.join(path.dirname(tree), "base"))) return [];
-    // Another worktree's branch decides what sits here: a link could point at a device that
-    // never ends, or at a file whose first heading would be copied in as a title.
-    const file = path.join(tree, offset, STATE, "context", "current-work.md");
-    const stat = quiet(() => lstatSync(file));
-    if (!stat?.isFile() || stat.size > 256 * 1024) return [];
-    const spec = quiet(() => readFileSync(file, "utf8")) ?? "";
+    const spec = readPlain(path.join(tree, offset, STATE, "context", "current-work.md")) ?? "";
     if (!spec.trim() || /_Nothing in progress\./.test(spec)) return [];
     const item = spec.match(/^\*\*From build plan:\*\*[ \t]*item[ \t]+([0-9a-z]+)/im)?.[1]?.toLowerCase();
     const name = plain(spec.match(/^#\s+(.+)$/m)?.[1] ?? "Active work");

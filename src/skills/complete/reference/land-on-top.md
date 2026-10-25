@@ -16,8 +16,8 @@ by the same yes; it never writes the target.
 Run each block as **one** command, from the item's checkout, after the work commit. Each runs in
 a subshell and sets what it needs. A block that stops ends the landing: report what it printed
 and stop. A stop after block 1 leaves the merge open: either put right what the block named and
-run it again, or abandon the merge, staging `{{state}}/context/handoff.md` first, since the hook
-that rewrites it at the end of every turn would otherwise make `git merge --abort` refuse.
+run it again, or abandon the merge with the block in "Abandoning the merge" below, never with
+`git merge --abort` alone.
 
 ## 1. Bring in what landed
 
@@ -105,16 +105,40 @@ and a document elsewhere may show one on purpose.
 
 Run the project's full `Verify` on the result: it is new code, made of both items, and neither
 was checked against the other. A turn that ends before the merge is committed has its handoff
-rewritten by the hook; stage it again before going on.
+rewritten by the hook; run block 3 again before committing, which stages it only while the index
+still tracks it.
 
 When `Verify` passes, commit the merge with a message that says what was brought in, such as
 `merge: bring in what landed on main`.
 
-When it fails, stage the handoff, run `git merge --abort`, which returns the branch to its work
+When it fails, abandon the merge with the block below, which returns the branch to its work
 commit, and stop with the failure. The item is complete on its branch but cannot land as it
 stands: the way forward is {{cmd:fix}} here, describing the failure, built on this branch.
-Completing that fix lands both through this routine, and writes the `## Landed` record into both
-archives, the item's and the fix's, with the one range they share, each saying it is shared.
+Completing that fix lands both through this routine: block 2 then redoes the share of both, the
+item's and the fix's, every row, each taken from `HEAD`, and the `## Landed` record goes into
+both archives with the one range they share, each saying it is shared.
+
+## Abandoning the merge
+
+    (
+      root=$(git rev-parse --show-toplevel) || exit 1
+      for f in build-plan.md context/findings.md learning/journal.md context/project-overview.md context/handoff.md; do
+        [ -e "$root/{{state}}/$f" ] || continue
+        if git -C "$root" ls-files --error-unmatch -- "{{state}}/$f" >/dev/null 2>&1; then
+          git -C "$root" add -- "{{state}}/$f" || exit 1
+        elif git -C "$root" cat-file -e "HEAD:{{state}}/$f" 2>/dev/null; then
+          rm -f -- "$root/{{state}}/$f" || exit 1
+        fi
+      done
+      git -C "$root" merge --abort || exit 1
+      echo "back at the work commit"
+    )
+
+`git merge --abort` refuses while a file the merge touched has changes that are not staged: a
+share redone by hand, or a handoff the hook rewrote at the end of a turn. Staging each shared file
+the index tracks first, as block 3 does, lets it return the branch to its work commit. A shared
+file the target removed is not tracked; when something rewrote it since, such as the hook, the
+abort would refuse to overwrite it, so that copy is removed, since `HEAD` holds this item's own.
 
 ## 4. Record what landed
 
@@ -132,5 +156,8 @@ the worktree can be removed, redo this item's share, as the table in block 2 lis
 main checkout's own `{{state}}/` files, and copy this item's archive there. With no `HEAD` copy
 or merge base in git, the worktree's own files are this item's part, and the ledger saved when
 the worktree was made, `{{state}}/.state/findings-at-start.md` in it, is the base: an entry the
-worktree's ledger holds that the saved one did not is this item's. Removing the
-worktree deletes ignored files with it, so until then they are the only record.
+worktree's ledger holds that the saved one did not is this item's. Comparing the two also shows
+each entry this item changed or removed, a repair it closed and pruned among them: make the
+same change in the main checkout's ledger, or name the entry in the report, so a finding this
+item closed does not stay open there. Removing the worktree deletes ignored files with it, so
+until then they are the only record.

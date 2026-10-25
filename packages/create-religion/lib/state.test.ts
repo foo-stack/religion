@@ -871,6 +871,10 @@ test("readInFlight lists active specs across worktrees, skipping wave steps and 
     await spec("item b", "# Second\n\n**Type:** Feature\n**From build plan:** item 2\n\n- [x] **one**\n- [ ] **two**\n");
     await spec("item-c", "# Unplanned\n\n**Type:** Fix\n\n- [ ] **only**\n");
     await spec(path.join("wave", "step-2"), "# Second\n\n**From build plan:** item 2\n\n- [ ] **two**\n");
+    git("worktree", "add", "-q", "--detach", path.join(dir, "linked"));
+    await fs.mkdir(path.join(dir, "linked", "religion", "context"), { recursive: true });
+    await fs.writeFile(path.join(dir, "secret.md"), "# Secret heading\n");
+    await fs.symlink(path.join(dir, "secret.md"), path.join(dir, "linked", "religion", "context", "current-work.md"));
 
     const fromB = await readInFlight(path.join(dir, "item b"));
     assert.deepEqual(fromB, [

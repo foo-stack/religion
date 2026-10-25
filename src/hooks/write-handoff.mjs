@@ -100,7 +100,12 @@ const elsewhere = (() => {
     if (!tree || tree === home) return [];
     // A wave's step worktree holds a copy of its parent item's spec, not an item of its own.
     if (/^step-\d+$/.test(path.basename(tree)) && existsSync(path.join(path.dirname(tree), "base"))) return [];
-    const spec = quiet(() => readFileSync(path.join(tree, offset, STATE, "context", "current-work.md"), "utf8")) ?? "";
+    // Another worktree's branch decides what sits here: a link could point at a device that
+    // never ends, or at a file whose first heading would be copied in as a title.
+    const file = path.join(tree, offset, STATE, "context", "current-work.md");
+    const stat = quiet(() => lstatSync(file));
+    if (!stat?.isFile() || stat.size > 256 * 1024) return [];
+    const spec = quiet(() => readFileSync(file, "utf8")) ?? "";
     if (!spec.trim() || /_Nothing in progress\./.test(spec)) return [];
     const item = spec.match(/^\*\*From build plan:\*\*\s*item\s+(\S+)/im)?.[1];
     const name = plain(spec.match(/^#\s+(.+)$/m)?.[1] ?? "Active work");

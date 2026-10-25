@@ -257,5 +257,14 @@ test("write-handoff lists items in flight in other worktrees, cleaned, and nothi
   assert.match(text, /^- \*\*Second \[2Jbitem\*\* \(item 2\) on `feature\/b`: 1 of 2 step\(s\) done\.$/m);
   assert.doesNotMatch(text, /\u001b/);
 
+  const linked = path.join(path.dirname(root), "linked");
+  git("worktree", "add", "-q", "--detach", linked);
+  await fs.mkdir(path.join(linked, "religion", "context"), { recursive: true });
+  await fs.symlink("/dev/zero", path.join(linked, "religion", "context", "current-work.md"));
+  const started = Date.now();
+  assert.equal(spawnSync(process.execPath, [HOOK], { cwd: root, input: "{}", timeout: 10000 }).status, 0);
+  assert.ok(Date.now() - started < 5000, "a spec linked to an endless device is not read");
+  assert.doesNotMatch(await handoff(root), /linked/);
+
   assert.equal(runHook(other), 0, "a worktree with no religion directory is left alone");
 });

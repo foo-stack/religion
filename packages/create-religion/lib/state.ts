@@ -671,6 +671,9 @@ export interface InFlight {
   here: boolean;
 }
 
+/** Far above any real spec; a larger file in another worktree is not read. */
+const SPEC_MAX = 256 * 1024;
+
 /** Active specs across the repository's worktrees; empty outside a repository. */
 export async function readInFlight(root: string): Promise<InFlight[]> {
   const listed = await listWorktrees(root);
@@ -682,7 +685,12 @@ export async function readInFlight(root: string): Promise<InFlight[]> {
   for (const { path: worktree, branch } of listed.trees) {
     // A wave's step worktree holds a copy of its parent item's spec, not an item of its own.
     if (/^step-\d+$/.test(path.basename(worktree)) && (await readIfPresent(path.join(path.dirname(worktree), "base"))) !== null) continue;
-    const source = await readIfPresent(statePath(path.join(worktree, offset), "context", "current-work.md"));
+    const spec = statePath(path.join(worktree, offset), "context", "current-work.md");
+    // Another worktree's branch decides what sits here: a link could point at a device that
+    // never ends, or at a file whose first heading would be reported as a title.
+    const stat = await fs.lstat(spec).catch(() => null);
+    if (!stat?.isFile() || stat.size > SPEC_MAX) continue;
+    const source = await readIfPresent(spec);
     const work = parseWork(source);
     if (!source || !work.active) continue;
     const plan = field(source, "From build plan");

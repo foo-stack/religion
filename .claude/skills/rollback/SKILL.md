@@ -67,7 +67,9 @@ Stop on any failure. Do not repair a mismatch by choosing a nearby commit.
 1. Every recorded identifier matches `^[0-9a-f]{40}$`. Reject abbreviated or uppercase
    values.
 2. Every recorded commit resolves in this repository and is an ancestor of `HEAD`.
-3. The recorded base is the parent of the earliest recorded commit.
+3. The recorded base is a parent of the earliest recorded commit. For an item landed on top of
+   another, that commit is the merge that brought the other in, and the base is its second
+   parent, what it brought in.
 4. The working tree is clean apart from the rollback spec being written.
 
 ## Step 3 - preview the product diff

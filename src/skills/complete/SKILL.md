@@ -202,7 +202,7 @@ since the item began, because another item built in its own worktree landed firs
 that in, takes the landed copy of the plan, ledger, journal, overview and handoff, and redoes
 this item's share of them, so those files are never merged as text. Any other conflict stops
 for review. When nothing landed in between, it does nothing. Write the `## Landed` record after
-it, so it names the commits the branch actually carries.
+it, as its last section says, so a later rollback reverses this item's work alone.
 
 Under **`branch-per-item`**:
 
@@ -256,7 +256,9 @@ the content landed before reaching for `-D`.
 
 An item built in its own worktree holds its branch there, so the cleanup runs from the main
 checkout: remove the worktree first, then the branch. Removing the worktree is deleting files,
-so it asks, every time, and only once the work commit is confirmed in the default branch.
+so it asks, every time, and only once the work commit is confirmed in the default branch. When
+the state directory is ignored, the item's record is in the worktree alone until the routine's
+last section has copied it to the main checkout; say so when asking.
 
 ## Step 5 - say how to try it
 

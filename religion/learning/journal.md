@@ -221,3 +221,11 @@ verification check, and both were found by hand first.
 **Surprised:** The dashboard had quietly assumed every identifier was `F-` followed by a number, reading `39a/F-1` as 0; only red-teaming the spec against the code caught it, since nothing tests the page script.
 **Went wrong:** A "fails without the fix" check stashed the test along with the fix and proved nothing until redone.
 **Deferred:** Prefixes for unplanned work, until item 39c.
+
+## 2026-10-25 - Items in flight are visible
+
+**Archive:** history/features/39b-items-in-flight-are-visible.md
+**Surprised:** The spec planned to run `git worktree list`, but `verify` refuses `node:child_process` in shipped code because it backs the no-network promise, so worktrees are read from git's own files instead; nobody caught that while red-teaming the spec.
+**Went wrong:** Reading another worktree's spec safely took six repair rounds: each fix for a symlinked spec (a hang on `/dev/zero`, a leaked heading, a race, a linked directory, whole-path resolution, Windows without `O_NOFOLLOW`) opened a narrower gap that the next independent review found, and the run stopped once on its repair bound.
+**Deferred:** 39b/F-7 to F-15, all P3, including the handoff's next-up line not passing over items in flight and the two readers living in two copies.
+

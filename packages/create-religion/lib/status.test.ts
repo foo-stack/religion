@@ -22,6 +22,7 @@ function state(overrides: Partial<ProjectState> = {}): ProjectState {
     learning: { lessons: [], journal: [], undecided: 0 },
     settledSpikes: [],
     spec: { hash: null, approved: null, drifted: false },
+    inFlight: [],
     ...overrides
   };
 }
@@ -117,4 +118,26 @@ test("status warns when the active spec drifted from its approval", () => {
   const drift = "the active spec changed since its approval stamp; record an amendment saying why and renew the stamp";
   assert.ok(computeStatus(state({ spec: { hash: "1111111111111111", approved: "2222222222222222", drifted: true } })).warnings.includes(drift));
   assert.ok(!computeStatus(state()).warnings.includes(drift));
+});
+
+test("status passes over a plan item in flight in another worktree and lists it", () => {
+  const away = { worktree: "/elsewhere", branch: "feature/b", item: "2", title: "Second", stepsDone: 1, stepsTotal: 3, here: false };
+  const items = plan("- [x] 1. **Done** - x", "- [ ] 2. **Second** - x", "- [ ] 3. **Third** - x");
+
+  const status = computeStatus(state({ plan: items, inFlight: [away] }));
+  assert.equal(status.plan.nextItem, "Third - x");
+  assert.ok(status.warnings.includes("passed over plan items in flight in another worktree: 2 (feature/b)"));
+  assert.deepEqual(status.inFlight, [away]);
+  assert.match(renderStatus(status), /^In flight: item 2 Second - step 1\/3 on feature\/b$/m);
+
+  const here = computeStatus(state({ plan: items, inFlight: [{ ...away, here: true }] }));
+  assert.equal(here.plan.nextItem, "Second - x", "this worktree's own item is not passed over");
+  assert.doesNotMatch(renderStatus(here), /In flight/);
+
+  const idle = state({ plan: items });
+  assert.equal(renderStatus(computeStatus(idle)), renderStatus(computeStatus({ ...idle, inFlight: [] })));
+  assert.doesNotMatch(renderStatus(computeStatus(idle)), /In flight/);
+
+  const allBusy = computeStatus(state({ plan: plan("- [ ] 2. **Second** - x"), inFlight: [away] }));
+  assert.equal(allBusy.next.command, "implement");
 });

@@ -218,6 +218,17 @@
         "approved": "string|null",
         "drifted": "boolean"
       },
+      "inFlight": [
+        {
+          "worktree": "string",
+          "branch": "string|null",
+          "item": "string|null",
+          "title": "string|null",
+          "stepsDone": "number",
+          "stepsTotal": "number",
+          "here": "boolean"
+        }
+      ],
       "warnings": [
         "string"
       ]

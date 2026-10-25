@@ -8,7 +8,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readFileSync, writeFileSync } from "node:fs";
+import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readdirSync, readFileSync, readSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const STATE = "religion";
@@ -62,6 +62,78 @@ const stale = stamp !== undefined && stamp !== plansHash;
 
 const notes = (inbox.match(/^- .+$/gm) ?? []).length;
 
+// Items active in the repository's other worktrees, found as status finds them: from git's own
+// worktree records, since this hook runs no subprocess. A spec there is written by whoever
+// works in that worktree, so what is copied from it is cleaned like a ledger title.
+const quiet = (fn) => {
+  try {
+    return fn();
+  } catch {
+    return null;
+  }
+};
+const gitDir = (dotgit) => {
+  const stat = quiet(() => statSync(dotgit));
+  if (!stat) return null;
+  if (stat.isDirectory()) return dotgit;
+  const target = quiet(() => readFileSync(dotgit, "utf8"))?.match(/^gitdir:\s*(.+)$/m)?.[1]?.trim();
+  return target ? path.resolve(path.dirname(dotgit), target) : null;
+};
+const headBranch = (git) => quiet(() => readFileSync(path.join(git, "HEAD"), "utf8"))?.match(/^ref:\s*refs\/heads\/(.+)$/m)?.[1]?.trim() ?? null;
+// Another worktree's branch decides what its spec is: a link could point at a device that never
+// ends, or at a file whose first heading would be copied in as a title. So it is opened without
+// following a link or blocking, checked through the open handle, and read up to a cap.
+const readPlain = (file, within) =>
+  quiet(() => {
+    // The folder is resolved so a linked directory cannot lead outside that worktree; the spec
+    // itself is not, so a spec that is a link is refused below.
+    const folder = realpathSync(path.dirname(file));
+    if (!(folder + path.sep).startsWith(within + path.sep)) return null;
+    const resolved = path.join(folder, path.basename(file));
+    const fd = openSync(resolved, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
+    try {
+      const stat = fstatSync(fd);
+      if (!stat.isFile() || stat.size > 256 * 1024) return null;
+      // Windows has no O_NOFOLLOW: the name must still be a plain file, the one that was opened.
+      const named = lstatSync(resolved);
+      if (!named.isFile() || named.ino !== stat.ino || named.dev !== stat.dev) return null;
+      const buffer = Buffer.alloc(stat.size);
+      return buffer.subarray(0, readSync(fd, buffer, 0, stat.size, 0)).toString("utf8");
+    } finally {
+      closeSync(fd);
+    }
+  });
+const elsewhere = (() => {
+  const self = quiet(() => realpathSync(root));
+  let home = self;
+  let own = null;
+  while (home && !(own = gitDir(path.join(home, ".git")))) home = path.dirname(home) === home ? null : path.dirname(home);
+  if (!home || !own) return [];
+  const commondir = quiet(() => readFileSync(path.join(own, "commondir"), "utf8"));
+  const common = commondir ? path.resolve(own, commondir.trim()) : own;
+  const records = path.basename(common) === ".git" ? [{ dir: path.dirname(common), git: common }] : [];
+  for (const id of quiet(() => readdirSync(path.join(common, "worktrees"))) ?? []) {
+    const git = path.join(common, "worktrees", id);
+    const target = quiet(() => readFileSync(path.join(git, "gitdir"), "utf8"))?.trim();
+    // Git calls a record prunable once the `.git` file it points at is gone.
+    if (target && existsSync(path.resolve(git, target))) records.push({ dir: path.dirname(path.resolve(git, target)), git });
+  }
+  const offset = path.relative(home, self);
+  return records.flatMap(({ dir, git }) => {
+    const tree = quiet(() => realpathSync(dir));
+    if (!tree || tree === home) return [];
+    // A wave's step worktree holds a copy of its parent item's spec, not an item of its own.
+    if (/^step-\d+$/.test(path.basename(tree)) && existsSync(path.join(path.dirname(tree), "base"))) return [];
+    const spec = readPlain(path.join(tree, offset, STATE, "context", "current-work.md"), tree) ?? "";
+    if (!spec.trim() || /_Nothing in progress\./.test(spec)) return [];
+    const item = spec.match(/^\*\*From build plan:\*\*[ \t]*item[ \t]+([0-9a-z]+)/im)?.[1]?.toLowerCase();
+    const name = plain(spec.match(/^#\s+(.+)$/m)?.[1] ?? "Active work");
+    // Spaces and tabs only: `\s` crosses newlines, which makes blank lines quadratic.
+    const steps = `${(spec.match(/^[ \t]*- \[x\]/gim) ?? []).length} of ${(spec.match(/^[ \t]*- \[[ x]\]/gim) ?? []).length}`;
+    return [`- **${name}**${item ? ` (item ${plain(item)})` : ""} on \`${plain(headBranch(git) ?? tree)}\`: ${steps} step(s) done.`];
+  });
+})();
+
 // Only names the status rule accepts reach this file, which every session loads: no free text
 // from a record any skill can write.
 let run = null;
@@ -95,6 +167,11 @@ if (active) {
   );
 } else {
   lines.push("Nothing in progress.", "");
+}
+
+if (elsewhere.length > 0) {
+  const more = elsewhere.length - LISTED;
+  lines.push("In flight in other worktrees:", "", ...elsewhere.slice(0, LISTED), ...(more > 0 ? [`- and ${more} more`] : []), "");
 }
 
 lines.push(

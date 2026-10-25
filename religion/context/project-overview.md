@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash c52126da907728bf -->
+<!-- religion:source-hash c3c8b0c93f2b924f -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -49,8 +49,8 @@ nothing to sign into.
 
 ## Roadmap
 
-Eighteen items queued. Item 21's spike is settled and it is split into 21a to 21c, one per
-tool, built in that order; every other item still waits on a spike. Several also say which
+Seventeen items queued. Item 39's spike is settled and it is split into 39a to 39d, built in
+that order, with 39a and 39b done; every other item still waits on a spike. Several also say which
 items they follow; item 29 made the tooling honour both.
 
 **Status, learning and health**
@@ -58,8 +58,6 @@ items they follow; item 29 made the tooling honour both.
 
 **Bigger capabilities, mostly spike-first**
 
-21. **Hooks beyond Claude Code** - the four hooks for Codex (21a), then Copilot (21b), then
-    OpenCode (21c), sharing scripts under `.agents/hooks/`
 22. **Update merges edits** - three-way merge against a stored copy of what was installed
 23. **Adopt from another workflow** - `setup` converts another workflow's plans and specs,
     landing them unverified
@@ -73,7 +71,7 @@ items they follow; item 29 made the tooling honour both.
 **Direction changes, all spike-first**
 
 39. **Several work items at once** - one worktree per active item, landed one at a time;
-    39a done, 39b to 39d queued; backward compatible
+    39a and 39b done, 39c and 39d queued; backward compatible
 40. **Religion runs in CI** - a labelled issue to a pull request nothing merges; after 20,
     24 and 33
 41. **One tool builds, another reviews** - review handed to a different installed tool

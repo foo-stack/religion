@@ -8,6 +8,7 @@
 
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import path from "node:path";
 
 import { installedSkills, readIfPresent, statePath } from "./paths.js";
 
@@ -145,6 +146,8 @@ export interface ProjectState {
   settledSpikes: string[];
   /** The active spec's hash, its approval stamp, and whether it drifted from that stamp. */
   spec: { hash: string | null; approved: string | null; drifted: boolean };
+  /** Work items active in any worktree of the repository, this one included. */
+  inFlight: InFlight[];
 }
 
 const CHECKBOX = /^(\s*)- \[( |x|X)\]\s*(.*)$/;
@@ -604,6 +607,136 @@ export function parseOpenQuestions(overview: string | null): string[] {
   return [...section[1].matchAll(/^-\s+\*\*(.+?)\*\*/gim)].map((m) => (m[1] ?? "").trim());
 }
 
+export interface Worktree {
+  /** Resolved absolute path. */
+  path: string;
+  /** Short branch name; null when detached. */
+  branch: string | null;
+}
+
+function headBranch(head: string | null): string | null {
+  return /^ref:\s*refs\/heads\/(.+)$/m.exec(head ?? "")?.[1]?.trim() ?? null;
+}
+
+/** The git directory a `.git` entry stands for: itself, or where its `gitdir:` line points. */
+async function gitDir(dotgit: string): Promise<string | null> {
+  const stat = await fs.stat(dotgit).catch(() => null);
+  if (!stat) return null;
+  if (stat.isDirectory()) return dotgit;
+  const target = /^gitdir:\s*(.+)$/m.exec((await readIfPresent(dotgit)) ?? "")?.[1]?.trim();
+  return target ? path.resolve(path.dirname(dotgit), target) : null;
+}
+
+/**
+ * The repository's worktrees and the one holding `root`, read from git's own records under
+ * `worktrees/` rather than by running git, which shipped code may not do. A worktree whose
+ * directory is gone is left out, and so is the main entry of a bare repository. Null outside
+ * a repository.
+ */
+export async function listWorktrees(root: string): Promise<{ home: string; trees: Worktree[] } | null> {
+  let home = await fs.realpath(root).catch(() => null);
+  let own: string | null = null;
+  while (home && !(own = await gitDir(path.join(home, ".git")))) {
+    const up = path.dirname(home);
+    home = up === home ? null : up;
+  }
+  if (!home || !own) return null;
+  const commondir = await readIfPresent(path.join(own, "commondir"));
+  const common = commondir ? path.resolve(own, commondir.trim()) : own;
+  const records = [{ dir: path.basename(common) === ".git" ? path.dirname(common) : null, git: common }];
+  for (const id of await fs.readdir(path.join(common, "worktrees")).catch(() => [])) {
+    const git = path.join(common, "worktrees", id);
+    const target = (await readIfPresent(path.join(git, "gitdir")))?.trim();
+    // Git calls a record prunable once the `.git` file it points at is gone.
+    const dotgit = target ? path.resolve(git, target) : null;
+    if (dotgit && (await fs.stat(dotgit).catch(() => null))) records.push({ dir: path.dirname(dotgit), git });
+  }
+  const trees: Worktree[] = [];
+  for (const { dir, git } of records) {
+    const resolved = dir ? await fs.realpath(dir).catch(() => null) : null;
+    if (resolved) trees.push({ path: resolved, branch: headBranch(await readIfPresent(path.join(git, "HEAD"))) });
+  }
+  if (!trees.some((t) => t.path === home)) trees.unshift({ path: home, branch: headBranch(await readIfPresent(path.join(own, "HEAD"))) });
+  return { home, trees };
+}
+
+export interface InFlight {
+  /** Resolved absolute path. */
+  worktree: string;
+  branch: string | null;
+  /** The spec's build-plan number, null for unplanned work. */
+  item: string | null;
+  title: string | null;
+  stepsDone: number;
+  stepsTotal: number;
+  /** True for the worktree this command ran in. */
+  here: boolean;
+}
+
+/** Far above any real spec; a larger file in another worktree is not read. */
+const SPEC_MAX = 256 * 1024;
+
+/**
+ * A file another worktree's branch controls: a link could point at a device that never ends,
+ * or at a file whose first heading would be reported as a title. So it is opened without
+ * following a link or blocking, checked through the open handle, and read up to the cap.
+ */
+async function readPlain(file: string, within: string): Promise<string | null> {
+  // The folder is resolved so a linked directory cannot lead outside that worktree; the spec
+  // itself is not, so a spec that is a link is refused below.
+  const folder = await fs.realpath(path.dirname(file)).catch(() => null);
+  if (!folder || !(folder + path.sep).startsWith(within + path.sep)) return null;
+  const resolved = path.join(folder, path.basename(file));
+  const flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0);
+  const handle = await fs.open(resolved, flags).catch(() => null);
+  if (!handle) return null;
+  try {
+    const stat = await handle.stat();
+    if (!stat.isFile() || stat.size > SPEC_MAX) return null;
+    // Windows has no O_NOFOLLOW: the name must still be a plain file, the one that was opened.
+    const named = await fs.lstat(resolved);
+    if (!named.isFile() || named.ino !== stat.ino || named.dev !== stat.dev) return null;
+    const buffer = Buffer.alloc(stat.size);
+    const { bytesRead } = await handle.read(buffer, 0, stat.size, 0);
+    return buffer.subarray(0, bytesRead).toString("utf8");
+  } catch {
+    return null;
+  } finally {
+    await handle.close().catch(() => undefined);
+  }
+}
+
+/** Active specs across the repository's worktrees; empty outside a repository. */
+export async function readInFlight(root: string): Promise<InFlight[]> {
+  const listed = await listWorktrees(root);
+  const self = await fs.realpath(root).catch(() => null);
+  if (!listed || !self) return [];
+  // Religion may live below the repository's top, so each spec sits at the same offset in its worktree.
+  const offset = path.relative(listed.home, self);
+  const found: InFlight[] = [];
+  for (const { path: worktree, branch } of listed.trees) {
+    // A wave's step worktree holds a copy of its parent item's spec, not an item of its own.
+    if (/^step-\d+$/.test(path.basename(worktree)) && (await readIfPresent(path.join(path.dirname(worktree), "base"))) !== null) continue;
+    const spec = statePath(path.join(worktree, offset), "context", "current-work.md");
+    // This worktree's spec is read as `work` reads it; another's comes from someone else's branch.
+    const source = worktree === listed.home ? await readIfPresent(spec) : await readPlain(spec, worktree);
+    const work = parseWork(source);
+    if (!source || !work.active) continue;
+    const plan = field(source, "From build plan");
+    found.push({
+      worktree,
+      branch,
+      // Plan numbers are compared lowercased, as the build plan's parser stores them.
+      item: plan ? /^item\s+([0-9a-z]+)/i.exec(plan)?.[1]?.toLowerCase() ?? null : null,
+      title: work.title,
+      stepsDone: work.stepsDone,
+      stepsTotal: work.stepsTotal,
+      here: worktree === listed.home
+    });
+  }
+  return found;
+}
+
 /** The stamp the overview carries, and the hash the current plans produce. */
 export function overviewHash(projectPlan: string, buildPlan: string): string {
   return crypto.createHash("sha256").update(projectPlan).update(buildPlan).digest("hex").slice(0, 16);
@@ -666,6 +799,7 @@ export async function readProjectState(root: string): Promise<ProjectState> {
     inbox: parseInbox(inbox),
     learning: { lessons: parseLessons(lessons), journal: entries, undecided: entries.filter((e) => !e.decided).length },
     settledSpikes,
-    spec: specState(work)
+    spec: specState(work),
+    inFlight: await readInFlight(root)
   };
 }

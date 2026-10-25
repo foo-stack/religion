@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-Nothing in progress.
+**Items in flight are visible** is in progress: 13 step(s) done, 0 to go.
 
-Plan: 35 of 54 item(s) complete. Next up: 21. **Hooks beyond Claude Code** - the rendered-output guard, the injection scan, and the handoff rewrite wired for Codex, Copilot, and OpenCode wherever each tool's hooks allow, one sub-item per tool; spike first on whether each can stop a write before it lands
+Plan: 37 of 57 item(s) complete. Next up: 22. **Update merges edits** - an edited managed file that a new version also changed is merged three ways against a stored copy of what was installed, with conflicts stopping the update rather than shipping marked-up skills; spike first on a dependency-free merge over real skill files
 
 ## Read first
 

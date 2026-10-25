@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 
 import {
   overviewHash,
@@ -17,10 +18,11 @@ import {
   parsePlan,
   parseSettledSpike,
   parseSpec,
-  parseWorktrees,
   parseWork,
   specHash,
   readHistory,
+  listWorktrees,
+  readInFlight,
   readProjectState,
   waiting
 } from "./state.js";
@@ -810,36 +812,77 @@ test("specHash and the stamp hold against whitespace, heading case, tilde fences
   assert.equal(parseSpec(hidden)?.steps.length, 1, "a fenced heading does not replace the real steps");
 });
 
-test("parseWorktrees reads main, linked, detached, bare and prunable entries", () => {
-  const source = [
-    "worktree /repo/main",
-    "HEAD 1111111111111111111111111111111111111111",
-    "branch refs/heads/main",
-    "",
-    "worktree /tmp/item work",
-    "HEAD 2222222222222222222222222222222222222222",
-    "branch refs/heads/feature/item-b",
-    "locked",
-    "",
-    "worktree /tmp/detached",
-    "HEAD 3333333333333333333333333333333333333333",
-    "detached",
-    "",
-    "worktree /srv/bare.git",
-    "bare",
-    "",
-    "worktree /tmp/gone",
-    "HEAD 4444444444444444444444444444444444444444",
-    "branch refs/heads/old",
-    "prunable gitdir file points to non-existent location",
-    ""
-  ].join("\n");
-  assert.deepEqual(parseWorktrees(source), [
-    { path: "/repo/main", branch: "main", bare: false, prunable: false },
-    { path: "/tmp/item work", branch: "feature/item-b", bare: false, prunable: false },
-    { path: "/tmp/detached", branch: null, bare: false, prunable: false },
-    { path: "/srv/bare.git", branch: null, bare: true, prunable: false },
-    { path: "/tmp/gone", branch: "old", bare: false, prunable: true }
-  ]);
-  assert.deepEqual(parseWorktrees(""), []);
+test("listWorktrees reads git's worktree records, resolved, without running git", async () => {
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "religion-trees-"));
+  const dir = await fs.realpath(tmp);
+  const git = (cwd: string, ...args: string[]) => execFileSync("git", ["-C", cwd, ...args], { stdio: "pipe" });
+  const commit = (cwd: string) => git(cwd, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "base");
+  try {
+    const main = path.join(dir, "main");
+    await fs.mkdir(path.join(main, "app"), { recursive: true });
+    git(main, "init", "-q", "-b", "main");
+    commit(main);
+    git(main, "worktree", "add", "-q", "-b", "feature/b", path.join(dir, "item b"));
+    git(main, "worktree", "add", "-q", "--detach", path.join(dir, "detached"));
+    git(main, "worktree", "add", "-q", "-b", "gone", path.join(dir, "gone"));
+    await fs.rm(path.join(dir, "gone"), { recursive: true });
+
+    const expected = [
+      { path: main, branch: "main" },
+      { path: path.join(dir, "detached"), branch: null },
+      { path: path.join(dir, "item b"), branch: "feature/b" }
+    ];
+    const sorted = (trees: { path: string }[]) => [...trees].sort((a, b) => a.path.localeCompare(b.path));
+    const fromSub = await listWorktrees(path.join(tmp, "main", "app"));
+    assert.equal(fromSub?.home, main);
+    assert.deepEqual(sorted(fromSub?.trees ?? []), sorted(expected));
+    assert.equal((await listWorktrees(path.join(dir, "item b")))?.home, path.join(dir, "item b"));
+
+    const bare = path.join(dir, "bare.git");
+    execFileSync("git", ["init", "-q", "--bare", "-b", "main", bare]);
+    git(main, "push", "-q", bare, "main");
+    git(bare, "worktree", "add", "-q", path.join(dir, "from-bare"), "main");
+    assert.deepEqual((await listWorktrees(path.join(dir, "from-bare")))?.trees, [{ path: path.join(dir, "from-bare"), branch: "main" }]);
+
+    await fs.mkdir(path.join(dir, "plain"));
+    assert.equal(await listWorktrees(path.join(dir, "plain")), null);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("readInFlight lists active specs across worktrees, skipping wave steps and idle checkouts", async () => {
+  const dir = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "religion-inflight-")));
+  const git = (...args: string[]) => execFileSync("git", ["-C", path.join(dir, "main"), ...args], { stdio: "pipe" });
+  const spec = async (tree: string, body: string) => {
+    await fs.mkdir(path.join(dir, tree, "religion", "context"), { recursive: true });
+    await fs.writeFile(path.join(dir, tree, "religion", "context", "current-work.md"), body);
+  };
+  try {
+    await fs.mkdir(path.join(dir, "main"));
+    git("init", "-q", "-b", "main");
+    git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "base");
+    git("worktree", "add", "-q", "-b", "feature/b", path.join(dir, "item b"));
+    git("worktree", "add", "-q", "--detach", path.join(dir, "item-c"));
+    await fs.mkdir(path.join(dir, "wave"));
+    await fs.writeFile(path.join(dir, "wave", "base"), "");
+    git("worktree", "add", "-q", "--detach", path.join(dir, "wave", "step-2"));
+    await spec("main", "# Current work\n\n_Nothing in progress._\n");
+    await spec("item b", "# Second\n\n**Type:** Feature\n**From build plan:** item 2\n\n- [x] **one**\n- [ ] **two**\n");
+    await spec("item-c", "# Unplanned\n\n**Type:** Fix\n\n- [ ] **only**\n");
+    await spec(path.join("wave", "step-2"), "# Second\n\n**From build plan:** item 2\n\n- [ ] **two**\n");
+
+    const fromB = await readInFlight(path.join(dir, "item b"));
+    assert.deepEqual(fromB, [
+      { worktree: path.join(dir, "item b"), branch: "feature/b", item: "2", title: "Second", stepsDone: 1, stepsTotal: 2, here: true },
+      { worktree: path.join(dir, "item-c"), branch: null, item: null, title: "Unplanned", stepsDone: 0, stepsTotal: 1, here: false }
+    ]);
+    assert.deepEqual((await readInFlight(path.join(dir, "main"))).map((i) => i.here), [false, false]);
+    assert.deepEqual((await readProjectState(path.join(dir, "main"))).inFlight, await readInFlight(path.join(dir, "main")));
+
+    await fs.mkdir(path.join(dir, "plain"));
+    assert.deepEqual(await readInFlight(path.join(dir, "plain")), []);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
 });

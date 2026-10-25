@@ -22,6 +22,7 @@ function state(overrides: Partial<ProjectState> = {}): ProjectState {
     learning: { lessons: [], journal: [], undecided: 0 },
     settledSpikes: [],
     spec: { hash: null, approved: null, drifted: false },
+    inFlight: [],
     ...overrides
   };
 }

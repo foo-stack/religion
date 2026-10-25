@@ -273,5 +273,15 @@ test("write-handoff lists items in flight in other worktrees, cleaned, and nothi
   assert.ok(Date.now() - started < 5000, "a spec linked to an endless device is not read");
   assert.doesNotMatch(await handoff(root), /linked/);
 
+  const elsewhere = path.join(path.dirname(root), "elsewhere");
+  await fs.mkdir(elsewhere);
+  await fs.writeFile(path.join(elsewhere, "current-work.md"), "# Outside spec\n\n- [ ] **one**\n");
+  const dirLinked = path.join(path.dirname(root), "dir-linked");
+  git("worktree", "add", "-q", "--detach", dirLinked);
+  await fs.mkdir(path.join(dirLinked, "religion"));
+  await fs.symlink(elsewhere, path.join(dirLinked, "religion", "context"));
+  assert.equal(runHook(root), 0);
+  assert.doesNotMatch(await handoff(root), /Outside spec/, "a linked directory does not lead outside the worktree");
+
   assert.equal(runHook(other), 0, "a worktree with no religion directory is left alone");
 });

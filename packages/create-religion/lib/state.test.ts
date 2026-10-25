@@ -892,6 +892,11 @@ test("readInFlight lists active specs across worktrees, skipping wave steps and 
     const ownLink = await readInFlight(path.join(dir, "own link"));
     assert.deepEqual(ownLink.filter((i) => i.here).map((i) => i.title), ["Own"], "this worktree's own linked spec still counts");
     await fs.rm(path.join(dir, "own link", "religion", "context", "current-work.md"));
+    git("worktree", "add", "-q", "--detach", path.join(dir, "dir link"));
+    await fs.mkdir(path.join(dir, "dir link", "religion"), { recursive: true });
+    await fs.mkdir(path.join(dir, "outside"));
+    await fs.writeFile(path.join(dir, "outside", "current-work.md"), "# Outside\n\n- [ ] **one**\n");
+    await fs.symlink(path.join(dir, "outside"), path.join(dir, "dir link", "religion", "context"));
 
     const fromB = await readInFlight(path.join(dir, "item b"));
     assert.deepEqual(fromB, [

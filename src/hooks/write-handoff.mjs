@@ -83,9 +83,12 @@ const headBranch = (git) => quiet(() => readFileSync(path.join(git, "HEAD"), "ut
 // Another worktree's branch decides what its spec is: a link could point at a device that never
 // ends, or at a file whose first heading would be copied in as a title. So it is opened without
 // following a link or blocking, checked through the open handle, and read up to a cap.
-const readPlain = (file) =>
+const readPlain = (file, within) =>
   quiet(() => {
-    const fd = openSync(file, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
+    // A linked directory on the way would lead outside that worktree.
+    const resolved = realpathSync(file);
+    if (!resolved.startsWith(within + path.sep)) return null;
+    const fd = openSync(resolved, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
     try {
       const stat = fstatSync(fd);
       if (!stat.isFile() || stat.size > 256 * 1024) return null;
@@ -116,7 +119,7 @@ const elsewhere = (() => {
     if (!tree || tree === home) return [];
     // A wave's step worktree holds a copy of its parent item's spec, not an item of its own.
     if (/^step-\d+$/.test(path.basename(tree)) && existsSync(path.join(path.dirname(tree), "base"))) return [];
-    const spec = readPlain(path.join(tree, offset, STATE, "context", "current-work.md")) ?? "";
+    const spec = readPlain(path.join(tree, offset, STATE, "context", "current-work.md"), tree) ?? "";
     if (!spec.trim() || /_Nothing in progress\./.test(spec)) return [];
     const item = spec.match(/^\*\*From build plan:\*\*[ \t]*item[ \t]+([0-9a-z]+)/im)?.[1]?.toLowerCase();
     const name = plain(spec.match(/^#\s+(.+)$/m)?.[1] ?? "Active work");

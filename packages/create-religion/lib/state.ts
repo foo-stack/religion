@@ -681,9 +681,12 @@ const SPEC_MAX = 256 * 1024;
  * or at a file whose first heading would be reported as a title. So it is opened without
  * following a link or blocking, checked through the open handle, and read up to the cap.
  */
-async function readPlain(file: string): Promise<string | null> {
+async function readPlain(file: string, within: string): Promise<string | null> {
+  // A linked directory on the way would lead outside that worktree.
+  const resolved = await fs.realpath(file).catch(() => null);
+  if (!resolved?.startsWith(within + path.sep)) return null;
   const flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0);
-  const handle = await fs.open(file, flags).catch(() => null);
+  const handle = await fs.open(resolved, flags).catch(() => null);
   if (!handle) return null;
   try {
     const stat = await handle.stat();
@@ -691,8 +694,10 @@ async function readPlain(file: string): Promise<string | null> {
     const buffer = Buffer.alloc(stat.size);
     const { bytesRead } = await handle.read(buffer, 0, stat.size, 0);
     return buffer.subarray(0, bytesRead).toString("utf8");
+  } catch {
+    return null;
   } finally {
-    await handle.close();
+    await handle.close().catch(() => undefined);
   }
 }
 
@@ -709,7 +714,7 @@ export async function readInFlight(root: string): Promise<InFlight[]> {
     if (/^step-\d+$/.test(path.basename(worktree)) && (await readIfPresent(path.join(path.dirname(worktree), "base"))) !== null) continue;
     const spec = statePath(path.join(worktree, offset), "context", "current-work.md");
     // This worktree's spec is read as `work` reads it; another's comes from someone else's branch.
-    const source = worktree === listed.home ? await readIfPresent(spec) : await readPlain(spec);
+    const source = worktree === listed.home ? await readIfPresent(spec) : await readPlain(spec, worktree);
     const work = parseWork(source);
     if (!source || !work.active) continue;
     const plan = field(source, "From build plan");

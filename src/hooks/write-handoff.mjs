@@ -86,8 +86,10 @@ const headBranch = (git) => quiet(() => readFileSync(path.join(git, "HEAD"), "ut
 const readPlain = (file, within) =>
   quiet(() => {
     // A linked directory on the way would lead outside that worktree.
-    const resolved = realpathSync(file);
-    if (!resolved.startsWith(within + path.sep)) return null;
+    // Only the folder is resolved, so the open below still refuses a spec that is itself a link.
+    const folder = realpathSync(path.dirname(file));
+    if (!(folder + path.sep).startsWith(within + path.sep)) return null;
+    const resolved = path.join(folder, path.basename(file));
     const fd = openSync(resolved, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
     try {
       const stat = fstatSync(fd);

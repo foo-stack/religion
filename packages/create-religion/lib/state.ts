@@ -683,8 +683,10 @@ const SPEC_MAX = 256 * 1024;
  */
 async function readPlain(file: string, within: string): Promise<string | null> {
   // A linked directory on the way would lead outside that worktree.
-  const resolved = await fs.realpath(file).catch(() => null);
-  if (!resolved?.startsWith(within + path.sep)) return null;
+  // Only the folder is resolved, so the open below still refuses a spec that is itself a link.
+  const folder = await fs.realpath(path.dirname(file)).catch(() => null);
+  if (!folder || !(folder + path.sep).startsWith(within + path.sep)) return null;
+  const resolved = path.join(folder, path.basename(file));
   const flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0);
   const handle = await fs.open(resolved, flags).catch(() => null);
   if (!handle) return null;

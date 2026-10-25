@@ -897,6 +897,10 @@ test("readInFlight lists active specs across worktrees, skipping wave steps and 
     await fs.mkdir(path.join(dir, "outside"));
     await fs.writeFile(path.join(dir, "outside", "current-work.md"), "# Outside\n\n- [ ] **one**\n");
     await fs.symlink(path.join(dir, "outside"), path.join(dir, "dir link", "religion", "context"));
+    git("worktree", "add", "-q", "--detach", path.join(dir, "inner link"));
+    await fs.mkdir(path.join(dir, "inner link", "religion", "context"), { recursive: true });
+    await fs.writeFile(path.join(dir, "inner link", ".env.local"), "# SECRET_TOKEN=abc\n");
+    await fs.symlink("../../.env.local", path.join(dir, "inner link", "religion", "context", "current-work.md"));
 
     const fromB = await readInFlight(path.join(dir, "item b"));
     assert.deepEqual(fromB, [

@@ -283,5 +283,13 @@ test("write-handoff lists items in flight in other worktrees, cleaned, and nothi
   assert.equal(runHook(root), 0);
   assert.doesNotMatch(await handoff(root), /Outside spec/, "a linked directory does not lead outside the worktree");
 
+  const innerLinked = path.join(path.dirname(root), "inner-linked");
+  git("worktree", "add", "-q", "--detach", innerLinked);
+  await fs.mkdir(path.join(innerLinked, "religion", "context"), { recursive: true });
+  await fs.writeFile(path.join(innerLinked, ".env.local"), "# SECRET_TOKEN=abc\n");
+  await fs.symlink("../../.env.local", path.join(innerLinked, "religion", "context", "current-work.md"));
+  assert.equal(runHook(root), 0);
+  assert.doesNotMatch(await handoff(root), /SECRET_TOKEN/, "a spec linked to a file in its own worktree is not read");
+
   assert.equal(runHook(other), 0, "a worktree with no religion directory is left alone");
 });

@@ -107,6 +107,7 @@ Every key in `religion/config.json`, and the values it accepts:
 | `schemaVersion` | `1` |
 | `workflow.stepReview` | `every`, `item` |
 | `workflow.parallelSteps` | `true`, `false` |
+| `workflow.parallelItems` | `true`, `false` |
 | `git.mode` | `trunk`, `branch-per-item`, `pull-request` |
 | `git.checkpoints` | `none`, `every-step`, `squash` |
 | `git.featureBranchPrefix` | a lowercase prefix ending in `/` |

@@ -24,6 +24,10 @@ guess past broken configuration.
 **Read the spec.** If `religion/context/current-work.md` is still the stub, or its status
 is already complete, stop and say to run /feature, /fix, or
 /rollback first.
+When it is the stub and `religion status --json` lists items under `inFlight` with `here`
+false, or the handoff lists items in flight in other worktrees, name each with its worktree
+and branch, and say that resuming one means working from that worktree. Never start one of
+them again here.
 
 **Take the context.** Conventions from `religion/context/coding-standards.md`, the data
 model from the project overview. Code that ignores them is rework, not progress.
@@ -55,6 +59,17 @@ the spec, using the prefix configured for its kind: feature, fix, rollback, or r
 They differ only in how the work leaves the branch at completion, which is not this skill's
 concern. On a resume the branch exists already, so check it out rather than creating a
 second one.
+
+**With `workflow.parallelItems` on**, under either of those modes, a feature from the build
+plan starts in its own worktree instead: follow `reference/item-worktree.md`, which creates
+it on that branch beside the project and moves the spec there. Creating it is part of
+positioning the work, as creating the branch is; removing it is deleting files, and asks.
+An automated run keeps the plain branch, since it removes each item's branch once it lands,
+and a worktree holding the branch would stop that. From then on the item is the worktree's.
+Move the session into it where the tool can; otherwise address every file and
+command to the worktree's path, and tell the user to open later sessions there, since hooks
+keep running where a session started. A resume inside the worktree is the ordinary resume
+below. Fixes, rollbacks and refactor campaigns keep the branch above.
 
 Either way, if the project is not a git repository, say so and ask the user to initialize
 one. The loop needs history to be reviewable.

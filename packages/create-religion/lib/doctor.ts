@@ -11,7 +11,7 @@ import path from "node:path";
 import { exists, readIfPresent, SKILL_TREES, STATE_DIR, statePath } from "./paths.js";
 import { editedSinceInstall, isPlainFile } from "./install.js";
 import { SETTINGS, settingProblems } from "./settings.js";
-import { readProjectState } from "./state.js";
+import { listWorktrees, readProjectState } from "./state.js";
 
 export interface CheckResult {
   name: string;
@@ -67,6 +67,10 @@ export async function runDoctor(
     results.push({ name: "configuration", ok: false, detail: "config.json does not parse", blocks: "work" });
   } else {
     const bad = settingProblems(state.config);
+    const config = (state.config ?? {}) as { workflow?: { parallelItems?: unknown }; git?: { mode?: unknown } };
+    if (bad.length === 0 && config.workflow?.parallelItems === true && (config.git?.mode ?? "trunk") === "trunk") {
+      bad.push("workflow.parallelItems needs a branch per item, which git.mode trunk never makes");
+    }
     results.push({
       name: "configuration",
       ok: bad.length === 0,
@@ -141,15 +145,21 @@ export async function runDoctor(
     blocks: "nothing"
   });
 
+  const worktrees = await listWorktrees(root);
+  const linkedTo = worktrees?.main && worktrees.main !== worktrees.home ? worktrees.main : null;
   results.push({
     name: "git",
     ok: await exists(path.join(root, ".git")),
-    detail: (await exists(path.join(root, ".git"))) ? "repository present" : "not a git repository",
+    detail: !(await exists(path.join(root, ".git")))
+      ? "not a git repository"
+      : linkedTo
+        ? `linked worktree of ${linkedTo}`
+        : "repository present",
     blocks: "completion"
   });
 
   results.push(managedFilesCheck(changes === undefined ? await editedSinceInstall(root) : changes));
-  results.push(await readHooks(root));
+  results.push(await readHooks(root, linkedTo));
 
   return results;
 }
@@ -168,7 +178,7 @@ export const HOOKS: readonly Hook[] = [
   { event: "PreToolUse", command: "node .claude/hooks/warn-on-drift.mjs" }
 ];
 
-async function readHooks(root: string): Promise<CheckResult> {
+async function readHooks(root: string, mainCheckout: string | null): Promise<CheckResult> {
   const files = new Set<string>();
   for (const { command } of HOOKS) {
     const file = hookFile(command);
@@ -180,7 +190,8 @@ async function readHooks(root: string): Promise<CheckResult> {
     wanted: HOOKS,
     settings: await readSettings(root, SETTINGS_FILE),
     local: await readSettings(root, LOCAL_SETTINGS_FILE),
-    files
+    files,
+    mainCheckout
   });
 }
 
@@ -248,13 +259,19 @@ export function hooksCheck(input: {
   settings: string | "link" | "not-file" | null;
   local?: string | "link" | "not-file" | null;
   files: ReadonlySet<string>;
+  /** Set inside a linked worktree, where git ignores the settings an install wrote. */
+  mainCheckout?: string | null;
 }): CheckResult {
   const result = (ok: boolean, detail: string): CheckResult => ({ name: "hooks", ok, detail, blocks: "nothing" });
   if (!input.installed) return result(true, "Claude Code is not installed here");
   if (input.settings === "link") return result(false, `${SETTINGS_FILE} is reached through a link, so it was not read`);
   if (input.settings === "not-file") return result(false, `${SETTINGS_FILE} is not a regular file`);
   const local = typeof input.local === "string" && input.local !== "link" && input.local !== "not-file" ? input.local : null;
-  if (input.settings === null && local === null) return result(false, `${SETTINGS_FILE} is missing; a fresh install writes it`);
+  if (input.settings === null && local === null) {
+    return result(false, input.mainCheckout
+      ? `${SETTINGS_FILE} is missing in this linked worktree; copy the main checkout's from ${input.mainCheckout}`
+      : `${SETTINGS_FILE} is missing; a fresh install writes it`);
+  }
   const shared = input.settings === null ? [] : parseHooks(input.settings);
   if (shared === null) return result(false, `${SETTINGS_FILE} does not parse`);
   if (disablesHooks(input.settings) || disablesHooks(local)) return result(false, "disableAllHooks is on, so no hook runs");

@@ -8,7 +8,7 @@ test("settingProblems accepts the shipped defaults and an empty file", () => {
   assert.deepEqual(
     settingProblems({
       schemaVersion: 1,
-      workflow: { stepReview: "item", parallelSteps: true },
+      workflow: { stepReview: "item", parallelSteps: true, parallelItems: true },
       git: { mode: "pull-request", featureBranchPrefix: "feat/", integrationBranchPrefix: "auto/runs/" },
       auto: { maxItems: null, maxRepairAttempts: 0, finalAudit: true },
       refactor: { maxFileLines: 400 }
@@ -20,6 +20,7 @@ test("settingProblems accepts the shipped defaults and an empty file", () => {
 test("settingProblems names the key, the value and what would work, for each kind", () => {
   assert.deepEqual(settingProblems({ git: { mode: "trunkk" } }), ['git.mode is "trunkk", expected one of trunk, branch-per-item, pull-request']);
   assert.deepEqual(settingProblems({ workflow: { parallelSteps: "yes" } }), ['workflow.parallelSteps is "yes", expected true or false']);
+  assert.deepEqual(settingProblems({ workflow: { parallelItems: "yes" } }), ['workflow.parallelItems is "yes", expected true or false']);
   assert.deepEqual(settingProblems({ git: { fixBranchPrefix: "Fix" } }), ['git.fixBranchPrefix is "Fix", expected a lowercase prefix ending in /']);
   assert.deepEqual(settingProblems({ auto: { maxRepairAttempts: 11 } }), ["auto.maxRepairAttempts is 11, expected an integer from 0 through 10"]);
   assert.deepEqual(settingProblems({ auto: { maxItems: 0 } }), ["auto.maxItems is 0, expected an integer 1 or more, or null"]);

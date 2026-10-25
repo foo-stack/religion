@@ -98,7 +98,7 @@ const PROJECTS: Record<string, Record<string, string>> = {
     "religion/project-plan.md": "# Plan\n",
     "religion/build-plan.md": "## Plan\n\n- [x] 1. **Done** - finished\n- [ ] 2. **Next** - queued\n",
     "religion/context/current-work.md":
-      "# Export reports\n\n**Type:** Feature\n**Status:** in progress\n\n## Build steps\n\n" +
+      "# Export reports\n\n**Type:** Feature\n**From build plan:** item 2\n**Status:** in progress\n\n## Build steps\n\n" +
       "- [x] **Step 1 - the serializer** - done\n- [ ] **Step 2 - the route** - next\n",
     "religion/context/findings.md":
       "# Findings\n\n### F-01 [P1] open - A missing guard\n\n### F-02 [P3] closed - A cleanup\n",
@@ -109,6 +109,8 @@ const PROJECTS: Record<string, Record<string, string>> = {
       '{ "command": "auto", "status": "blocked", "summary": "Building the plan", ' +
       '"updatedAt": "2026-10-21T10:00:00Z", "resumeCommand": "/auto resume" }\n',
     "religion/context/inbox.md": "# Inbox\n\n- 2026-10-21 - a note\n",
-    ".claude/skills/auto/SKILL.md": "---\nname: auto\n---\n"
+    ".claude/skills/auto/SKILL.md": "---\nname: auto\n---\n",
+    // Enough of a git directory for the worktree read to find this checkout and its branch.
+    ".git/HEAD": "ref: refs/heads/main\n"
   }
 };

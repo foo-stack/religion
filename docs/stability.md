@@ -58,7 +58,9 @@ meanings. No automated check runs the tool and compares its exit codes yet.
   (`active`, `title`, `type`, `status`, `stepsDone`, `stepsTotal`, `nextStep`), `findings`
   (`total`, `blocking`, `byStatus`), `overview` (`present`, `fresh`), `activity`
   (`recorded`, `command`, `status`, `summary`, `updatedAt`, `resumeCommand`), `inbox`
-  (`notes`), `spec` (`hash`, `approved`, `drifted`), and `warnings`.
+  (`notes`), `spec` (`hash`, `approved`, `drifted`), `inFlight`, a list of the work items active
+  in any worktree of the repository (`worktree`, `branch`, `item`, `title`, `stepsDone`,
+  `stepsTotal`, `here`), empty outside a repository, and `warnings`.
 - **`doctor`**: `healthy`, true exactly when the exit code is 0, and `checks`, each with
   `name`, `ok`, `detail` and `blocks`.
 

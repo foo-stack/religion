@@ -122,23 +122,32 @@ both archives with the one range they share, each saying it is shared.
     (
       root=$(git rev-parse --show-toplevel) || exit 1
       git -C "$root" rev-parse -q --verify MERGE_HEAD >/dev/null || { echo "no merge open"; exit 0; }
-      before=$({ git -C "$root" diff --name-only --no-renames HEAD; git -C "$root" ls-files -o --directory; } | sort -u)
-      git -C "$root" reset -q --hard HEAD || exit 1
-      after=$(git -C "$root" ls-files -o --directory)
-      printf '%s\n' "$before" | while IFS= read -r f; do
-        [ -z "$f" ] || printf '%s\n' "$after" | grep -Fxq -- "$f" || echo "discarded: $f"
+      list="$(git -C "$root" rev-parse --absolute-git-dir)/abandon-untracked"
+      git -C "$root" ls-files -z -o --directory > "$list" || exit 1
+      git -C "$root" diff -z --name-only --no-renames HEAD | while IFS= read -r -d '' f; do
+        printf 'discarded: %s\n' "$f"
       done
-      git -C "$root" ls-files -o --exclude-standard | sed 's/^/left untracked: /'
+      git -C "$root" reset -q --hard HEAD || { rm -f "$list"; exit 1; }
+      while IFS= read -r -d '' f; do
+        [ -e "$root/$f" ] || [ -L "$root/$f" ] || printf 'discarded: %s\n' "$f"
+      done < "$list"
+      rm -f "$list"
+      git -C "$root" ls-files -z -o --exclude-standard --directory | while IFS= read -r -d '' f; do
+        printf 'left untracked: %s\n' "$f"
+      done
       echo "back at the work commit"
     )
 
 Block 1 started from a clean tree, so the work commit is the whole of this item's work, and
 resetting to it ends the merge and returns the branch exactly as it was, whatever the merge left:
 redone shares, a handoff the hook rewrote, output `Verify` regenerated, paths still in conflict.
-Each path the reset set back or removed is named, an edit made by hand while the merge was open
-among them, and so is an untracked or ignored file it removed from a directory the merge made, so
-nothing is lost without a word. Other untracked files are left where they are and named. Never abandon with `git merge --abort` alone, which refuses while a
-file the merge touched has unstaged changes. With no merge open, the block does nothing.
+Each tracked path the reset sets back is named first, an edit made by hand while the merge was
+open among them. The reset removes an untracked or ignored file only where it stands in the way
+of a file `HEAD` has, such as inside a directory the target put where `HEAD` has a file, and each
+one it removed is named after. Other untracked files are left where they are and named, a whole
+directory as one line. So nothing is lost without a word. Never abandon with `git merge --abort`
+alone, which refuses while a file the merge touched has unstaged changes. With no merge open, the
+block does nothing.
 
 ## 4. Record what landed
 

@@ -42,15 +42,22 @@ the spec, go on to block 2; otherwise stop and say which, never reusing or repla
 
 ## 2. Copy what git does not carry, then move the spec
 
-Safe to run again. Set `tree` to the path block 1 printed:
+Safe to run again until block 3 has run, and it refuses after that. Use the same branch as
+block 1:
 
     (
       root=$(git rev-parse --show-toplevel) || exit 1
-      tree='<the path block 1 printed>'
-      [ "$(git -C "$tree" rev-parse --show-toplevel)" = "$tree" ] || { echo "not a worktree: $tree"; exit 1; }
+      branch='<the branch Step 1 names>'
+      tree="${root%/*}/${root##*/}.$(printf '%s' "$branch" | tr / -)"
+      [ "$(git -C "$tree" branch --show-current 2>/dev/null)" = "$branch" ] || { echo "not this item's worktree: $tree"; exit 1; }
+      spec="{{state}}/context/current-work.md"
+      ! grep -q '_Nothing in progress' "$root/$spec" || { echo "the main checkout holds no spec to move"; exit 1; }
+      if [ -f "$tree/$spec" ] && ! grep -q '_Nothing in progress' "$tree/$spec" && ! cmp -s "$root/$spec" "$tree/$spec"; then
+        echo "the worktree already holds another spec"; exit 1
+      fi
       for f in .claude/settings.json .claude/settings.local.json .claude/hooks; do
         if [ -e "$root/$f" ] && git -C "$root" check-ignore -q "$f"; then
-          mkdir -p "$tree/$(dirname "$f")" && cp -RPp "$root/$f" "$tree/$f" || exit 1
+          mkdir -p "$tree/$(dirname "$f")" && cp -RPp "$root/$f" "$tree/$(dirname "$f")/" || exit 1
         fi
       done
       if git -C "$root" check-ignore -q {{state}}; then
@@ -65,9 +72,7 @@ Safe to run again. Set `tree` to the path block 1 printed:
         [ -e "$tree/$d" ] || [ -L "$tree/$d" ] || ln -s "$root/$d" "$tree/$d" || exit 1
         git -C "$tree" check-ignore -q "$d" || printf '/%s\n' "$d" >> "$(git -C "$root" rev-parse --path-format=absolute --git-path info/exclude)" || exit 1
       done
-      mkdir -p "$tree/{{state}}/context" &&
-        cp -p "$root/{{state}}/context/current-work.md" "$tree/{{state}}/context/current-work.md" &&
-        cmp -s "$root/{{state}}/context/current-work.md" "$tree/{{state}}/context/current-work.md" || exit 1
+      mkdir -p "$tree/{{state}}/context" && cp -p "$root/$spec" "$tree/$spec" && cmp -s "$root/$spec" "$tree/$spec" || exit 1
       echo "copied"
     )
 
@@ -75,7 +80,13 @@ The installer's output that git ignores is copied only where git ignores it; a t
 already in the worktree. When `{{state}}/` itself is ignored, which `doctor` reports as "state is
 local only", every state file but `{{state}}/.state/` is copied, since each worktree keeps its own
 activity record. The list of files is written beside the worktree, not piped, so a failed copy
-stops the block in every shell.
+stops the block in every shell; a block that stopped there leaves that list, `<worktree>.files`,
+and the rerun removes it.
+
+The checks at the top are what make a rerun safe. Once block 3 has reset the main checkout's
+spec, there is nothing to move, and copying would put the stub over the only copy of the spec.
+A worktree that already holds a different spec belongs to work that has started, and copying the
+main checkout's over it would replace that work.
 
 Each installed dependency directory at the project root that the gate needs is linked, never
 installed: an install needs its own yes. Name each one in the `for d` list; `node_modules` is the

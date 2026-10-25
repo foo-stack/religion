@@ -124,25 +124,28 @@ both archives with the one range they share, each saying it is shared.
       root=$(git rev-parse --show-toplevel) || exit 1
       git -C "$root" rev-parse -q --verify MERGE_HEAD >/dev/null || { echo "no merge open"; exit 0; }
       for f in build-plan.md context/findings.md learning/journal.md context/project-overview.md context/handoff.md; do
-        [ -e "$root/{{state}}/$f" ] || continue
-        if git -C "$root" ls-files --error-unmatch -- "{{state}}/$f" >/dev/null 2>&1; then
-          git -C "$root" add -- "{{state}}/$f" || exit 1
-        elif git -C "$root" cat-file -e "HEAD:{{state}}/$f" 2>/dev/null; then
-          rm -f -- "$root/{{state}}/$f" || exit 1
-        fi
+        [ -e "$root/{{state}}/$f" ] && git -C "$root" ls-files --error-unmatch -- "{{state}}/$f" >/dev/null 2>&1 &&
+          { git -C "$root" add -- "{{state}}/$f" || exit 1; }
       done
-      git -C "$root" checkout -q -- . || exit 1
+      git -C "$root" diff --name-only | sort -u | sed 's/^/set back: /'
+      git -C "$root" checkout -q -f -- . || exit 1
+      git -C "$root" diff --cached --name-only --diff-filter=D HEAD | while IFS= read -r f; do
+        [ -e "$root/$f" ] || [ -L "$root/$f" ] || continue
+        echo "cleared, held in HEAD: $f"; rm -f -- "$root/$f" || exit 1
+      done || exit 1
       git -C "$root" merge --abort || exit 1
       echo "back at the work commit"
     )
 
 `git merge --abort` refuses while a file the merge touched has changes that are not staged: a
 share redone by hand, or a handoff the hook rewrote at the end of a turn. Staging each shared file
-the index tracks first, as block 3 does, lets it return the branch to its work commit. A shared
-file the target removed is not tracked; when something rewrote it since, such as the hook, the
-abort would refuse to overwrite it, so that copy is removed, since `HEAD` holds this item's own.
-Anything else a run of `Verify` rewrote, generated output say, is set back to the merge's staged
-copy: the tree was clean when block 1 started, so nothing there is this item's. With no merge
+the index tracks first, as block 3 does, keeps the redone shares. Anything else changed since,
+output a run of `Verify` regenerated or an edit made while the merge was open, is set back to the
+merge's staged copy, and each such path is printed first, so nothing goes unreported; the tree was
+clean when block 1 started, so none of it is this item's committed work. The `-f` skips paths
+still in conflict, which the abort itself clears. A path the merge removed, a shared file the
+target stopped tracking among them, that something wrote again would stop the abort from
+restoring `HEAD`'s copy, so it is cleared and named; `HEAD` holds this item's own. With no merge
 open, the block does nothing.
 
 ## 4. Record what landed

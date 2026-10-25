@@ -72,6 +72,9 @@ block 1:
         [ -e "$tree/$d" ] || [ -L "$tree/$d" ] || ln -s "$root/$d" "$tree/$d" || exit 1
         git -C "$tree" check-ignore -q "$d" || printf '/%s\n' "$d" >> "$(git -C "$root" rev-parse --path-format=absolute --git-path info/exclude)" || exit 1
       done
+      if git -C "$root" check-ignore -q religion && [ -f "$root/religion/context/findings.md" ]; then
+        mkdir -p "$tree/religion/.state" && cp -p "$root/religion/context/findings.md" "$tree/religion/.state/findings-at-start.md" || exit 1
+      fi
       mkdir -p "$tree/religion/context" && cp -p "$root/$spec" "$tree/$spec" && cmp -s "$root/$spec" "$tree/$spec" || exit 1
       echo "copied"
     )
@@ -79,7 +82,8 @@ block 1:
 The installer's output that git ignores is copied only where git ignores it; a tracked copy is
 already in the worktree. When `religion/` itself is ignored, which `doctor` reports as "state is
 local only", every state file but `religion/.state/` is copied, since each worktree keeps its own
-activity record. The list of files is written beside the worktree, not piped, so a failed copy
+activity record; the ledger as it stood is saved in the worktree's `religion/.state/` as
+`findings-at-start.md`, the base landing later tells this item's findings apart by. The list of files is written beside the worktree, not piped, so a failed copy
 stops the block in every shell; a block that stopped there leaves that list, `<worktree>.files`,
 and the rerun removes it.
 

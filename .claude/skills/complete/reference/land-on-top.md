@@ -15,7 +15,9 @@ by the same yes; it never writes the target.
 
 Run each block as **one** command, from the item's checkout, after the work commit. Each runs in
 a subshell and sets what it needs. A block that stops ends the landing: report what it printed
-and stop.
+and stop. A stop after block 1 leaves the merge open: either put right what the block named and
+run it again, or abandon the merge, staging `religion/context/handoff.md` first, since the hook
+that rewrites it at the end of every turn would otherwise make `git merge --abort` refuse.
 
 ## 1. Bring in what landed
 
@@ -37,7 +39,7 @@ and stop.
           git -C "$root" checkout MERGE_HEAD -- "$p" || exit 1
           echo "taken as landed: $p"
         else
-          git -C "$root" rm -q --cached --ignore-unmatch -- "$p" || exit 1
+          git -C "$root" rm -q -f --ignore-unmatch -- "$p" || exit 1
           echo "no longer tracked by the target: $p"
         fi
       done
@@ -52,8 +54,7 @@ and stop.
 `nothing landed since` means the target is already part of the branch: skip the rest. Only a
 shared file the target changed since the item began is taken from it; one it left alone merges
 as usual, carrying this item's changes with nothing to redo. A shared file the target stopped
-tracking is dropped from the index, as the target has it, and left in place untracked. The
-handoff is generated and rewritten at the end of every turn, so discarding it loses nothing.
+tracking is removed, as the target has it; this item's copy is still in `HEAD`. The handoff is generated and rewritten at the end of every turn, so discarding it loses nothing.
 
 Taking the target's copy of a shared file resolves that file, conflicted or not. A conflict in
 any other file, product code included, is not this routine's to settle: the merge is abandoned,
@@ -70,7 +71,7 @@ For each file block 1 took as landed, edit it as it now stands, taking this item
 | File | This item's share |
 | --- | --- |
 | `build-plan.md` | a feature ticks its line, and its parent once every sub-item is ticked; a rollback unticks its target and adds its note; a fix or refactor campaign has none |
-| `context/findings.md` | append each entry `HEAD`'s copy holds that the merge base's did not, still `open`, `fixed` or `unverified`, unchanged; when the landed copy is the stub, replace its placeholder line |
+| `context/findings.md` | append each entry `HEAD`'s copy holds that the merge base's did not, still `open`, `fixed` or `unverified`, unchanged; one whose identifier the landed copy already holds, two fixes' bare `F-1` say, takes its permanent prefixed form, the archive's name before it as completion would archive it, and the rename is reported; when the landed copy is the stub, replace its placeholder line |
 | `learning/journal.md` | append its entry, the one whose `**Archive:**` line names this item's archive |
 | `context/project-overview.md` | none: left as landed, and stale until /overview runs, as after any completion |
 | `context/handoff.md` | none |
@@ -93,7 +94,7 @@ Stage the redone files, so the merge can still be abandoned cleanly, then check 
           { git -C "$root" add -- "religion/$f" || exit 1; }
       done
       for f in build-plan.md context/findings.md learning/journal.md; do
-        ! grep -n -e '^<<<<<<< ' -e '^>>>>>>> ' -e '^=======$' -- "$root/religion/$f" 2>/dev/null || { echo "conflict markers in religion/$f"; exit 1; }
+        ! grep -n -e '^<<<<<<< ' -e '^>>>>>>> ' -- "$root/religion/$f" 2>/dev/null || { echo "conflict markers in religion/$f"; exit 1; }
       done
       [ -z "$(git -C "$root" diff --name-only --diff-filter=U)" ] || { echo "unresolved paths remain"; exit 1; }
       echo "ready for Verify"
@@ -103,21 +104,22 @@ Only the files edited by hand are searched: git leaves no markers in a file it m
 and a document elsewhere may show one on purpose.
 
 Run the project's full `Verify` on the result: it is new code, made of both items, and neither
-was checked against the other. A hook that rewrites the handoff while it runs leaves that file
-changed; stage it again before going on.
+was checked against the other. A turn that ends before the merge is committed has its handoff
+rewritten by the hook; stage it again before going on.
 
 When `Verify` passes, commit the merge with a message that says what was brought in, such as
 `merge: bring in what landed on main`.
 
-When it fails, run `git merge --abort`, which returns the branch to its work commit, and stop
-with the failure. The item is complete on its branch but cannot land as it stands: the way
-forward is /fix here, describing the failure, built on this branch; completing that fix
-lands both.
+When it fails, stage the handoff, run `git merge --abort`, which returns the branch to its work
+commit, and stop with the failure. The item is complete on its branch but cannot land as it
+stands: the way forward is /fix here, describing the failure, built on this branch.
+Completing that fix lands both through this routine, and writes the `## Landed` record into both
+archives, the item's and the fix's, with the one range they share, each saying it is shared.
 
 ## 4. Record what landed
 
-When a merge was made, the item's `## Landed` record names the merge's second parent, the
-target it brought in, as **Base**, and the merge commit and anything after it as **Commits**:
+When a merge was made, the item's `## Landed` record names the last such merge's second parent,
+the target it brought in, as **Base**, and that merge commit and anything after it as **Commits**:
 `git diff` from that base to the last commit is then this item's work alone, which is what a
 rollback reverses. Without a merge, the record is as `/complete` describes. Commit the
 record: in a worktree, an uncommitted file goes when the worktree is removed.
@@ -127,5 +129,8 @@ record: in a worktree, an uncommitted file goes when the worktree is removed.
 Then none of these files are in git, and the merge carries none of them: this item's archive,
 plan tick, journal entry and ledger exist only in its worktree's copy of `religion/`. Before
 the worktree can be removed, redo this item's share, as the table in block 2 lists it, in the
-main checkout's own `religion/` files, and copy this item's archive there. Removing the
+main checkout's own `religion/` files, and copy this item's archive there. With no `HEAD` copy
+or merge base in git, the worktree's own files are this item's part, and the ledger saved when
+the worktree was made, `religion/.state/findings-at-start.md` in it, is the base: an entry the
+worktree's ledger holds that the saved one did not is this item's. Removing the
 worktree deletes ignored files with it, so until then they are the only record.

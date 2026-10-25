@@ -79,9 +79,9 @@ It needs a branch per item, so `doctor` refuses it under `git.mode: trunk`. Fixe
 refactor campaigns keep building where they are, and an automated run keeps the plain branch.
 
 Items land one at a time. When another item landed first, `complete` brings that in, takes the
-landed copy of the plan, ledger, journal, overview and handoff, and redoes the item's own share
-of them on top: its plan tick, its unresolved findings, its journal entry, and the overview
-regenerated when it is stale. Those files are never merged as text. A conflict anywhere else
+landed copy of whichever of the plan, ledger, journal, overview and handoff the other item
+changed, and redoes the item's own share of them on top: its plan tick, the findings it added
+that are still unresolved, and its journal entry. Those files are never merged as text. A conflict anywhere else
 stops for review, and removing an item's worktree after it lands asks.
 
 ## Branch prefixes

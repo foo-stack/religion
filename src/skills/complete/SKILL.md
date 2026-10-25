@@ -199,8 +199,9 @@ to merge. Go to Step 5.
 **Under either branching mode, land on top of what already landed.** Before the squash merge
 or the push, follow `reference/land-on-top.md`. When the branch the item lands in has moved
 since the item began, because another item built in its own worktree landed first, it brings
-that in, takes the landed copy of the plan, ledger, journal, overview and handoff, and redoes
-this item's share of them, so those files are never merged as text. Any other conflict stops
+that in, takes the landed copy of each of the plan, ledger, journal, overview and handoff that
+the other item changed, and redoes this item's share of them, so those files are never merged
+as text. Any other conflict stops
 for review. When nothing landed in between, it does nothing. Write the `## Landed` record after
 it, as its last section says, so a later rollback reverses this item's work alone.
 

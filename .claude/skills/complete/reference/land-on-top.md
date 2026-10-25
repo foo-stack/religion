@@ -16,8 +16,7 @@ by the same yes; it never writes the target.
 Run each block as **one** command, from the item's checkout, after the work commit. Each runs in
 a subshell and sets what it needs. A block that stops ends the landing: report what it printed
 and stop. A stop after block 1 leaves the merge open: either put right what the block named and
-run it again, or abandon the merge with the block in "Abandoning the merge" below, never with
-`git merge --abort` alone.
+run it again, or abandon the merge with the block in "Abandoning the merge" below.
 
 ## 1. Bring in what landed
 
@@ -85,7 +84,7 @@ Everything else, this item's archive included, merged as git merges it.
 
 ## 3. Check, then commit the merge
 
-Stage the redone files, so the merge can still be abandoned cleanly, then check them:
+Stage the redone files for the merge commit, then check them:
 
     (
       root=$(git rev-parse --show-toplevel) || exit 1
@@ -123,30 +122,23 @@ both archives with the one range they share, each saying it is shared.
     (
       root=$(git rev-parse --show-toplevel) || exit 1
       git -C "$root" rev-parse -q --verify MERGE_HEAD >/dev/null || { echo "no merge open"; exit 0; }
-      for f in build-plan.md context/findings.md learning/journal.md context/project-overview.md context/handoff.md; do
-        [ -e "$root/religion/$f" ] && git -C "$root" ls-files --error-unmatch -- "religion/$f" >/dev/null 2>&1 &&
-          { git -C "$root" add -- "religion/$f" || exit 1; }
+      before=$({ git -C "$root" diff --name-only --no-renames HEAD; git -C "$root" ls-files -o --directory; } | sort -u)
+      git -C "$root" reset -q --hard HEAD || exit 1
+      after=$(git -C "$root" ls-files -o --directory)
+      printf '%s\n' "$before" | while IFS= read -r f; do
+        [ -z "$f" ] || printf '%s\n' "$after" | grep -Fxq -- "$f" || echo "discarded: $f"
       done
-      git -C "$root" diff --name-only | sort -u | sed 's/^/set back: /'
-      git -C "$root" checkout -q -f -- . || exit 1
-      git -C "$root" diff --cached --name-only --diff-filter=D HEAD | while IFS= read -r f; do
-        [ -e "$root/$f" ] || [ -L "$root/$f" ] || continue
-        echo "cleared, held in HEAD: $f"; rm -f -- "$root/$f" || exit 1
-      done || exit 1
-      git -C "$root" merge --abort || exit 1
+      git -C "$root" ls-files -o --exclude-standard | sed 's/^/left untracked: /'
       echo "back at the work commit"
     )
 
-`git merge --abort` refuses while a file the merge touched has changes that are not staged: a
-share redone by hand, or a handoff the hook rewrote at the end of a turn. Staging each shared file
-the index tracks first, as block 3 does, keeps the redone shares. Anything else changed since,
-output a run of `Verify` regenerated or an edit made while the merge was open, is set back to the
-merge's staged copy, and each such path is printed first, so nothing goes unreported; the tree was
-clean when block 1 started, so none of it is this item's committed work. The `-f` skips paths
-still in conflict, which the abort itself clears. A path the merge removed, a shared file the
-target stopped tracking among them, that something wrote again would stop the abort from
-restoring `HEAD`'s copy, so it is cleared and named; `HEAD` holds this item's own. With no merge
-open, the block does nothing.
+Block 1 started from a clean tree, so the work commit is the whole of this item's work, and
+resetting to it ends the merge and returns the branch exactly as it was, whatever the merge left:
+redone shares, a handoff the hook rewrote, output `Verify` regenerated, paths still in conflict.
+Each path the reset set back or removed is named, an edit made by hand while the merge was open
+among them, and so is an untracked or ignored file it removed from a directory the merge made, so
+nothing is lost without a word. Other untracked files are left where they are and named. Never abandon with `git merge --abort` alone, which refuses while a
+file the merge touched has unstaged changes. With no merge open, the block does nothing.
 
 ## 4. Record what landed
 

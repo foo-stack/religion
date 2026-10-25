@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import type { TestContext } from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -233,4 +233,29 @@ test("warn-on-drift stays quick on a spec with a very long build steps section",
   const started = Date.now();
   drift(root, editing(path.join(root, "b.ts")));
   assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+});
+
+test("write-handoff lists items in flight in other worktrees, cleaned, and nothing outside a repository", async (t) => {
+  const { root } = await project(t);
+  const before = (assert.equal(runHook(root), 0), await handoff(root));
+  assert.doesNotMatch(before, /In flight/);
+
+  const git = (...args: string[]) => execFileSync("git", ["-C", root, ...args], { stdio: "pipe" });
+  git("init", "-q", "-b", "main");
+  git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "base");
+  const other = path.join(path.dirname(root), "other tree");
+  git("worktree", "add", "-q", "-b", "feature/b", other);
+  await fs.mkdir(path.join(other, "religion", "context"), { recursive: true });
+  await fs.writeFile(
+    path.join(other, "religion", "context", "current-work.md"),
+    "# Second \u001b[2J`<b>`item\n\n**From build plan:** item 2\n\n- [x] **one**\n- [ ] **two**\n"
+  );
+
+  assert.equal(runHook(root), 0);
+  const text = await handoff(root);
+  assert.match(text, /^In flight in other worktrees:$/m);
+  assert.match(text, /^- \*\*Second \[2Jbitem\*\* \(item 2\) on `feature\/b`: 1 of 2 step\(s\) done\.$/m);
+  assert.doesNotMatch(text, /\u001b/);
+
+  assert.equal(runHook(other), 0, "a worktree with no religion directory is left alone");
 });

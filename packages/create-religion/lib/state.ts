@@ -604,6 +604,30 @@ export function parseOpenQuestions(overview: string | null): string[] {
   return [...section[1].matchAll(/^-\s+\*\*(.+?)\*\*/gim)].map((m) => (m[1] ?? "").trim());
 }
 
+export interface Worktree {
+  path: string;
+  /** Short branch name; null when detached. */
+  branch: string | null;
+  bare: boolean;
+  prunable: boolean;
+}
+
+/** Entries of `git worktree list --porcelain`, which separates each by a blank line. */
+export function parseWorktrees(source: string): Worktree[] {
+  return source.split(/\n\s*\n/).flatMap((block) => {
+    const lines = block.split("\n");
+    const path = lines.find((l) => l.startsWith("worktree "))?.slice("worktree ".length);
+    if (!path) return [];
+    const branch = lines.find((l) => l.startsWith("branch "))?.slice("branch ".length).replace(/^refs\/heads\//, "");
+    return [{
+      path,
+      branch: branch ?? null,
+      bare: lines.includes("bare"),
+      prunable: lines.some((l) => l === "prunable" || l.startsWith("prunable "))
+    }];
+  });
+}
+
 /** The stamp the overview carries, and the hash the current plans produce. */
 export function overviewHash(projectPlan: string, buildPlan: string): string {
   return crypto.createHash("sha256").update(projectPlan).update(buildPlan).digest("hex").slice(0, 16);

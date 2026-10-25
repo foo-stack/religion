@@ -17,6 +17,7 @@ import {
   parsePlan,
   parseSettledSpike,
   parseSpec,
+  parseWorktrees,
   parseWork,
   specHash,
   readHistory,
@@ -807,4 +808,38 @@ test("specHash and the stamp hold against whitespace, heading case, tilde fences
   assert.equal(parseSpec(body.replace("**Type:** Feature", "**Type:** Feature\n**Approved:** soon"))?.drifted, true, "an unreadable stamp is drift");
   const hidden = body + "\n## Evidence\n\n```\n## Build steps\n\n- [ ] **Step 1 - a** - x\n- [ ] **Step 2 - b** - y\n```\n";
   assert.equal(parseSpec(hidden)?.steps.length, 1, "a fenced heading does not replace the real steps");
+});
+
+test("parseWorktrees reads main, linked, detached, bare and prunable entries", () => {
+  const source = [
+    "worktree /repo/main",
+    "HEAD 1111111111111111111111111111111111111111",
+    "branch refs/heads/main",
+    "",
+    "worktree /tmp/item work",
+    "HEAD 2222222222222222222222222222222222222222",
+    "branch refs/heads/feature/item-b",
+    "locked",
+    "",
+    "worktree /tmp/detached",
+    "HEAD 3333333333333333333333333333333333333333",
+    "detached",
+    "",
+    "worktree /srv/bare.git",
+    "bare",
+    "",
+    "worktree /tmp/gone",
+    "HEAD 4444444444444444444444444444444444444444",
+    "branch refs/heads/old",
+    "prunable gitdir file points to non-existent location",
+    ""
+  ].join("\n");
+  assert.deepEqual(parseWorktrees(source), [
+    { path: "/repo/main", branch: "main", bare: false, prunable: false },
+    { path: "/tmp/item work", branch: "feature/item-b", bare: false, prunable: false },
+    { path: "/tmp/detached", branch: null, bare: false, prunable: false },
+    { path: "/srv/bare.git", branch: null, bare: true, prunable: false },
+    { path: "/tmp/gone", branch: "old", bare: false, prunable: true }
+  ]);
+  assert.deepEqual(parseWorktrees(""), []);
 });

@@ -93,9 +93,9 @@ Read the spec's type.
 
 The number lives in the path. It never appears in the commit message.
 
-**Record what landed.** After the work commit exists in Step 3, append a `## Landed`
-section to the archive with the exact commits this item produced, oldest first, and the
-commit that preceded them:
+**Record what landed.** After the work commit exists in Step 3, and after Step 4 has landed
+it on top of anything that landed first, append a `## Landed` section to the archive with the
+exact commits this item produced, oldest first, and the commit that preceded them:
 
     ## Landed
 
@@ -196,6 +196,14 @@ is refused outright when any of those commits has already been pushed.
 Under **`git.mode: trunk`** the work is already on the branch you were on. There is nothing
 to merge. Go to Step 5.
 
+**Under either branching mode, land on top of what already landed.** Before the squash merge
+or the push, follow `reference/land-on-top.md`. When the branch the item lands in has moved
+since the item began, because another item built in its own worktree landed first, it brings
+that in, takes the landed copy of the plan, ledger, journal, overview and handoff, and redoes
+this item's share of them, so those files are never merged as text. Any other conflict stops
+for review. When nothing landed in between, it does nothing. Write the `## Landed` record after
+it, so it names the commits the branch actually carries.
+
 Under **`branch-per-item`**:
 
 1. Squash-merge into the default branch, only with an explicit yes, so the item lands as
@@ -245,6 +253,10 @@ session. When the user says it merged: check out the default branch, fast-forwar
 confirm the work commit is actually in it, and only then delete the branch locally and on
 the remote. A squash-merge leaves no merge parent, so `git branch -d` will refuse; verify
 the content landed before reaching for `-D`.
+
+An item built in its own worktree holds its branch there, so the cleanup runs from the main
+checkout: remove the worktree first, then the branch. Removing the worktree is deleting files,
+so it asks, every time, and only once the work commit is confirmed in the default branch.
 
 ## Step 5 - say how to try it
 

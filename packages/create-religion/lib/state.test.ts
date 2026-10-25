@@ -826,6 +826,8 @@ test("listWorktrees reads git's worktree records, resolved, without running git"
     git(main, "worktree", "add", "-q", "--detach", path.join(dir, "detached"));
     git(main, "worktree", "add", "-q", "-b", "gone", path.join(dir, "gone"));
     await fs.rm(path.join(dir, "gone"), { recursive: true });
+    git(main, "worktree", "add", "-q", "--detach", path.join(dir, "unlinked"));
+    await fs.rm(path.join(dir, "unlinked", ".git"));
 
     const expected = [
       { path: main, branch: "main" },
@@ -868,7 +870,7 @@ test("readInFlight lists active specs across worktrees, skipping wave steps and 
     await fs.writeFile(path.join(dir, "wave", "base"), "");
     git("worktree", "add", "-q", "--detach", path.join(dir, "wave", "step-2"));
     await spec("main", "# Current work\n\n_Nothing in progress._\n");
-    await spec("item b", "# Second\n\n**Type:** Feature\n**From build plan:** item 2\n\n- [x] **one**\n- [ ] **two**\n");
+    await spec("item b", "# Second\n\n**Type:** Feature\n**From build plan:** Item 2B.\n\n- [x] **one**\n- [ ] **two**\n");
     await spec("item-c", "# Unplanned\n\n**Type:** Fix\n\n- [ ] **only**\n");
     await spec(path.join("wave", "step-2"), "# Second\n\n**From build plan:** item 2\n\n- [ ] **two**\n");
     git("worktree", "add", "-q", "--detach", path.join(dir, "linked"));
@@ -878,7 +880,7 @@ test("readInFlight lists active specs across worktrees, skipping wave steps and 
 
     const fromB = await readInFlight(path.join(dir, "item b"));
     assert.deepEqual(fromB, [
-      { worktree: path.join(dir, "item b"), branch: "feature/b", item: "2", title: "Second", stepsDone: 1, stepsTotal: 2, here: true },
+      { worktree: path.join(dir, "item b"), branch: "feature/b", item: "2b", title: "Second", stepsDone: 1, stepsTotal: 2, here: true },
       { worktree: path.join(dir, "item-c"), branch: null, item: null, title: "Unplanned", stepsDone: 0, stepsTotal: 1, here: false }
     ]);
     assert.deepEqual((await readInFlight(path.join(dir, "main"))).map((i) => i.here), [false, false]);

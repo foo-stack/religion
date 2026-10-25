@@ -647,7 +647,9 @@ export async function listWorktrees(root: string): Promise<{ home: string; trees
   for (const id of await fs.readdir(path.join(common, "worktrees")).catch(() => [])) {
     const git = path.join(common, "worktrees", id);
     const target = (await readIfPresent(path.join(git, "gitdir")))?.trim();
-    if (target) records.push({ dir: path.dirname(path.resolve(git, target)), git });
+    // Git calls a record prunable once the `.git` file it points at is gone.
+    const dotgit = target ? path.resolve(git, target) : null;
+    if (dotgit && (await fs.stat(dotgit).catch(() => null))) records.push({ dir: path.dirname(dotgit), git });
   }
   const trees: Worktree[] = [];
   for (const { dir, git } of records) {
@@ -697,7 +699,8 @@ export async function readInFlight(root: string): Promise<InFlight[]> {
     found.push({
       worktree,
       branch,
-      item: plan ? /item\s+(\S+)/i.exec(plan)?.[1] ?? null : null,
+      // Plan numbers are compared lowercased, as the build plan's parser stores them.
+      item: plan ? /^item\s+([0-9a-z]+)/i.exec(plan)?.[1]?.toLowerCase() ?? null : null,
       title: work.title,
       stepsDone: work.stepsDone,
       stepsTotal: work.stepsTotal,

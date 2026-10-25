@@ -92,7 +92,8 @@ const elsewhere = (() => {
   for (const id of quiet(() => readdirSync(path.join(common, "worktrees"))) ?? []) {
     const git = path.join(common, "worktrees", id);
     const target = quiet(() => readFileSync(path.join(git, "gitdir"), "utf8"))?.trim();
-    if (target) records.push({ dir: path.dirname(path.resolve(git, target)), git });
+    // Git calls a record prunable once the `.git` file it points at is gone.
+    if (target && existsSync(path.resolve(git, target))) records.push({ dir: path.dirname(path.resolve(git, target)), git });
   }
   const offset = path.relative(home, self);
   return records.flatMap(({ dir, git }) => {
@@ -107,9 +108,10 @@ const elsewhere = (() => {
     if (!stat?.isFile() || stat.size > 256 * 1024) return [];
     const spec = quiet(() => readFileSync(file, "utf8")) ?? "";
     if (!spec.trim() || /_Nothing in progress\./.test(spec)) return [];
-    const item = spec.match(/^\*\*From build plan:\*\*\s*item\s+(\S+)/im)?.[1];
+    const item = spec.match(/^\*\*From build plan:\*\*[ \t]*item[ \t]+([0-9a-z]+)/im)?.[1]?.toLowerCase();
     const name = plain(spec.match(/^#\s+(.+)$/m)?.[1] ?? "Active work");
-    const steps = `${(spec.match(/^\s*- \[x\]/gim) ?? []).length} of ${(spec.match(/^\s*- \[[ x]\]/gim) ?? []).length}`;
+    // Spaces and tabs only: `\s` crosses newlines, which makes blank lines quadratic.
+    const steps = `${(spec.match(/^[ \t]*- \[x\]/gim) ?? []).length} of ${(spec.match(/^[ \t]*- \[[ x]\]/gim) ?? []).length}`;
     return [`- **${name}**${item ? ` (item ${plain(item)})` : ""} on \`${plain(headBranch(git) ?? tree)}\`: ${steps} step(s) done.`];
   });
 })();

@@ -81,9 +81,12 @@ removes resolved entries. No two of them run at once.
 
 ## Invariants
 
-**One work item at a time.** `context/current-work.md` holds exactly one feature, fix,
-or rollback. Finish it, archive it, reset the file, start the next. There is no queue and
-no registry, so "what is being built right now" always has one answer.
+**One work item at a time, per worktree.** `context/current-work.md` holds exactly one
+feature, fix, or rollback. Finish it, archive it, reset the file, start the next. There is no
+queue and no registry, so "what is being built here" always has one answer. With
+`workflow.parallelItems` on, other items may be in flight in other worktrees of the same
+repository, each with its own spec; `status` reads them from git's worktree list, and they land
+one at a time, each redoing its share of the shared state files on top of what landed before.
 
 **Subagents read; the parent writes.** Reviews fan out across lenses and diagnosis fans
 out across hypotheses, but those agents only read code and return findings. The parent

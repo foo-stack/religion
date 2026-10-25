@@ -10,6 +10,7 @@ Implementation lands one small step at a time, each with a diff to read and evid
 its stated outcome was met.
 
 `{{state}}/context/current-work.md` holds exactly one work item. Finish it, archive it,
-then start the next. Progress lives in checkboxes inside that file, so a cleared context
+then start the next. With `workflow.parallelItems` on, other items may be in flight in other
+git worktrees, one each; they land one at a time. Progress lives in checkboxes inside that file, so a cleared context
 costs nothing: a fresh session reads which steps are ticked and resumes from the first
 one that is not.

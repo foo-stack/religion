@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Each item starts in its own worktree** is in progress: 6 step(s) done, 0 to go.
+**Items land one at a time** is in progress: 13 step(s) done, 0 to go.
 
-Plan: 38 of 57 item(s) complete. Next up: 22. **Update merges edits** - an edited managed file that a new version also changed is merged three ways against a stored copy of what was installed, with conflicts stopping the update rather than shipping marked-up skills; spike first on a dependency-free merge over real skill files
+Plan: 39 of 57 item(s) complete. Next up: 22. **Update merges edits** - an edited managed file that a new version also changed is merged three ways against a stored copy of what was installed, with conflicts stopping the update rather than shipping marked-up skills; spike first on a dependency-free merge over real skill files
 
 ## Read first
 

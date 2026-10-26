@@ -236,3 +236,10 @@ verification check, and both were found by hand first.
 **Went wrong:** Two repair rounds: the first made the copy block safe to repeat and so let a rerun put the stub over the moved spec; the second guarded that and, in turn, refuses a first run when the base commit carries an active spec.
 **Deferred:** 39c/F-15 (P3) and 39c/F-11 behind it; Windows; landing items one at a time and removing their worktrees.
 
+
+## 2026-10-26 - Items land one at a time
+
+**Archive:** history/features/39d-items-land-one-at-a-time.md
+**Surprised:** Taking the landed copy of each state file and redoing the share worked first time; nearly all the trouble was in giving up a merge half way, which the spec treated as a one-line `git merge --abort`.
+**Went wrong:** Abandoning the merge took nine repair rounds. Each hand-built abort that staged, set back and cleared paths opened a narrower case the next independent review found; replacing it with one reset to the work commit, and finding what the reset removed by listing untracked files with git before and after, ended the chain.
+**Deferred:** 39d/F-23 (P2) and 39d/F-31 (P3), ignored files a target starts tracking that block 1's merge overwrites; removing an item's worktree after it lands, which asks.

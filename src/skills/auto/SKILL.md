@@ -1,7 +1,7 @@
 ---
 name: auto
 summary: run the loop unattended, within explicit bounds
-description: "Run the reviewed loop without stopping between steps, within bounds you set. With no argument it takes one work item and stops before completing it; `all` runs the remaining build plan; a number runs that many items; `fix` works through the findings ledger instead, every class most severe first or one class such as `fix P1`, one fix per file and class, re-reviewing every repair and folding any finding a repair surfaces into the same fix. Specs, implements, verifies, applies the configured gates, repairs confirmed high-severity findings, and completes each item. Its invocation grants committing, dependency installs, and remote reads for the run, and grants nothing else: it still stops to ask before any merge. Under git.mode pull-request it lands every item on one shared integration branch and ends by opening a single aggregate review packet it never merges, after stating that whole remote budget up front and being told yes. Use only when the user runs {{cmd}} or explicitly asks for an unattended run."
+description: "Run the reviewed loop without stopping between steps, within bounds you set. With no argument it takes one work item and stops before completing it; `all` runs the remaining build plan; a number runs that many items; a range or list such as `1-5` or `6, 7, 8` runs exactly those items; `refresh` brings the default branch into a run's integration branch after another run landed first; `fix` works through the findings ledger instead, every class most severe first or one class such as `fix P1`, one fix per file and class, re-reviewing every repair and folding any finding a repair surfaces into the same fix. Specs, implements, verifies, applies the configured gates, repairs confirmed high-severity findings, and completes each item. Its invocation grants committing, dependency installs, and remote reads for the run, and grants nothing else: it still stops to ask before any merge. Under git.mode pull-request it lands every item on one shared integration branch and ends by opening a single aggregate review packet it never merges, after stating that whole remote budget up front and being told yes. Use only when the user runs {{cmd}} or explicitly asks for an unattended run."
 ---
 
 # auto - the same loop, without the pauses
@@ -21,6 +21,8 @@ between steps.
 - `{{cmd}} 1-5` or `{{cmd}} 6, 7, 8` - exactly those plan items, completing each. A range or
   a comma list names items; a bare number is always a count. See Named items.
 - `{{cmd}} resume` - continue an interrupted run from the file-backed state.
+- `{{cmd}} refresh` - bring the default branch into a run's integration branch after another
+  run's aggregate landed first. See Refresh.
 - `{{cmd}} fix` - the findings ledger instead of the plan; see Fix mode.
 
 `auto.maxItems` caps successful completions. `auto.maxRepairAttempts` caps repeated
@@ -69,7 +71,7 @@ Before the first item:
   than one that never began.
 - The working tree is clean, or the only dirt belongs to work being resumed.
 - The plan has unchecked items, or in fix mode the ledger has `open` or `fixed` findings in
-  range.
+  range. A named run needs at least one of its own items unchecked.
 - Under `pull-request`, the repository can host one: a remote exists and the host command
   works. A repository that cannot is a stop, not a reason to fall back to local merges. The
   mode exists to produce review gates, and silently producing a different history instead
@@ -85,6 +87,24 @@ items one and two. On a resume, reuse the branch of that name rather than openin
 if one exists that does not descend from the recorded commit, stop, because the run's base
 moved and that needs a person. Never rebase, reset, or force-push it: it is append-only for
 the run.
+
+A named run's integration branch adds its items to the date, `<prefix><date>-<first>-<last>`,
+or `-<item>` for one, with labels as the plan writes them: `auto/2026-10-26-6-10`. Two runs on
+one day then never share a name, and a resume finds its own.
+
+**With `workflow.parallelItems` on**, under `pull-request`, the run works in its own worktree so
+another session can run beside it. The main checkout must be on the default branch at the
+recorded commit, since the worktree is made from `HEAD`; anything else stops. Make the
+integration branch with blocks 1 and 2 of the routine {{cmd:implement}} keeps in
+`reference/item-worktree.md`, with `move='no'`, push it from the worktree, and work from there
+from then on: move the session into it where the tool can, and otherwise address every file and
+command to its path. Item branches stay plain branches, made and removed inside that worktree,
+so the main checkout stays on the default branch for the next session. Under
+`branch-per-item`, which merges each item into the default branch only one checkout can hold, a
+run stays in the main checkout and runs alone.
+
+**Resuming from the main checkout** while a run's worktree exists names that worktree and its
+branch and stops: the run resumes from there, never as a second copy here.
 
 State the bounds, the gates in force, and how many items are in range. Then start.
 
@@ -126,25 +146,92 @@ Given a range or a list, the run builds those items and no others.
   run before any work starts, naming it: a typo should not quietly shrink the run.
 - **The waiting rule still applies.** An item waiting on one outside the list, or on a
   spike, is passed over and named in the final report, as in Step 2.
-- **Hold them.** Write the listed items, lowercased, as `items` in the activity record from
-  its first write, and keep them in every rewrite. That is what lets `status`, the handoff and
+- **Refuse what another run holds.** Before any work, read `religion status --json`, or the
+  handoff without that command. A named item that an `inFlight` entry with `here` false holds
+  under `items` or is building, counting a parent and its sub-items as one, stops the run,
+  naming each such item and the branch that has it: two runs over one item is what holding
+  exists to prevent.
+- **Name what waits on another run.** A named item that waits on an item held elsewhere will
+  be passed over, since that item lands on the other run's integration branch, not this one.
+  Name each when stating the bounds, with what it waits on and the branch that holds it, so a
+  run that will build fewer items than it was given says so before it starts.
+- **Hold them.** The first write, made before the configuration is read, holds no `items`.
+  Once preflight knows where the run will run, write the listed items, lowercased, as `items`
+  in the record there, and keep them in every rewrite. A run that moves into its own worktree
+  writes them only in the worktree, then rewrites the main checkout's record as `completed`,
+  holding none and with no resume command, its summary naming the worktree: nothing resumes
+  from the main checkout, and a record holding the items there would read, from the run's own
+  worktree, as another run holding them. That is what lets `status`, the handoff and
   {{cmd:feature}} in another worktree pass over the items this run has not reached yet, which no
   spec shows.
-- **Release them only when none is left to build**, each named item completed or passed over
-  as waiting. That final write is `completed` and keeps just the items the run completed, so
-  the ones it passed over are free for another worktree to take; a parent number stays only
-  when every sub-item under it was completed, since a parent still held holds all of them.
-  Any other stop, a merge question, a bound, a failure, an aggregate pull request opened early,
+- **Release them only when none is left to build**, each named item completed, already
+  ticked, or passed over as waiting. That release is the run's last write, made after Step 3
+  has opened the aggregate pull request where the mode has one, and it is `completed` although
+  the run ends waiting for review: `completed` is what says nothing remains to resume. It keeps
+  just the items the run completed, so the ones it passed over are free for another worktree to
+  take; a parent number stays only when every sub-item under it was completed, since a parent
+  still held holds all of them. A run that completed nothing has no aggregate to open, so it
+  releases at once, `completed` and holding none. Any other stop, a merge question, a bound, a
+  failure, an aggregate pull request opened early, or one Step 3 should have opened and did not,
   keeps every item and writes `blocked` with `{{cmd}} resume`.
-- **Resume.** A record holding `items` resumes those still unticked; a `completed` one has
-  nothing left to resume. A record without `items` is a count, `all` or fix run, and resumes as
-  one. A named run whose record is gone stops and asks for the list again rather than guessing
-  which items it had.
+- **Resume.** A record holding `items` resumes those still unticked, and when every one is
+  ticked it resumes at Step 3; a `completed` one has nothing left to resume. A record without
+  `items` is a count, `all` or fix run, and resumes as one. A named run whose record is gone
+  stops and asks for the list again rather than guessing which items it had.
 
 Plain numbers and sub-item labels are both items (`39a, 39b`); a range covers whole numbers
 only. A number that has sub-items stands for its unticked sub-items: build those, and record
 their labels in `items` beside the number, so readers that do not walk the plan still see
 them.
+
+## Refresh
+
+`{{cmd}} refresh` catches a run up when another run's aggregate pull request merged into the
+default branch first. Both wrote the plan, the ledger and the journal, so this run's aggregate
+now conflicts on them every time. It runs where the run's integration branch is checked out, in
+the run's own worktree when it has one, and only when all of these hold; otherwise it stops and
+says which:
+
+- the checked-out branch starts with `git.integrationBranchPrefix` and is not the default
+  branch, and the run's aggregate pull request is open with it as head and the default branch
+  as base
+- the run's own record, here, is `blocked` or `completed`, never `running`, and the spec is the
+  stub and the tree clean
+- after fetching it, the branch is at its remote-tracking copy or can fast-forward to it, which
+  is how an item merged on the host since reaches it; or it is ahead only by an earlier
+  refresh's own merge, one commit whose second parent is on the default branch, left by a
+  rejected push. Ahead by that merge and behind as well means the merge was made on a stale
+  branch: stop, naming the merge commit and saying why. Dropping it is a reset, first-tier and
+  the person's to take, after which a refresh starts again from the remote copy. Any other
+  difference stops
+
+A refresh writes **no activity record**, the one exception to writing one first: the record is
+the run's, and the `items` it holds are what keep other worktrees off the run's work.
+
+Its remote budget is asked for **before any work starts**, in full, as a run's is:
+
+    This refresh will, without asking again:
+      push <integration branch>, adding one merge commit that brings in <default branch>
+      update the body of its aggregate pull request <number>
+
+    It will not merge or push <default branch>, will not force-push,
+    and will not merge the aggregate pull request.
+
+Then, when the branch is behind, fast-forward it. When an earlier refresh's merge is waiting,
+push it as it is, add the body line, and end. Otherwise fetch the default branch and follow "A
+run catching up" in {{cmd:complete}}'s `reference/land-on-top.md`: blocks 1 to 3 with the
+default branch's remote-tracking name as the target, redoing the share of every item the run
+completed; `nothing landed since` ends the refresh with nothing to do. Run the full `Verify`.
+Only when it passes, commit the merge, push the integration branch by name, never forced, and
+add a line to the aggregate's body naming the default-branch commit brought in and the files
+redone. A rejected push is a stop that keeps the merge commit locally and says so. Once the
+cause is put right, `{{cmd}} refresh` again pushes it; when the push was refused because the
+branch moved on the host, it stops on the stale merge as above.
+
+Stop, keeping the state as it is, on a conflict outside the shared files, which the routine
+reports and abandons; on a failing `Verify`, abandoning the merge with the routine's block; or
+when nothing landed since. A refresh never rebases, resets or force-pushes the integration
+branch, and the run's activity record and the items it holds are left as they were.
 
 ## Fix mode
 

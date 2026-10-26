@@ -18,6 +18,9 @@
     },
     {
       "prompt": "Run items 6 to 10 unattended in this session"
+    },
+    {
+      "prompt": "The other run's aggregate merged into main, catch my auto run's integration branch up"
     }
   ],
   "negative": [

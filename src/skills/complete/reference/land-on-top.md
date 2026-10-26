@@ -158,6 +158,20 @@ the target it brought in, as **Base**, and that merge commit and anything after 
 rollback reverses. Without a merge, the record is as `{{cmd:complete}}` describes. Commit the
 record: in a worktree, an uncommitted file goes when the worktree is removed.
 
+## A run catching up
+
+`{{cmd:auto}} refresh` uses blocks 1 to 3 for a whole run rather than one item, when another run's
+aggregate pull request merged into the default branch first. The checkout is the run's
+integration branch, between items, and the target is the default branch's remote-tracking name,
+such as `origin/main`, fetched first. The merge is a commit on the integration branch, which
+stays append-only: nothing is rebased, reset or force-pushed.
+
+Block 2's share is every item the run completed, each row as the table gives it: every one of
+the run's plan ticks, and a parent's once all its sub-items are ticked; the ledger entries
+`HEAD` holds beyond the merge base, as for one item; and each journal entry whose `**Archive:**`
+names one of the run's archives. Block 4 does not apply: each item's `## Landed` record already
+names its own commits on the integration branch, and the refresh's merge belongs to none of them.
+
 ## When the state directory is ignored
 
 Then none of these files are in git, and the merge carries none of them: this item's archive,

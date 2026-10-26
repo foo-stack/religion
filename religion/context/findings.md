@@ -1154,13 +1154,13 @@
 **Suggested fix:** Before merging, name or stop on ignored files the target tracks, or say so in the routine.
 **Resolution:**
 
-### 49a/F-6 [P3] open - The routing description does not mention named items
+### 49a/F-6 [P3] fixed - The routing description does not mention named items
 
 **File:** src/skills/auto/SKILL.md:4
 **Found:** 2026-10-26 by audit (scope: current; lens: quality)
 **Why it matters:** `description` is what routing runs on; the new routing case passes on "unattended", not on the new form.
 **Suggested fix:** Add "a range or list such as `1-5` or `6, 7, 8` runs exactly those items".
-**Resolution:**
+**Resolution:** 2026-10-26, item 49b - the `description` names the range and list forms.
 
 ### 49a/F-7 [P3] open - readInFlight's doc comment sits on the wrong symbol and is stale
 
@@ -1178,13 +1178,13 @@
 **Suggested fix:** Add cases for an unplanned titled spec holding items and an untitled zero-step spec holding none; optionally narrow the check to `item` and `title` both null.
 **Resolution:**
 
-### 49a/F-10 [P3] open - Preflight does not stop a named run whose items are all ticked
+### 49a/F-10 [P3] fixed - Preflight does not stop a named run whose items are all ticked
 
 **File:** src/skills/auto/SKILL.md:71
 **Found:** 2026-10-26 by audit (scope: current; lens: quality)
 **Why it matters:** "The plan has unchecked items" passes while every named item is ticked, so the run reaches Step 2 with nothing to do and no stated stop.
 **Suggested fix:** For a named run, require at least one named item unticked.
-**Resolution:**
+**Resolution:** 2026-10-26, item 49b - preflight needs at least one of a named run's items unchecked.
 
 ### 49a/F-11 [P3] open - This worktree's own run between specs is untested in readInFlight
 
@@ -1219,20 +1219,214 @@
 **Suggested fix:** Release on what is left to build, not on status: only when every named item is completed or passed over as waiting; every other stop keeps them and writes `blocked` with the resume command; a completed record resumes nothing.
 **Resolution:** 2026-10-26 - `auto` releases items only when none is left to build, with a `completed` final write; every other stop keeps them and writes `blocked` with the resume command; a completed record resumes nothing. `activity.md` says the same.
 
-### 49a/F-21 [P3] open - The releasing write comes before the aggregate pull request
+### 49a/F-21 [P3] fixed - The releasing write comes before the aggregate pull request
 
 **File:** src/skills/auto/SKILL.md:133
 **Found:** 2026-10-26 by audit (scope: current; lens: quality)
 **Surfaced by:** 49a/F-20
 **Why it matters:** Under `pull-request`, nothing is left to build once the last item lands, so the `completed` write can precede Step 3; if opening the aggregate pull request then fails, a completed record resumes nothing and the pull request is never opened. It is also a deliberate exception to `ready` for an unattended run waiting for review that the text does not name.
 **Suggested fix:** Say the releasing write is the run's last, after Step 3 where the mode has one, and that a blocked record with every item ticked resumes at Step 3.
-**Resolution:**
+**Resolution:** 2026-10-26, item 49b - the releasing write is the run's last, after Step 3 opens the aggregate pull request, `completed` by design; a record with every item ticked resumes at Step 3; an aggregate pull request not opened is a `blocked` stop.
 
-### 49a/F-22 [P3] open - The release condition leaves out items already ticked
+### 49a/F-22 [P3] fixed - The release condition leaves out items already ticked
 
 **File:** src/skills/auto/SKILL.md:133
 **Found:** 2026-10-26 by audit (scope: current; lens: quality)
 **Surfaced by:** 49a/F-20
 **Why it matters:** "each named item completed or passed over as waiting" read literally never releases a run named over an item ticked before it started.
 **Suggested fix:** "each named item completed, already ticked, or passed over as waiting".
+**Resolution:** 2026-10-26, item 49b - release counts items already ticked.
+
+### 49b/F-3 [P2] open - A rerun of block 2 in run mode overwrites a run that has progressed
+
+**File:** src/skills/implement/reference/item-worktree.md:57
+**Found:** 2026-10-26 by audit (scope: current; lens: security)
+**Why it matters:** With `move='no'` no rerun guard is left, and under ignored state the copy loop puts the main checkout's ledger, plan and spec over the run worktree's. Reproduced: an open P1 and a plan tick in the worktree were reverted.
+**Suggested fix:** In run mode, refuse when the worktree's `.state/run.json` exists.
+**Resolution:**
+
+### 49b/F-4 [P2] open - A run's worktree inherits the main checkout's spec under ignored state
+
+**File:** src/skills/implement/reference/item-worktree.md:129
+**Found:** 2026-10-26 by audit (scope: current; lens: security, quality)
+**Why it matters:** The copy loop brings the main checkout's `current-work.md` with the rest of the ignored state, and the run's clean-tree check cannot see ignored files, so a run starts holding work it was not given. Reproduced.
+**Suggested fix:** In run mode, refuse unless the main checkout's spec is the stub.
+**Resolution:**
+
+### 49b/F-5 [P2] open - The remote budget template names a branch a named run does not push
+
+**File:** src/skills/auto/SKILL.md:48
+**Found:** 2026-10-26 by audit (scope: current; lens: security, quality)
+**Why it matters:** The enumeration shows `<prefix><date>`, but a named run pushes `<prefix><date>-<first>-<last>`; followed literally, the approval names a different branch.
+**Suggested fix:** Show the named run's form in the template.
+**Resolution:**
+
+### 49b/F-6 [P2] open - A pre-created worktree on the run's branch is adopted
+
+**File:** src/skills/implement/reference/item-worktree.md:42
+**Found:** 2026-10-26 by audit (scope: current; lens: security)
+**Why it matters:** The branch and path are predictable; a worktree made there from the recorded commit with commits on top passes the only check, and the run moves in under its settings and pushes its commits.
+**Suggested fix:** On a fresh start, require the branch tip to equal the recorded commit; on a resume, require the worktree's own blocked record with the same items.
+**Resolution:**
+
+### 49b/F-7 [P2] open - Step 1 creates and pushes the branch before the routine that refuses an existing one
+
+**File:** src/skills/auto/SKILL.md:81
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** Read in order, the run creates the integration branch, then block 1 stops on "branch exists"; a branch whose worktree is gone is undefined.
+**Suggested fix:** Scope the create-and-push paragraph to runs without the setting, and name a branch with no worktree as a stop.
+**Resolution:**
+
+### 49b/F-8 [P2] open - Integration branch names collide and an existing one is reused
+
+**File:** src/skills/auto/SKILL.md:89
+**Found:** 2026-10-26 by audit (scope: current; lens: security, quality)
+**Why it matters:** `6, 9` and `6-9`, or a same-day rerun after a release, give one name, and the resume rule then builds on another run's branch whose aggregate is open; a parent's first and last labels are undefined.
+**Suggested fix:** Name from the labels as given; reuse an existing branch only when this run's own record names it, otherwise stop.
+**Resolution:**
+
+### 49b/F-9 [P2] open - Under ignored state a run's bookkeeping never returns to the main checkout
+
+**File:** src/skills/implement/reference/item-worktree.md:125
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** Each item's archive, tick and ledger live only in the run worktree; land-on-top's ignored-state section is written for one item and its base is the run's start.
+**Suggested fix:** Say how a run copies its state back at Step 3, or that ignored state is a stop for parallel runs.
+**Resolution:**
+
+### 49b/F-10 [P2] open - The worktree applies to count runs, which hold nothing
+
+**File:** src/skills/auto/SKILL.md:93
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** The text promises any `pull-request` run can run beside another, but only a named run holds its items, so a named run beside a count run can take an item the count run reaches later.
+**Suggested fix:** Say only a named run may run beside another, or restrict the worktree to named runs.
+**Resolution:**
+
+### 49b/F-11 [P2] open - Per-item landing deletes the branch before leaving it and never refreshes the integration branch
+
+**File:** src/skills/auto/SKILL.md:130
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** `git branch -d` refuses a branch checked out in the run's worktree, and the merge happens on the host, so the next item branches from a stale ref. Predates this item.
+**Suggested fix:** Check out the integration branch, fast-forward it, confirm the work commit, then delete the item branch.
+**Resolution:**
+
+### 49b/F-12 [P3] open - implement's worktree paragraph reads as applying to a run's item
+
+**File:** src/skills/implement/SKILL.md:67
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** "From then on the item is the worktree's" now follows the automated-run sentence.
+**Suggested fix:** Move the automated-run sentence after the paragraph.
+**Resolution:**
+
+### 49b/F-14 [P3] unverified - A hostile record refuses every named run
+
+**File:** src/skills/auto/SKILL.md:147
+**Found:** 2026-10-26 by audit (scope: current; lens: security)
+**Why it matters:** A record holding every number stops every named run before it starts: the 49a/F-13 nuisance as a denial of service. It cannot steer a push or merge.
+**Suggested fix:** Name the holder's worktree path in the stop.
+**Resolution:**
+
+### 49b/F-18 [P3] open - A run blocked in its worktree is easy to miss from the main checkout
+
+**File:** packages/create-religion/lib/state.ts:742
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** The main checkout's record reads `completed` and its in-flight line does not say the worktree's run is blocked, so its resume command is visible only inside the worktree.
+**Suggested fix:** Carry the worktree record's status on `InFlight` and print "blocked" on the in-flight line.
+**Resolution:**
+
+### 49c/F-4 [P2] open - A change the run made to an existing finding is dropped
+
+**File:** src/skills/complete/reference/land-on-top.md:169
+**Found:** 2026-10-26 by audit (scope: current; lens: security, quality)
+**Why it matters:** Block 1 takes the landed ledger whole and block 2 carries only added entries, so a finding the run closed comes back open and one it reopened or raised loses that, and the refresh's body line says neither.
+**Suggested fix:** For a run, re-apply status changes and removals to entries whose landed copy is unchanged from the merge base; name every one it cannot in the aggregate body.
+**Resolution:**
+
+### 49c/F-6 [P2] open - The rename rule is undefined for run-level findings
+
+**File:** src/skills/complete/reference/land-on-top.md:73
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** Two runs can both allocate the same bare identifier, and a run has many archives or none to take a prefix from.
+**Suggested fix:** Name the prefix a run-level entry takes and report renames in the aggregate body.
+**Resolution:**
+
+### 49c/F-7 [P2] open - Block 3's failure path contradicts the refresh
+
+**File:** src/skills/complete/reference/land-on-top.md:113
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** It says to build a fix on this branch and record `## Landed` in both archives, which on an integration branch would open a pull request carrying the whole run and contradicts skipping block 4.
+**Suggested fix:** Say the paragraph does not apply to a run and give its way forward.
+**Resolution:**
+
+### 49c/F-9 [P3] open - "Never resets" conflicts with the abandon block
+
+**File:** src/skills/auto/SKILL.md:214
+**Found:** 2026-10-26 by audit (scope: current; lens: security, quality)
+**Why it matters:** Both texts say a refresh never resets, yet abandon with `git reset --hard HEAD`, which leaves the tip where it is.
+**Suggested fix:** Say it never moves the branch's tip backwards.
+**Resolution:**
+
+### 49c/F-10 [P3] open - A refresh with no worktree leaves the main checkout off the default branch
+
+**File:** src/skills/auto/SKILL.md:191
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** Checking out the integration branch in the main checkout blocks the next run's preflight.
+**Suggested fix:** Stop when a worktree run's worktree is gone; otherwise return to the default branch.
+**Resolution:**
+
+### 49c/F-11 [P3] open - Which run a refresh acts on is not said
+
+**File:** src/skills/auto/SKILL.md:24
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** From the main checkout with two run worktrees, `refresh` names neither.
+**Suggested fix:** Refresh the branch checked out where it is invoked; elsewhere stop naming the candidates.
+**Resolution:**
+
+### 49c/F-12 [P3] open - The description's gate excludes the new routing case
+
+**File:** src/skills/auto/SKILL.md:4
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** The description's closing gate, run only on an explicit invocation or a request for an unattended run, does not cover asking to catch a branch up.
+**Suggested fix:** Name refresh in the gate, or word the case as an explicit refresh invocation.
+**Resolution:**
+
+### 49c/F-13 [P3] open - The aggregate body goes stale after a refresh
+
+**File:** src/skills/auto/SKILL.md:210
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** Renamed or reopened findings make Step 3's findings list wrong.
+**Suggested fix:** Fold into 49c/F-4 and F-6.
+**Resolution:**
+
+### 49c/F-14 [P3] open - Ignored files are overwritten by the merge
+
+**File:** src/skills/complete/reference/land-on-top.md:31
+**Found:** 2026-10-26 by audit (scope: current; lens: security)
+**Why it matters:** An ignored file the target starts tracking is overwritten by `git merge` and deleted by the abandon reset, unreported. Reproduced. Predates this item, widened by a long-lived run worktree.
+**Suggested fix:** Before merging, stop on target-added paths that are ignored files here.
+**Resolution:**
+
+### 49c/F-15 [P3] open - Whether the Authority section allows a refresh's push to be granted up front
+
+**File:** src/skills/auto/SKILL.md:200
+**Found:** 2026-10-26 by audit (scope: current; lens: security)
+**Why it matters:** The pre-grant covers branches a run creates, asked at that moment; a refresh is a later invocation pushing an earlier run's branch, and the aggregate body edit is not a listed pre-grantable action. A decision for the user, not a rule a skill may widen.
+**Suggested fix:** Ask again just before the push, or the user extends the Authority section.
+**Resolution:**
+
+### 49c/F-16 [P3] open - Nothing marks a refresh as in progress
+
+**File:** src/skills/auto/SKILL.md:203
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Surfaced by:** 49c/F-1
+**Why it matters:** The run's record stays `blocked` while a refresh merges and pushes, so a second session's `auto resume` or `auto refresh` can start in the same worktree.
+**Suggested fix:** Have `auto resume` and `auto refresh` refuse while a merge is open or the branch is ahead of its remote.
+**Resolution:**
+
+### 49c/F-17 [P3] open - The run's own record cannot be verified without a worktree
+
+**File:** src/skills/auto/SKILL.md:198
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Surfaced by:** 49c/F-8
+**Why it matters:** With `parallelItems` off, any later skill's `completed` record in the main checkout passes the check.
+**Suggested fix:** Require the record's command to be `auto` and its items to match the branch's suffix.
 **Resolution:**

@@ -64,8 +64,9 @@ second one.
 plan starts in its own worktree instead: follow `reference/item-worktree.md`, which creates
 it on that branch beside the project and moves the spec there. Creating it is part of
 positioning the work, as creating the branch is; removing it is deleting files, and asks.
-An automated run keeps the plain branch, since it removes each item's branch once it lands,
-and a worktree holding the branch would stop that. From then on the item is the worktree's.
+An automated run keeps a plain branch per item, inside the run's own worktree when it has
+one, since it removes each item's branch once it lands, and a worktree holding the branch would
+stop that. From then on the item is the worktree's.
 Move the session into it where the tool can; otherwise address every file and
 command to the worktree's path, and tell the user to open later sessions there, since hooks
 keep running where a session started. A resume inside the worktree is the ordinary resume

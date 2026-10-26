@@ -251,3 +251,19 @@ verification check, and both were found by hand first.
 **Surprised:** The code was right first time apart from one gap: a held parent did not hold its sub-items, because `status` only offers leaves. Almost every later finding was in the skill prose, not the code.
 **Went wrong:** The rule for when a run releases its items took four re-review rounds. Each version keyed it on the record's status, and each status turned out to fit some stop that still meant to resume; keying it on whether any named item is left to build ended the chain.
 **Deferred:** 49a/F-20 (P2) waiting on 49a/F-21 and 49a/F-22 (P3), when the releasing write happens under `pull-request` and items already ticked; six P3s from the first audit; all for 49b, which rewrites how a run starts and stops.
+
+
+## 2026-10-26 - Each run in its own worktree
+
+**Archive:** history/features/49b-each-run-in-its-own-worktree.md
+**Surprised:** Reusing the item routine for a run needed only one switch, but turning off its spec checks also turned off its only rerun guard, which the security review found by reverting a run's ledger and plan tick with a second copy.
+**Went wrong:** The activity record's "first action" rule clashed with a run that moves: the first record landed in the main checkout holding the run's items and read as a phantom run from the worktree. Two repair rounds settled it by writing no items until preflight knows where the run runs.
+**Deferred:** nine P2s for the next item or a fix, chiefly the run-mode rerun guard (49b/F-3), the inherited spec under ignored state (49b/F-4), the budget template's branch name (49b/F-5), adopting a pre-created worktree (49b/F-6) and per-item landing order (49b/F-11); 49a/F-6, F-10, F-21 and F-22 were repaired here but not yet re-reviewed.
+
+
+## 2026-10-26 - A run catches up after another lands
+
+**Archive:** history/features/49c-a-run-catches-up-after-another-lands.md
+**Surprised:** The land-on-top routine needed no new code for a whole run, only a section saying the share is every item the run completed; the hard part was everything around the merge: which branch, which record, and what a rejected push leaves behind.
+**Went wrong:** A throwaway test script failed midway and its later commands ran in the real repository, committing two blank lines that a forward commit removed; the proof was rerun behind a guard that refuses to run outside the scratchpad. 49c/F-2 took three repairs, the run stopping at its limit after two; the third, at the user's request, made a merge left on a stale branch a named stop whose reset is the person's.
+**Deferred:** 49c/F-4, F-6, F-7 (P2: changes to existing findings dropped, the rename rule for run-level findings, block 3's failure path) and P3s including F-15, whether a refresh's push may be granted up front, which is the user's to decide in the Authority section.

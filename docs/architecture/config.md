@@ -76,7 +76,11 @@ own git worktree beside the project, on the item's branch, and moves the spec th
 checkout is idle and can spec the next item while that one is built. A session resumes an item by
 working from its worktree, and `religion status` lists every item in flight from any worktree.
 It needs a branch per item, so `doctor` refuses it under `git.mode: trunk`. Fixes, rollbacks and
-refactor campaigns keep building where they are, and an automated run keeps the plain branch.
+refactor campaigns keep building where they are. An automated run under `pull-request` makes
+one worktree for itself instead, on its integration branch, and builds each item on a plain
+branch inside it, so two sessions can each run a named set of items at once. When one run's
+aggregate pull request merges first, `auto refresh` brings the default branch into the other's
+integration branch with a merge commit, redoing that run's share of the shared state files.
 
 Items land one at a time. When another item landed first, `complete` brings that in, takes the
 landed copy of whichever of the plan, ledger, journal, overview and handoff the other item

@@ -56,7 +56,8 @@ finding, already repaired, is an incident.
 
 For each group that earns it, propose the coding-standard rule that would have prevented every
 finding in it, in the standards' own voice, as an instruction for work not yet started, with the
-findings cited by identifier. A rule that only restates one finding is not a standard. Skip a
+findings cited by their archived identifier, prefix included, such as `39a/F-2` or `27/F-161`.
+A rule that only restates one finding is not a standard. Skip a
 group already recorded in `religion/learning/journal-archive.md` unless it has grown since.
 
 ## Step 3 - route by kind

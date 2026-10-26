@@ -18,6 +18,7 @@ export interface Status {
   activity: ProjectState["activity"];
   inbox: { notes: number };
   spec: ProjectState["spec"];
+  inFlight: ProjectState["inFlight"];
   warnings: string[];
 }
 
@@ -31,8 +32,13 @@ export function computeStatus(state: ProjectState): Status {
   const done = leaves.filter((i) => i.done).length;
   const { waits, problems } = waiting(state.plan, new Set(state.settledSpikes));
   const waitsOn = (item: PlanItem) => (item.number ? waits.get(item.number) : undefined);
-  const nextItem = leaves.find((i) => !i.done && !waitsOn(i)) ?? null;
-  const passedOver = leaves.slice(0, nextItem ? leaves.indexOf(nextItem) : leaves.length).filter((i) => !i.done && waitsOn(i));
+  // An item another worktree is building is not this checkout's to start.
+  const elsewhere = new Map(state.inFlight.filter((i) => !i.here && i.item).map((i) => [i.item!, i.branch ?? i.worktree]));
+  const busy = (item: PlanItem) => !!item.number && elsewhere.has(item.number);
+  const nextItem = leaves.find((i) => !i.done && !waitsOn(i) && !busy(i)) ?? null;
+  const before = leaves.slice(0, nextItem ? leaves.indexOf(nextItem) : leaves.length).filter((i) => !i.done);
+  const passedOver = before.filter((i) => waitsOn(i));
+  const building = before.filter((i) => !waitsOn(i) && busy(i));
 
   const byStatus: Record<string, number> = {};
   for (const finding of state.findings) {
@@ -46,6 +52,10 @@ export function computeStatus(state: ProjectState): Status {
   if (passedOver.length > 0) {
     const named = passedOver.map((i) => `${i.number} (${waitsOn(i)!.join(", ")})`);
     warnings.push(`passed over plan items that are waiting: ${named.join("; ")}`);
+  }
+  if (building.length > 0) {
+    const named = building.map((i) => `${i.number} (${elsewhere.get(i.number!)})`);
+    warnings.push(`passed over plan items in flight in another worktree: ${named.join("; ")}`);
   }
   warnings.push(...problems.map((p) => `the build plan: ${p}`));
   if (!state.configValid) warnings.push("config.json does not parse; workflow commands will stop rather than guess");
@@ -66,7 +76,7 @@ export function computeStatus(state: ProjectState): Status {
 
   return {
     schemaVersion: 1,
-    next: nextAction(state, nextItem?.title ?? null, blocking.length > 0, leaves.filter((i) => !i.done && waitsOn(i)), waitsOn),
+    next: nextAction(state, nextItem?.title ?? null, blocking.length > 0, leaves.filter((i) => !i.done && waitsOn(i)), waitsOn, building.length > 0),
     plan: { done, total: leaves.length, nextItem: nextItem?.title ?? null },
     work: state.work,
     findings: { total: state.findings.length, blocking, byStatus },
@@ -74,6 +84,7 @@ export function computeStatus(state: ProjectState): Status {
     activity: state.activity,
     inbox: { notes: state.inbox.length },
     spec: state.spec,
+    inFlight: state.inFlight,
     warnings
   };
 }
@@ -83,7 +94,8 @@ function nextAction(
   nextItem: string | null,
   blocked: boolean,
   waitingLeaves: readonly PlanItem[],
-  waitsOn: (item: PlanItem) => string[] | undefined
+  waitsOn: (item: PlanItem) => string[] | undefined,
+  building: boolean
 ): Status["next"] {
   if (!state.configValid) return { command: "doctor", because: "configuration cannot be parsed" };
   if (!state.overviewPresent) return { command: "overview", because: "no source of truth has been generated" };
@@ -105,6 +117,9 @@ function nextAction(
 
   if (nextItem) return { command: "feature", because: `next in the plan: ${nextItem}` };
   if (state.plan.length === 0) return { command: "overview", because: "the build plan has no items yet" };
+  if (building && waitingLeaves.length === 0) {
+    return { command: "implement", because: "every remaining item is in flight in another worktree; continue one there" };
+  }
   if (waitingLeaves.length > 0) {
     const onSpike = waitingLeaves.find((i) => waitsOn(i)!.includes("a spike"));
     return onSpike
@@ -125,6 +140,12 @@ export function renderStatus(status: Status, cmd = "/"): string {
           (status.work.status ? ` (${status.work.status})` : "")
       : "Active:   nothing in progress"
   );
+  for (const item of status.inFlight.filter((i) => !i.here)) {
+    out.push(
+      `In flight: ${item.item ? `item ${item.item} ` : ""}${item.title ?? "untitled"} - step ${item.stepsDone}/${item.stepsTotal}` +
+        ` on ${item.branch ?? item.worktree}`
+    );
+  }
   out.push(`Plan:     ${status.plan.done}/${status.plan.total} complete (${pct}%)`);
 
   const run = status.activity;

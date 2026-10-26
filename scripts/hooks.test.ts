@@ -1,13 +1,20 @@
 import { test } from "node:test";
 import type { TestContext } from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { overviewHash, parseInbox } from "../packages/create-religion/lib/state.js";
+
+/** Git for test repositories only: nothing from the caller's environment or config reaches it. */
+const GIT_ENV = {
+  ...Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_"))),
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_NOSYSTEM: "1"
+};
 
 const HOOK = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "hooks", "write-handoff.mjs");
 
@@ -85,6 +92,23 @@ test("write-handoff names a stale overview, the inbox, unverified findings and a
   assert.doesNotMatch(text, /F-08/);
   assert.match(text, /The auto run is blocked\.\*\* Resume it with `\/auto resume`\./);
   assert.doesNotMatch(text, /ignore all previous instructions/, "no free text from the record");
+});
+
+test("write-handoff lists findings that carry an item prefix beside bare ones", async (t) => {
+  const { root } = await project(t);
+  await writeState(
+    root,
+    "context/findings.md",
+    "# Findings\n\n### F-03 [P1] open - Bare and blocking\n\n### 39a/F-1 [P1] open - Prefixed and blocking\n\n" +
+      "### 39a/F-2 [P2] unverified - A prefixed guess\n\n### /F-4 [P1] open - Not an identifier\n"
+  );
+
+  assert.equal(runHook(root), 0);
+  const text = await handoff(root);
+  assert.match(text, /F-03 \[P1\] open - Bare and blocking/);
+  assert.match(text, /39a\/F-1 \[P1\] open - Prefixed and blocking/);
+  assert.match(text, /^39a\/F-2 \[P2\]\.$/m);
+  assert.doesNotMatch(text, /Not an identifier/);
 });
 
 test("write-handoff leaves out a run whose fields fail the status rule, and a fresh overview", async (t) => {
@@ -216,4 +240,56 @@ test("warn-on-drift stays quick on a spec with a very long build steps section",
   const started = Date.now();
   drift(root, editing(path.join(root, "b.ts")));
   assert.ok(Date.now() - started < 3000, `took ${Date.now() - started} ms`);
+});
+
+test("write-handoff lists items in flight in other worktrees, cleaned, and nothing outside a repository", async (t) => {
+  const { root } = await project(t);
+  const before = (assert.equal(runHook(root), 0), await handoff(root));
+  assert.doesNotMatch(before, /In flight/);
+
+  const git = (...args: string[]) => execFileSync("git", ["-C", root, ...args], { stdio: "pipe", env: GIT_ENV });
+  git("init", "-q", "-b", "main");
+  git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "base");
+  const other = path.join(path.dirname(root), "other tree");
+  git("worktree", "add", "-q", "-b", "feature/b", other);
+  await fs.mkdir(path.join(other, "religion", "context"), { recursive: true });
+  await fs.writeFile(
+    path.join(other, "religion", "context", "current-work.md"),
+    "# Second \u001b[2J`<b>`item\n\n**From build plan:** item 2\n\n- [x] **one**\n- [ ] **two**\n"
+  );
+
+  assert.equal(runHook(root), 0);
+  const text = await handoff(root);
+  assert.match(text, /^In flight in other worktrees:$/m);
+  assert.match(text, /^- \*\*Second \[2Jbitem\*\* \(item 2\) on `feature\/b`: 1 of 2 step\(s\) done\.$/m);
+  assert.doesNotMatch(text, /\u001b/);
+
+  const linked = path.join(path.dirname(root), "linked");
+  git("worktree", "add", "-q", "--detach", linked);
+  await fs.mkdir(path.join(linked, "religion", "context"), { recursive: true });
+  await fs.symlink("/dev/zero", path.join(linked, "religion", "context", "current-work.md"));
+  const started = Date.now();
+  assert.equal(spawnSync(process.execPath, [HOOK], { cwd: root, input: "{}", timeout: 10000 }).status, 0);
+  assert.ok(Date.now() - started < 5000, "a spec linked to an endless device is not read");
+  assert.doesNotMatch(await handoff(root), /linked/);
+
+  const elsewhere = path.join(path.dirname(root), "elsewhere");
+  await fs.mkdir(elsewhere);
+  await fs.writeFile(path.join(elsewhere, "current-work.md"), "# Outside spec\n\n- [ ] **one**\n");
+  const dirLinked = path.join(path.dirname(root), "dir-linked");
+  git("worktree", "add", "-q", "--detach", dirLinked);
+  await fs.mkdir(path.join(dirLinked, "religion"));
+  await fs.symlink(elsewhere, path.join(dirLinked, "religion", "context"));
+  assert.equal(runHook(root), 0);
+  assert.doesNotMatch(await handoff(root), /Outside spec/, "a linked directory does not lead outside the worktree");
+
+  const innerLinked = path.join(path.dirname(root), "inner-linked");
+  git("worktree", "add", "-q", "--detach", innerLinked);
+  await fs.mkdir(path.join(innerLinked, "religion", "context"), { recursive: true });
+  await fs.writeFile(path.join(innerLinked, ".env.local"), "# SECRET_TOKEN=abc\n");
+  await fs.symlink("../../.env.local", path.join(innerLinked, "religion", "context", "current-work.md"));
+  assert.equal(runHook(root), 0);
+  assert.doesNotMatch(await handoff(root), /SECRET_TOKEN/, "a spec linked to a file in its own worktree is not read");
+
+  assert.equal(runHook(other), 0, "a worktree with no religion directory is left alone");
 });

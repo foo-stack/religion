@@ -1047,3 +1047,109 @@
 **Why it matters:** A project at `.../step-app` with a `base` file beside it is refused silently (reproduced); an empty state file prints a blank line and refuses; a stale one names a directory the OS already cleared. The routine says "deal with them first" without pointing at teardown, so a later wave in the same spec is refused with no cause given.
 **Suggested fix:** An `echo` on each of the three exits, and one sentence saying that clearing a kept wave is the teardown, which asks after a failed join, and that a state file naming nothing or a missing directory is stale and removing it also asks.
 **Resolution:** 2026-10-24, the narrow re-review of F-187 to F-190 raised the same false refusal again from the guard pattern, matching `/step-` anywhere in the path; suggested renaming the wave marker to something like `wave-base`.
+
+### 39b/F-7 [P3] open - The two readers test a wave step's base file differently
+
+**File:** src/hooks/write-handoff.mjs:100
+**Found:** 2026-10-25 by audit (scope: current; lens: quality)
+**Why it matters:** `readInFlight` needs `base` readable as a file; the hook takes any existing path, so a `base` directory skips the step worktree in one and not the other.
+**Suggested fix:** Use the same test in both.
+**Resolution:**
+
+### 39b/F-8 [P3] open - Two worktrees on one item name only the last branch
+
+**File:** packages/create-religion/lib/status.ts:36
+**Found:** 2026-10-25 by audit (scope: current; lens: quality)
+**Why it matters:** The map keeps one branch per item, so the warning hides the other worktree.
+**Suggested fix:** Keep each branch, or note the limit.
+**Resolution:**
+
+### 39b/F-9 [P3] open - Status prints text from other worktrees uncleaned
+
+**File:** packages/create-religion/lib/status.ts:143
+**Found:** 2026-10-25 by audit (scope: current; lens: security)
+**Why it matters:** The `In flight:` line prints another worktree's title, branch and path raw, so escape sequences in a title reach the terminal and the agent reading status, while the handoff cleans the same text.
+**Suggested fix:** Strip control and format characters in `renderStatus`.
+**Resolution:**
+
+### 39b/F-10 [P3] open - The hook's wave-step skip and its cap have no test
+
+**File:** scripts/hooks.test.ts:236
+**Found:** 2026-10-25 by audit (scope: current; lens: tests)
+**Why it matters:** A regression listing `step-<n>` worktrees, or dropping the `and N more` line, would pass.
+**Suggested fix:** Add a wave step worktree and six other worktrees to the hook test.
+**Resolution:**
+
+### 39b/F-11 [P3] open - No test covers Religion below the repository top, relative gitdir records, or an unresolved root
+
+**File:** packages/create-religion/lib/state.test.ts:848
+**Found:** 2026-10-25 by audit (scope: current; lens: tests)
+**Why it matters:** Verified by hand to work, but every `readInFlight` case passes a resolved root at the repository top with absolute records.
+**Suggested fix:** One case using `worktree add --relative-paths`, a `sub/` offset and the unresolved temp path.
+**Resolution:**
+
+### 39b/F-12 [P3] open - Nothing checks that the two readers agree
+
+**File:** src/hooks/write-handoff.mjs:104
+**Found:** 2026-10-25 by audit (scope: current; lens: tests)
+**Why it matters:** The item rules differ: the hook requires `item` straight after the label, status finds it anywhere in the value, so `see item 3` is item 3 in status and none in the handoff.
+**Suggested fix:** Feed both the same fixture and compare, or align the rule.
+**Resolution:**
+
+### 39b/F-13 [P3] open - A weak assertion on the hook run from a worktree without Religion
+
+**File:** scripts/hooks.test.ts:260
+**Found:** 2026-10-25 by audit (scope: current; lens: tests)
+**Why it matters:** It proves only that the hook exited 0, not that it wrote nothing there.
+**Suggested fix:** Assert no handoff was created in that worktree.
+**Resolution:**
+
+### 39b/F-14 [P3] open - The worktree reads do more work than they show
+
+**File:** src/hooks/write-handoff.mjs:98
+**Found:** 2026-10-25 by audit (scope: current; lens: performance)
+**Why it matters:** The hook reads every worktree's spec but prints five; `readProjectState`, polled every 3 seconds by the dashboard, rereads this worktree's spec and resolves the root twice.
+**Suggested fix:** Stop reading after six active specs in the hook; reuse the root's spec and resolved path in `readInFlight`.
+**Resolution:**
+
+### 39b/F-15 [P3] open - The handoff's next-up line names an item another worktree is building
+
+**File:** src/hooks/write-handoff.mjs:153
+**Found:** 2026-10-25 by audit (scope: current; lens: quality)
+**Why it matters:** Status and feature pass over it, so the handoff now disagrees with both. Recorded by the check as outside the spec.
+**Suggested fix:** Pass over items listed in flight elsewhere when choosing the next-up line.
+**Resolution:**
+
+### 39c/F-11 [P2] fixed - A rerun of the copy block after the move puts the stub over the moved spec
+
+**File:** src/skills/implement/reference/item-worktree.md:45
+**Found:** 2026-10-25 by audit (scope: current; lens: security)
+**Surfaced by:** 39c/F-5
+**Why it matters:** Block 2 said it was safe to repeat with no condition, so once block 3 reset the main checkout's spec a rerun copied the stub over the only copy of the spec, or the next item's spec over this one's; with an ignored state directory it also overwrote the worktree's other state files. Reproduced.
+**Suggested fix:** Refuse when the main checkout holds no spec, or the worktree already holds a different one.
+**Resolution:** 2026-10-25, block 2 refuses `the main checkout holds no spec to move` and `the worktree already holds another spec` before copying anything; both reproduced cases now stop with the worktree's spec and findings intact, in bash and zsh. Re-reviewed 2026-10-25: both refusals reproduced with the worktree's spec and findings intact; it stays fixed while 39c/F-15, surfaced by this repair, is open.
+
+### 39c/F-15 [P3] open - The copy block refuses its first run when the commit holds an active spec
+
+**File:** src/skills/implement/reference/item-worktree.md:55
+**Found:** 2026-10-25 by audit (scope: current; lens: quality)
+**Surfaced by:** 39c/F-11
+**Why it matters:** A worktree made from a commit whose spec is active checks that spec out, and the guard reads it as work already started, so block 2 always refuses and the start dead-ends with nothing lost; with an ignored state directory, a block that stopped after its state copy and a later edit to the main spec does the same. Both reproduced.
+**Suggested fix:** Treat a tracked worktree spec unchanged from its checkout as fresh, and leave the spec out of the state copy so only the final copy writes it.
+**Resolution:**
+
+### 39d/F-23 [P2] open - Block 1's merge overwrites an item's ignored state when the target tracks it
+
+**File:** src/skills/complete/reference/land-on-top.md:32
+**Found:** 2026-10-25 by audit (scope: current; lens: quality)
+**Why it matters:** When the item's branch ignores the state directory but the target tracks it, the merge brings the target's files over the item's only copies, and abandoning then removes them. Reproduced; not caused by the latest repair.
+**Suggested fix:** Refuse before merging when a shared path is ignored here but tracked in the target.
+**Resolution:** 
+
+### 39d/F-31 [P3] open - Block 1's merge overwrites an ignored file the target starts tracking without a word
+
+**File:** src/skills/complete/reference/land-on-top.md:32
+**Found:** 2026-10-25 by audit (scope: current; lens: quality)
+**Why it matters:** An ignored `dist/out.js` was replaced by the target's tracked copy at block 1, before any report; the clean check cannot see ignored files. Reproduced.
+**Suggested fix:** Before merging, name or stop on ignored files the target tracks, or say so in the routine.
+**Resolution:**

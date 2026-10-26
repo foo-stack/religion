@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -140,4 +141,41 @@ test("runDoctor tells a linked .claude, a directory at the settings path and lin
   for (const file of allFiles) await fs.writeFile(path.join(root, "hookfiles", path.basename(file)), "");
   await fs.symlink(path.join(root, "hookfiles"), path.join(root, ".claude", "hooks"));
   assert.equal(await hooks(), "all 4 wired");
+});
+
+const GIT_ENV = {
+  ...Object.fromEntries(Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_"))),
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_NOSYSTEM: "1"
+};
+
+test("runDoctor refuses parallel items under trunk and names a linked worktree's main checkout", async (t) => {
+  const base = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "religion-doctor-")));
+  t.after(() => fs.rm(base, { recursive: true, force: true }));
+  const main = path.join(base, "main");
+  const linked = path.join(base, "main.feature-x");
+  const git = (...args: string[]) => execFileSync("git", ["-C", main, ...args], { stdio: "pipe", env: GIT_ENV });
+  await fs.mkdir(path.join(main, "religion"), { recursive: true });
+  await fs.mkdir(path.join(main, ".claude", "skills"), { recursive: true });
+  const config = (body: object) => fs.writeFile(path.join(main, "religion", "config.json"), JSON.stringify(body));
+  const check = async (root: string, name: string) => (await runDoctor(root)).find((c) => c.name === name);
+
+  await config({ workflow: { parallelItems: true } });
+  assert.equal((await check(main, "configuration"))?.detail, "workflow.parallelItems needs a branch per item, which git.mode trunk never makes");
+  await config({ workflow: { parallelItems: true }, git: { mode: "pull-request" } });
+  assert.equal((await check(main, "configuration"))?.ok, true);
+
+  git("init", "-q", "-b", "main");
+  git("add", "-A");
+  git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "base");
+  assert.equal((await check(main, "git"))?.detail, "repository present");
+  assert.equal((await check(main, "hooks"))?.detail, ".claude/settings.json is missing; a fresh install writes it");
+
+  git("worktree", "add", "-q", "-b", "feature/x", linked);
+  await fs.mkdir(path.join(linked, ".claude", "skills"), { recursive: true });
+  assert.equal((await check(linked, "git"))?.detail, `linked worktree of ${main}`);
+  assert.equal(
+    (await check(linked, "hooks"))?.detail,
+    `.claude/settings.json is missing in this linked worktree; copy the main checkout's from ${main}`
+  );
 });

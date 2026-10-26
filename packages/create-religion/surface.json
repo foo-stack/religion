@@ -128,6 +128,7 @@
       "item"
     ],
     "workflow.parallelSteps": "boolean",
+    "workflow.parallelItems": "boolean",
     "git.mode": [
       "trunk",
       "branch-per-item",
@@ -218,6 +219,17 @@
         "approved": "string|null",
         "drifted": "boolean"
       },
+      "inFlight": [
+        {
+          "worktree": "string",
+          "branch": "string|null",
+          "item": "string|null",
+          "title": "string|null",
+          "stepsDone": "number",
+          "stepsTotal": "number",
+          "here": "boolean"
+        }
+      ],
       "warnings": [
         "string"
       ]

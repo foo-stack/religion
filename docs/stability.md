@@ -58,7 +58,9 @@ meanings. No automated check runs the tool and compares its exit codes yet.
   (`active`, `title`, `type`, `status`, `stepsDone`, `stepsTotal`, `nextStep`), `findings`
   (`total`, `blocking`, `byStatus`), `overview` (`present`, `fresh`), `activity`
   (`recorded`, `command`, `status`, `summary`, `updatedAt`, `resumeCommand`), `inbox`
-  (`notes`), `spec` (`hash`, `approved`, `drifted`), and `warnings`.
+  (`notes`), `spec` (`hash`, `approved`, `drifted`), `inFlight`, a list of the work items active
+  in any worktree of the repository (`worktree`, `branch`, `item`, `title`, `stepsDone`,
+  `stepsTotal`, `here`), empty outside a repository, and `warnings`.
 - **`doctor`**: `healthy`, true exactly when the exit code is 0, and `checks`, each with
   `name`, `ok`, `detail` and `blocks`.
 
@@ -105,6 +107,7 @@ Every key in `religion/config.json`, and the values it accepts:
 | `schemaVersion` | `1` |
 | `workflow.stepReview` | `every`, `item` |
 | `workflow.parallelSteps` | `true`, `false` |
+| `workflow.parallelItems` | `true`, `false` |
 | `git.mode` | `trunk`, `branch-per-item`, `pull-request` |
 | `git.checkpoints` | `none`, `every-step`, `squash` |
 | `git.featureBranchPrefix` | a lowercase prefix ending in `/` |
@@ -142,7 +145,9 @@ checked; see [Known limitations](#known-limitations).
 
 The state files keep their names and locations within 1.x, and the formats the tool reads
 from them (the build plan's checkboxes, the active spec's steps, the findings ledger's
-headings, the overview's source stamp) keep parsing.
+headings, the overview's source stamp) keep parsing. A ledger heading may carry an item
+prefix, `### 39a/F-2 [P1] open - ...`, and one without a prefix, `### F-07 [P2] open - ...`,
+keeps parsing beside it.
 
 **Held by:** the parser tests in `packages/create-religion/lib/state.test.ts`, for the build
 plan, the spec, the ledger and the overview's stamp; the install tests in `packages/create-religion/lib/install.test.ts`; and the upgrade check

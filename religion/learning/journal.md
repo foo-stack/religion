@@ -214,3 +214,32 @@ verification check, and both were found by hand first.
 **Surprised:** The spike's clean answer hid most of the work: a shell routine an agent runs one command at a time, from wherever its directory happens to be, failed in ways no single run showed, and five rounds of independent review each found a smaller gap in what the last repair added.
 **Went wrong:** `check` caught the untracked-file and untracked-link defects only on its second and third runs, and the completion audit found two P1s in the join, a subdirectory cwd and a pipe hiding a missing patch, either of which would have deleted step work.
 **Deferred:** F-163 to F-178, F-180, F-182, F-186 and F-188 in the ledger; Windows; the other three tools' shells.
+
+## 2026-10-25 - Finding identifiers scoped to their item
+
+**Archive:** history/features/39a-finding-identifiers-scoped-to-their-item.md
+**Surprised:** The dashboard had quietly assumed every identifier was `F-` followed by a number, reading `39a/F-1` as 0; only red-teaming the spec against the code caught it, since nothing tests the page script.
+**Went wrong:** A "fails without the fix" check stashed the test along with the fix and proved nothing until redone.
+**Deferred:** Prefixes for unplanned work, until item 39c.
+
+## 2026-10-25 - Items in flight are visible
+
+**Archive:** history/features/39b-items-in-flight-are-visible.md
+**Surprised:** The spec planned to run `git worktree list`, but `verify` refuses `node:child_process` in shipped code because it backs the no-network promise, so worktrees are read from git's own files instead; nobody caught that while red-teaming the spec.
+**Went wrong:** Reading another worktree's spec safely took six repair rounds: each fix for a symlinked spec (a hang on `/dev/zero`, a leaked heading, a race, a linked directory, whole-path resolution, Windows without `O_NOFOLLOW`) opened a narrower gap that the next independent review found, and the run stopped once on its repair bound.
+**Deferred:** 39b/F-7 to F-15, all P3, including the handoff's next-up line not passing over items in flight and the two readers living in two copies.
+
+## 2026-10-25 - Each item starts in its own worktree
+
+**Archive:** history/features/39c-each-item-starts-in-its-own-worktree.md
+**Surprised:** A shell routine an agent runs one block at a time cannot share variables between blocks; the check passed only because the test harness set them itself, and the audit, running each block in a fresh shell, found the routine did nothing past its first block.
+**Went wrong:** Two repair rounds: the first made the copy block safe to repeat and so let a rerun put the stub over the moved spec; the second guarded that and, in turn, refuses a first run when the base commit carries an active spec.
+**Deferred:** 39c/F-15 (P3) and 39c/F-11 behind it; Windows; landing items one at a time and removing their worktrees.
+
+
+## 2026-10-26 - Items land one at a time
+
+**Archive:** history/features/39d-items-land-one-at-a-time.md
+**Surprised:** Taking the landed copy of each state file and redoing the share worked first time; nearly all the trouble was in giving up a merge half way, which the spec treated as a one-line `git merge --abort`.
+**Went wrong:** Abandoning the merge took nine repair rounds. Each hand-built abort that staged, set back and cleared paths opened a narrower case the next independent review found; replacing it with one reset to the work commit, and finding what the reset removed by listing untracked files with git before and after, ended the chain.
+**Deferred:** 39d/F-23 (P2) and 39d/F-31 (P3), ignored files a target starts tracking that block 1's merge overwrites; removing an item's worktree after it lands, which asks.

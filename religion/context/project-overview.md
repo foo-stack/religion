@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 408640bc26d17547 -->
+<!-- religion:source-hash 87feb06fdd28a07d -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -46,20 +46,19 @@ nothing to sign into.
 - **Entry-file merge** - installs into a repository that already carries agent instructions,
   keeping what is there
 - **Optional waves** - steps a spec marks as independent build concurrently, off by default
+- **Several items at once** - behind a setting, each planned item in its own git worktree,
+  landed one at a time with the shared bookkeeping redone on top of what already landed
 
 ## Roadmap
 
-Eighteen items queued. Item 21's spike is settled and it is split into 21a to 21c, one per
-tool, built in that order; every other item still waits on a spike. Several also say which
-items they follow; item 29 made the tooling honour both.
+Sixteen items queued, each waiting on a spike. Several also say which items they follow; item 29
+made the tooling honour both.
 
 **Status, learning and health**
 
 
 **Bigger capabilities, mostly spike-first**
 
-21. **Hooks beyond Claude Code** - the four hooks for Codex (21a), then Copilot (21b), then
-    OpenCode (21c), sharing scripts under `.agents/hooks/`
 22. **Update merges edits** - three-way merge against a stored copy of what was installed
 23. **Adopt from another workflow** - `setup` converts another workflow's plans and specs,
     landing them unverified
@@ -72,7 +71,6 @@ items they follow; item 29 made the tooling honour both.
 
 **Direction changes, all spike-first**
 
-39. **Several work items at once** - one spec per active item; after 27, a major version
 40. **Religion runs in CI** - a labelled issue to a pull request nothing merges; after 20,
     24 and 33
 41. **One tool builds, another reviews** - review handed to a different installed tool
@@ -167,8 +165,6 @@ The single thing in progress, in `context/current-work.md`.
 Each is deferred to its item's spike, which can run while the item is blocked. The spike's
 answer decides whether the project plan changes.
 
-- **Parallel work items** (affects: item 39, the work item shape) - the non-goals settle "no
-  parallel execution across work items", and item 39 builds it. Decided by item 39's spike.
 - **Independent review** (affects: item 41) - the non-goals settle "no independent-review
   mechanism", and item 41 hands review to a second tool. Decided by item 41's spike.
 - **Closed extensibility** (affects: item 42, the skill shape) - skill sources, tokens and

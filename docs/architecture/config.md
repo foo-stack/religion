@@ -14,6 +14,7 @@ deletion, waived check, or accepted finding.
 | --- | --- | --- |
 | `workflow.stepReview` | `every`, `item` | `every` |
 | `workflow.parallelSteps` | `true`, `false` | `false` |
+| `workflow.parallelItems` | `true`, `false` | `false` |
 | `git.mode` | `trunk`, `branch-per-item`, `pull-request` | `trunk` |
 | `git.checkpoints` | `none`, `every-step`, `squash` | `every-step` |
 | `git.featureBranchPrefix` | lowercase prefix ending in `/` | `feature/` |
@@ -67,6 +68,21 @@ them or none, renders generated output once, and gates each step on the joined t
 that does not apply stops for review with the project unchanged. The parent performs every
 write, and the wave is reviewed as one packet. `workflow.stepReview` still decides when that
 review happens.
+
+## Parallel items
+
+`workflow.parallelItems` ships `false`. Turned on, `implement` starts each planned item in its
+own git worktree beside the project, on the item's branch, and moves the spec there, so the main
+checkout is idle and can spec the next item while that one is built. A session resumes an item by
+working from its worktree, and `religion status` lists every item in flight from any worktree.
+It needs a branch per item, so `doctor` refuses it under `git.mode: trunk`. Fixes, rollbacks and
+refactor campaigns keep building where they are, and an automated run keeps the plain branch.
+
+Items land one at a time. When another item landed first, `complete` brings that in, takes the
+landed copy of whichever of the plan, ledger, journal, overview and handoff the other item
+changed, and redoes the item's own share of them on top: its plan tick, the findings it added
+that are still unresolved, and its journal entry. Those files are never merged as text. A conflict anywhere else
+stops for review, and removing an item's worktree after it lands asks.
 
 ## Branch prefixes
 

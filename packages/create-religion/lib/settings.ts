@@ -25,6 +25,10 @@ export const SETTINGS: Record<string, Setting> = {
     kind: "boolean", default: false,
     summary: "Whether steps a spec marks as independent build together as one reviewed wave."
   },
+  "workflow.parallelItems": {
+    kind: "boolean", default: false,
+    summary: "Whether implement starts each planned item in its own git worktree beside the project."
+  },
   "git.mode": {
     kind: "enum", values: ["trunk", "branch-per-item", "pull-request"], default: "trunk",
     summary: "Where work lands: the branch you are on, a branch merged per item, or a pull request per item."

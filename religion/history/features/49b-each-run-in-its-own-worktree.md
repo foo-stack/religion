@@ -202,3 +202,9 @@ large, so split it.
 **Why it matters:** "on every write where it runs once preflight knows where that is" parses badly, and the line was not rewrapped.
 **Suggested fix:** "on every write in the checkout it runs from, starting once preflight knows which that is", rewrapped.
 **Resolution:** 2026-10-26 - reworded as suggested and rewrapped. Closed 2026-10-26 by a fresh-context re-review: reworded and rewrapped, meaning unchanged, agrees with `auto`.
+
+## Landed
+
+**Base:** ee3a65b7faeb51d4508d342cfe8a64c680be15c3
+**Commits:** 3d5e99166901ae9d2380b2457325ce6443adf6ff
+**Product paths:** .changeset/runs-in-own-worktrees.md, docs/architecture/config.md, src/entry/partials/activity.md, src/skills/auto/SKILL.md, src/skills/implement/SKILL.md, src/skills/implement/reference/item-worktree.md

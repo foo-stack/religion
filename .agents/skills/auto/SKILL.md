@@ -18,6 +18,8 @@ between steps.
 - `$auto all` - the remaining build plan, completing each item, until it runs out or hits
   a bound.
 - `$auto 3` - the next three items, completing each.
+- `$auto 1-5` or `$auto 6, 7, 8` - exactly those plan items, completing each. A range or
+  a comma list names items; a bare number is always a count. See Named items.
 - `$auto resume` - continue an interrupted run from the file-backed state.
 - `$auto fix` - the findings ledger instead of the plan; see Fix mode.
 
@@ -114,6 +116,35 @@ nothing left to build and stops there.
 7. **Report one line** and move on.
 
 An item counts against `auto.maxItems` once it has landed, not once it is built.
+
+## Named items
+
+Given a range or a list, the run builds those items and no others.
+
+- **Plan order**, whatever order they were given in, since the waiting rule assumes it.
+- **A ticked item** is named and passed over. **A number the plan does not have** stops the
+  run before any work starts, naming it: a typo should not quietly shrink the run.
+- **The waiting rule still applies.** An item waiting on one outside the list, or on a
+  spike, is passed over and named in the final report, as in Step 2.
+- **Hold them.** Write the listed items, lowercased, as `items` in the activity record from
+  its first write, and keep them in every rewrite. That is what lets `status`, the handoff and
+  $feature in another worktree pass over the items this run has not reached yet, which no
+  spec shows.
+- **Release them only when none is left to build**, each named item completed or passed over
+  as waiting. That final write is `completed` and keeps just the items the run completed, so
+  the ones it passed over are free for another worktree to take; a parent number stays only
+  when every sub-item under it was completed, since a parent still held holds all of them.
+  Any other stop, a merge question, a bound, a failure, an aggregate pull request opened early,
+  keeps every item and writes `blocked` with `$auto resume`.
+- **Resume.** A record holding `items` resumes those still unticked; a `completed` one has
+  nothing left to resume. A record without `items` is a count, `all` or fix run, and resumes as
+  one. A named run whose record is gone stops and asks for the list again rather than guessing
+  which items it had.
+
+Plain numbers and sub-item labels are both items (`39a, 39b`); a range covers whole numbers
+only. A number that has sub-items stands for its unticked sub-items: build those, and record
+their labels in `items` beside the number, so readers that do not walk the plan still see
+them.
 
 ## Fix mode
 

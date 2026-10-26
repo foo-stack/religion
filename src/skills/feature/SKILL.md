@@ -67,7 +67,9 @@ those is unticked, or says `spike first` and no archive under `{{state}}/history
 Name each item passed over and what it waits on, and point a spike-first one at
 {{cmd:spike}}. An item another worktree is already building is passed over too: one that
 `religion status --json` lists under `inFlight` with `here` false, or, without the `religion`
-command, one the handoff lists as in flight in another worktree. Name it with its branch.
+command, one the handoff lists as in flight in another worktree. So is an item an automated
+run in another worktree holds: one listed under `items` on an `inFlight` entry with `here`
+false, or named as held in the handoff. Name it with its branch.
 State which item you are spec'ing before going further.
 
 Asked by number for an item that waits, say what it waits on and stop: speccing it now

@@ -473,8 +473,24 @@ test("parseActivity reads the record a running skill writes", () => {
     status: "blocked",
     summary: "Building the remaining plan",
     updatedAt: "2026-10-21T10:00:00Z",
-    resumeCommand: "/auto resume"
+    resumeCommand: "/auto resume",
+    items: []
   });
+});
+
+test("parseActivity reads the plan items an auto run holds", () => {
+  const items = (value: unknown, command = "auto") =>
+    activity(JSON.stringify({ command, status: "running", summary: "x", items: value })).items;
+
+  assert.deepEqual(items(["1", "2", "39A"]), ["1", "2", "39a"]);
+  assert.deepEqual(items("1-5"), [], "not an array");
+  assert.deepEqual(items(["6", 7, "x", "7; rm", "", null, "8b"]), ["6", "8b"], "bad entries dropped, good ones kept");
+  assert.deepEqual(items(["3", "1", "3", "1"]), ["3", "1"], "duplicates once, order kept");
+  const numbers = (n: number) => Array.from({ length: n }, (_, i) => String(i + 1));
+  assert.deepEqual(items(numbers(150)), numbers(100), "the first hundred are kept");
+  assert.deepEqual(items([...Array(100).fill("1"), "2"]), ["1", "2"], "duplicates go before the cap applies");
+  assert.deepEqual(items(["1", "2"], "fix"), [], "only an auto run holds items");
+  assert.equal(activity(JSON.stringify({ command: "auto", status: "running", summary: "x", items: { a: 1 } })).recorded, true);
 });
 
 test("parseActivity reads a missing, malformed or partial record as not recorded", () => {
@@ -904,10 +920,34 @@ test("readInFlight lists active specs across worktrees, skipping wave steps and 
 
     const fromB = await readInFlight(path.join(dir, "item b"));
     assert.deepEqual(fromB, [
-      { worktree: path.join(dir, "item b"), branch: "feature/b", item: "2b", title: "Second", stepsDone: 1, stepsTotal: 2, here: true },
-      { worktree: path.join(dir, "item-c"), branch: null, item: null, title: "Unplanned", stepsDone: 0, stepsTotal: 1, here: false }
+      { worktree: path.join(dir, "item b"), branch: "feature/b", item: "2b", title: "Second", stepsDone: 1, stepsTotal: 2, here: true, items: [] },
+      { worktree: path.join(dir, "item-c"), branch: null, item: null, title: "Unplanned", stepsDone: 0, stepsTotal: 1, here: false, items: [] }
     ]);
     assert.deepEqual((await readInFlight(path.join(dir, "main"))).map((i) => i.here), [false, false]);
+
+    const run = async (tree: string, items: unknown) => {
+      await fs.mkdir(path.join(dir, tree, "religion", ".state"), { recursive: true });
+      await fs.writeFile(path.join(dir, tree, "religion", ".state", "run.json"), JSON.stringify({ command: "auto", status: "running", summary: "x", items }));
+    };
+    await run("item b", ["2b", "3"]);
+    git("worktree", "add", "-q", "-b", "auto/between", path.join(dir, "between"));
+    await spec("between", "# Current work\n\n_Nothing in progress._\n");
+    await run("between", ["6", "7"]);
+    git("worktree", "add", "-q", "--detach", path.join(dir, "idle"));
+    await run("idle", []);
+    git("worktree", "add", "-q", "--detach", path.join(dir, "run link"));
+    await fs.mkdir(path.join(dir, "run link", "religion", ".state"), { recursive: true });
+    await fs.writeFile(path.join(dir, "run.json"), JSON.stringify({ command: "auto", status: "running", summary: "x", items: ["9"] }));
+    await fs.symlink(path.join(dir, "run.json"), path.join(dir, "run link", "religion", ".state", "run.json"));
+    const held = await readInFlight(path.join(dir, "main"));
+    assert.deepEqual(held.map((i) => [path.basename(i.worktree), i.item, i.items]).sort(), [
+      ["between", null, ["6", "7"]],
+      ["item b", "2b", ["2b", "3"]],
+      ["item-c", null, []]
+    ], "a run between specs is listed by its items; an idle run and a linked record are not");
+    assert.deepEqual(held.find((i) => i.items.includes("6")), {
+      worktree: path.join(dir, "between"), branch: "auto/between", item: null, title: null, stepsDone: 0, stepsTotal: 0, here: false, items: ["6", "7"]
+    });
     assert.deepEqual((await readProjectState(path.join(dir, "main"))).inFlight, await readInFlight(path.join(dir, "main")));
 
     await fs.mkdir(path.join(dir, "plain"));

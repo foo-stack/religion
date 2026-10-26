@@ -103,6 +103,15 @@ const readPlain = (file, within) =>
       closeSync(fd);
     }
   });
+// The rule `religion status` applies: only an `auto` run holds items, each a plan number, capped.
+const heldItems = (source) =>
+  quiet(() => {
+    const record = JSON.parse(source ?? "");
+    if (record?.command !== "auto" || typeof record.summary !== "string" || !["running", "blocked", "ready", "completed"].includes(record.status)) return [];
+    if (!Array.isArray(record.items)) return [];
+    const held = record.items.filter((i) => typeof i === "string" && /^\d+[a-z]?$/i.test(i)).map((i) => i.toLowerCase());
+    return [...new Set(held)].slice(0, 100);
+  }) ?? [];
 const elsewhere = (() => {
   const self = quiet(() => realpathSync(root));
   let home = self;
@@ -125,12 +134,15 @@ const elsewhere = (() => {
     // A wave's step worktree holds a copy of its parent item's spec, not an item of its own.
     if (/^step-\d+$/.test(path.basename(tree)) && existsSync(path.join(path.dirname(tree), "base"))) return [];
     const spec = readPlain(path.join(tree, offset, STATE, "context", "current-work.md"), tree) ?? "";
-    if (!spec.trim() || /_Nothing in progress\./.test(spec)) return [];
+    const items = heldItems(readPlain(path.join(tree, offset, STATE, ".state", "run.json"), tree));
+    const holding = items.length > 0 ? `holding items ${items.join(", ")}` : "";
+    const on = `on \`${plain(headBranch(git) ?? tree)}\``;
+    if (!spec.trim() || /_Nothing in progress\./.test(spec)) return holding ? [`- **An automated run** ${on}, ${holding}.`] : [];
     const item = spec.match(/^\*\*From build plan:\*\*[ \t]*item[ \t]+([0-9a-z]+)/im)?.[1]?.toLowerCase();
     const name = plain(spec.match(/^#\s+(.+)$/m)?.[1] ?? "Active work");
     // Spaces and tabs only: `\s` crosses newlines, which makes blank lines quadratic.
     const steps = `${(spec.match(/^[ \t]*- \[x\]/gim) ?? []).length} of ${(spec.match(/^[ \t]*- \[[ x]\]/gim) ?? []).length}`;
-    return [`- **${name}**${item ? ` (item ${plain(item)})` : ""} on \`${plain(headBranch(git) ?? tree)}\`: ${steps} step(s) done.`];
+    return [`- **${name}**${item ? ` (item ${plain(item)})` : ""} ${on}: ${steps} step(s) done${holding ? `, ${holding}` : ""}.`];
   });
 })();
 

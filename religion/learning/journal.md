@@ -243,3 +243,11 @@ verification check, and both were found by hand first.
 **Surprised:** Taking the landed copy of each state file and redoing the share worked first time; nearly all the trouble was in giving up a merge half way, which the spec treated as a one-line `git merge --abort`.
 **Went wrong:** Abandoning the merge took nine repair rounds. Each hand-built abort that staged, set back and cleared paths opened a narrower case the next independent review found; replacing it with one reset to the work commit, and finding what the reset removed by listing untracked files with git before and after, ended the chain.
 **Deferred:** 39d/F-23 (P2) and 39d/F-31 (P3), ignored files a target starts tracking that block 1's merge overwrites; removing an item's worktree after it lands, which asks.
+
+
+## 2026-10-26 - Runs that know their items
+
+**Archive:** history/features/49a-runs-that-know-their-items.md
+**Surprised:** The code was right first time apart from one gap: a held parent did not hold its sub-items, because `status` only offers leaves. Almost every later finding was in the skill prose, not the code.
+**Went wrong:** The rule for when a run releases its items took four re-review rounds. Each version keyed it on the record's status, and each status turned out to fit some stop that still meant to resume; keying it on whether any named item is left to build ended the chain.
+**Deferred:** 49a/F-20 (P2) waiting on 49a/F-21 and 49a/F-22 (P3), when the releasing write happens under `pull-request` and items already ticked; six P3s from the first audit; all for 49b, which rewrites how a run starts and stops.

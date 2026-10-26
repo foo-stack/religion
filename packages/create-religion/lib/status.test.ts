@@ -121,7 +121,7 @@ test("status warns when the active spec drifted from its approval", () => {
 });
 
 test("status passes over a plan item in flight in another worktree and lists it", () => {
-  const away = { worktree: "/elsewhere", branch: "feature/b", item: "2", title: "Second", stepsDone: 1, stepsTotal: 3, here: false };
+  const away = { worktree: "/elsewhere", branch: "feature/b", item: "2", title: "Second", stepsDone: 1, stepsTotal: 3, here: false, items: [] as string[] };
   const items = plan("- [x] 1. **Done** - x", "- [ ] 2. **Second** - x", "- [ ] 3. **Third** - x");
 
   const status = computeStatus(state({ plan: items, inFlight: [away] }));
@@ -140,4 +140,34 @@ test("status passes over a plan item in flight in another worktree and lists it"
 
   const allBusy = computeStatus(state({ plan: plan("- [ ] 2. **Second** - x"), inFlight: [away] }));
   assert.equal(allBusy.next.command, "implement");
+});
+
+test("status passes over plan items an auto run in another worktree holds", () => {
+  const items = plan(...[1, 2, 3, 4, 5, 6].map((n) => `- [ ] ${n}. **Item ${n}** - x`));
+  const between = { worktree: "/run-a", branch: "auto/a", item: null, title: null, stepsDone: 0, stepsTotal: 0, here: false, items: ["1", "2", "3", "4", "5"] };
+
+  const status = computeStatus(state({ plan: items, inFlight: [between] }));
+  assert.equal(status.plan.nextItem, "Item 6 - x");
+  assert.ok(status.warnings.includes("passed over plan items in flight in another worktree: 1 (auto/a); 2 (auto/a); 3 (auto/a); 4 (auto/a); 5 (auto/a)"));
+  assert.match(renderStatus(status), /^In flight: auto run holding items 1, 2, 3, 4, 5 on auto\/a$/m);
+
+  const building = { ...between, item: "2", title: "Item 2", stepsDone: 1, stepsTotal: 4 };
+  assert.match(renderStatus(computeStatus(state({ plan: items, inFlight: [building] }))), /^In flight: item 2 Item 2 - step 1\/4, holding items 1, 2, 3, 4, 5 on auto\/a$/m);
+
+  const split = plan("- [ ] 1. **One** - x", "- [ ] 2. **Two** - x", "  - [ ] 2a. **Two a** - x", "  - [ ] 2b. **Two b** - x", "- [ ] 3. **Three** - x");
+  const parent = computeStatus(state({ plan: split, inFlight: [{ ...between, items: ["2"] }] }));
+  assert.equal(parent.plan.nextItem, "One - x");
+  const pastOne = computeStatus(state({ plan: split.map((i) => (i.number === "1" ? { ...i, done: true } : i)), inFlight: [{ ...between, items: ["2"] }] }));
+  assert.equal(pastOne.plan.nextItem, "Three - x", "a held parent holds its sub-items");
+  assert.ok(pastOne.warnings.includes("passed over plan items in flight in another worktree: 2a (auto/a); 2b (auto/a)"));
+
+  const deep = plan("- [ ] 2. **Two** - x", "  - [ ] 2b. **Two b** - x", "    - [ ] **Unnumbered** - x", "    - [ ] 2b1. **Deep** - x", "- [ ] 3. **Three** - x");
+  const nested = computeStatus(state({ plan: deep, inFlight: [{ ...between, items: ["2"] }] }));
+  assert.equal(nested.plan.nextItem, "Three - x", "a held parent holds every level below it");
+  assert.ok(nested.warnings.includes("passed over plan items in flight in another worktree: 2b1 (auto/a)"), "an unnumbered line is not named");
+  const bare = computeStatus(state({ plan: plan("- [ ] 2. **Two** - x", "  - [ ] **Unnumbered** - x", "- [ ] 3. **Three** - x"), inFlight: [{ ...between, items: ["2"] }] }));
+  assert.ok(!bare.warnings.some((w) => w.includes("in another worktree")), "nothing numbered to name, so no warning");
+
+  const own = computeStatus(state({ plan: items, inFlight: [{ ...between, here: true }] }));
+  assert.equal(own.plan.nextItem, "Item 1 - x", "this worktree's own run does not pass over its items");
 });

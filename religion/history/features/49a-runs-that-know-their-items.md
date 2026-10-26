@@ -289,3 +289,9 @@ large, so split it.
 **Why it matters:** Reverting it to `building.length > 0` passes every test, though it would print an empty warning when every passed-over item is unnumbered.
 **Suggested fix:** A held parent whose only unticked child is unnumbered, asserting no in-flight warning.
 **Resolution:** 2026-10-26 - a held parent whose only child is unnumbered gives no in-flight warning; reverting the guard fails it (mutation, file restored). Closed 2026-10-26 by a fresh-context re-review: reverting the guard fails `status.test.ts`.
+
+## Landed
+
+**Base:** 262789d0b5de29c05133d7204edf7aa37cfd2cf8
+**Commits:** 9e73d9af82f68e2fe8aa4d0473efb277dfd30c3e
+**Product paths:** .changeset/runs-know-their-items.md, docs/stability.md, evals/routing/auto.json, packages/create-religion/lib/state.test.ts, packages/create-religion/lib/state.ts, packages/create-religion/lib/status.test.ts, packages/create-religion/lib/status.ts, packages/create-religion/surface.json, scripts/hooks.test.ts, src/entry/partials/activity.md, src/hooks/write-handoff.mjs, src/skills/auto/SKILL.md, src/skills/feature/SKILL.md

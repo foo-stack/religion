@@ -65,6 +65,10 @@
 - [ ] 46. **Lessons that travel between projects** - an opt-in user-level lesson store that `distill` can promote general lessons into and new installs can import from; revisits the promise to write nothing outside the project, a major version; after items 7 and 31, spike first on how many lessons are general
 - [ ] 47. **Religion runs its own agent** - `religion run` drives the loop through a model API with the skills as its instructions and the authority tiers enforced in code, a separate optional package outside the no-network promise; revisits the promise of no outbound network; spike first on one real item in a weekend
 - [ ] 48. **Tamper-evident history** - archives, approved steps and specs, and closed findings chained by hash, with a command that proves the record of what was reviewed and approved was not edited afterwards, and the chain recording legitimate rewrites; spike first on whether any team needs this for compliance
+- [ ] 49. **Several automated runs at once** - with `workflow.parallelItems` on, `auto` takes an explicit item list or range, runs in its own worktree on a uniquely named integration branch, refuses items another run holds, and can bring the default branch back in after another run's aggregate lands, redoing its share of the shared state files on top; after item 39d
+  - [x] 49a. **Runs that know their items** - `auto` takes an explicit item list or range while a bare number stays a count, the activity record carries the items a run holds, and `status` reports them under `inFlight` for every worktree
+  - [ ] 49b. **Each run in its own worktree** - with `workflow.parallelItems` on, `auto` starts in its own worktree on an integration branch named from the date and its items, refuses items another run holds, and names items that wait on another run's before it starts; after item 49a
+  - [ ] 49c. **A run catches up after another lands** - `auto refresh` brings the default branch into the integration branch with a merge commit, redoes the run's share of the shared state files on top, and updates its aggregate pull request; after item 49b
 
 ## Order
 

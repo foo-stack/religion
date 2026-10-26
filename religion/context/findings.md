@@ -1153,3 +1153,86 @@
 **Why it matters:** An ignored `dist/out.js` was replaced by the target's tracked copy at block 1, before any report; the clean check cannot see ignored files. Reproduced.
 **Suggested fix:** Before merging, name or stop on ignored files the target tracks, or say so in the routine.
 **Resolution:**
+
+### 49a/F-6 [P3] open - The routing description does not mention named items
+
+**File:** src/skills/auto/SKILL.md:4
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** `description` is what routing runs on; the new routing case passes on "unattended", not on the new form.
+**Suggested fix:** Add "a range or list such as `1-5` or `6, 7, 8` runs exactly those items".
+**Resolution:**
+
+### 49a/F-7 [P3] open - readInFlight's doc comment sits on the wrong symbol and is stale
+
+**File:** packages/create-religion/lib/state.ts:724
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** It now documents `AUTO`, and no longer says runs between specs are listed.
+**Suggested fix:** Move `AUTO` above the comment and say it lists active specs and auto runs holding items.
+**Resolution:**
+
+### 49a/F-8 [P3] open - The between-specs rendering is guessed from field values and half tested
+
+**File:** packages/create-religion/lib/status.ts:148
+**Found:** 2026-10-26 by audit (scope: current; lenses: quality, tests)
+**Why it matters:** Dropping `!item.title` and the step-count condition passes every test, and a titled spec with `item` null and held items is never rendered in a test.
+**Suggested fix:** Add cases for an unplanned titled spec holding items and an untitled zero-step spec holding none; optionally narrow the check to `item` and `title` both null.
+**Resolution:**
+
+### 49a/F-10 [P3] open - Preflight does not stop a named run whose items are all ticked
+
+**File:** src/skills/auto/SKILL.md:71
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** "The plan has unchecked items" passes while every named item is ticked, so the run reaches Step 2 with nothing to do and no stated stop.
+**Suggested fix:** For a named run, require at least one named item unticked.
+**Resolution:**
+
+### 49a/F-11 [P3] open - This worktree's own run between specs is untested in readInFlight
+
+**File:** packages/create-religion/lib/state.test.ts:942
+**Found:** 2026-10-26 by audit (scope: current; lens: tests)
+**Why it matters:** The `here` path reads through `readIfPresent`, and no test reads from the run's own worktree.
+**Suggested fix:** Assert `readInFlight` from `between` lists it with `here: true` and its items.
+**Resolution:**
+
+### 49a/F-12 [P3] open - Small redundant reads
+
+**File:** packages/create-religion/lib/state.ts:742
+**Found:** 2026-10-26 by audit (scope: current; lens: performance)
+**Why it matters:** This checkout's `run.json` is read and parsed twice per `status`, and the hook now reads each idle worktree's `HEAD` on every turn (`write-handoff.mjs:139`) because the branch is formatted before the idle check. Each is one small read.
+**Suggested fix:** Build the hook's branch text after the idle check; skip or reuse the home record read.
+**Resolution:**
+
+### 49a/F-13 [P3] unverified - Another worktree can hide up to 100 plan items
+
+**File:** packages/create-religion/lib/status.ts:36
+**Found:** 2026-10-26 by audit (scope: current; lens: security)
+**Why it matters:** A record listing items 1 to 100 makes `status` and an argumentless `feature` skip them. A nuisance, not an escalation: naming an item still works, and a hostile spec could already hide one.
+**Suggested fix:** None needed now; revisit if worktrees from untrusted branches become common.
+**Resolution:**
+
+### 49a/F-20 [P2] fixed - Releasing items by status frees ones a stopped run still means to build
+
+**File:** src/skills/auto/SKILL.md:132
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Surfaced by:** 49a/F-18
+**Why it matters:** No stop in `auto` says which status it writes, and several fit `ready`: the merge question under `branch-per-item`, an early stop that opened the aggregate pull request, a bound. Trimming on `ready` frees unreached items to other worktrees and leaves resume nothing to build; a named run that completed nothing is left with no `items` and would resume as a count run.
+**Suggested fix:** Release on what is left to build, not on status: only when every named item is completed or passed over as waiting; every other stop keeps them and writes `blocked` with the resume command; a completed record resumes nothing.
+**Resolution:** 2026-10-26 - `auto` releases items only when none is left to build, with a `completed` final write; every other stop keeps them and writes `blocked` with the resume command; a completed record resumes nothing. `activity.md` says the same.
+
+### 49a/F-21 [P3] open - The releasing write comes before the aggregate pull request
+
+**File:** src/skills/auto/SKILL.md:133
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Surfaced by:** 49a/F-20
+**Why it matters:** Under `pull-request`, nothing is left to build once the last item lands, so the `completed` write can precede Step 3; if opening the aggregate pull request then fails, a completed record resumes nothing and the pull request is never opened. It is also a deliberate exception to `ready` for an unattended run waiting for review that the text does not name.
+**Suggested fix:** Say the releasing write is the run's last, after Step 3 where the mode has one, and that a blocked record with every item ticked resumes at Step 3.
+**Resolution:**
+
+### 49a/F-22 [P3] open - The release condition leaves out items already ticked
+
+**File:** src/skills/auto/SKILL.md:133
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Surfaced by:** 49a/F-20
+**Why it matters:** "each named item completed or passed over as waiting" read literally never releases a run named over an item ticked before it started.
+**Suggested fix:** "each named item completed, already ticked, or passed over as waiting".
+**Resolution:**

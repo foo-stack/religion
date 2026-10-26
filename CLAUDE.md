@@ -189,6 +189,12 @@ its intended handoff, such as an unattended run waiting for review. Use `blocked
 exact recovery command when work can resume. `boundary` is `read-only`, `reviewed`, or
 `local-only`. Everything after `updatedAt` is optional.
 
+An `auto` run given explicit items also writes `items`, the plan numbers it holds as strings,
+such as `["6", "7", "8"]`, on every write. Other worktrees pass those items over, including the
+ones the run has not reached yet. Only when none of them is left to build does its final write,
+`completed`, keep just the items it completed, and a parent number only when all of its
+sub-items were; every earlier stop keeps them all and is `blocked`.
+
 Writing this record grants nothing and bypasses nothing. A failure to write it is reported
 and ignored: reporting must never turn into a workflow failure.
 

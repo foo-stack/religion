@@ -57,10 +57,11 @@ meanings. No automated check runs the tool and compares its exit codes yet.
 - **`status`**: `next` (`command`, `because`), `plan` (`done`, `total`, `nextItem`), `work`
   (`active`, `title`, `type`, `status`, `stepsDone`, `stepsTotal`, `nextStep`), `findings`
   (`total`, `blocking`, `byStatus`), `overview` (`present`, `fresh`), `activity`
-  (`recorded`, `command`, `status`, `summary`, `updatedAt`, `resumeCommand`), `inbox`
+  (`recorded`, `command`, `status`, `summary`, `updatedAt`, `resumeCommand`, `items`), `inbox`
   (`notes`), `spec` (`hash`, `approved`, `drifted`), `inFlight`, a list of the work items active
   in any worktree of the repository (`worktree`, `branch`, `item`, `title`, `stepsDone`,
-  `stepsTotal`, `here`), empty outside a repository, and `warnings`.
+  `stepsTotal`, `here`, `items`), empty outside a repository, and `warnings`. An `auto` run
+  between items is listed by the plan `items` it holds, with `item` and `title` null.
 - **`doctor`**: `healthy`, true exactly when the exit code is 0, and `checks`, each with
   `name`, `ok`, `detail` and `blocks`.
 

@@ -32,9 +32,20 @@ export function computeStatus(state: ProjectState): Status {
   const done = leaves.filter((i) => i.done).length;
   const { waits, problems } = waiting(state.plan, new Set(state.settledSpikes));
   const waitsOn = (item: PlanItem) => (item.number ? waits.get(item.number) : undefined);
-  // An item another worktree is building is not this checkout's to start.
-  const elsewhere = new Map(state.inFlight.filter((i) => !i.here && i.item).map((i) => [i.item!, i.branch ?? i.worktree]));
-  const busy = (item: PlanItem) => !!item.number && elsewhere.has(item.number);
+  // An item another worktree is building, or that a run there holds, is not this checkout's to start.
+  const elsewhere = new Map(
+    state.inFlight.filter((i) => !i.here).flatMap((i) => [...i.items, ...(i.item ? [i.item] : [])].map((n) => [n, i.branch ?? i.worktree] as const))
+  );
+  // A run holding a parent holds its sub-items, which are what actually get built.
+  const holder = new Map<PlanItem, string>();
+  const parents: PlanItem[] = [];
+  for (const item of state.plan) {
+    while (parents.length && parents[parents.length - 1]!.depth >= item.depth) parents.pop();
+    const by = [...parents, item].map((p) => p.number && elsewhere.get(p.number)).find(Boolean);
+    if (by) holder.set(item, by);
+    parents.push(item);
+  }
+  const busy = (item: PlanItem) => holder.has(item);
   const nextItem = leaves.find((i) => !i.done && !waitsOn(i) && !busy(i)) ?? null;
   const before = leaves.slice(0, nextItem ? leaves.indexOf(nextItem) : leaves.length).filter((i) => !i.done);
   const passedOver = before.filter((i) => waitsOn(i));
@@ -53,8 +64,9 @@ export function computeStatus(state: ProjectState): Status {
     const named = passedOver.map((i) => `${i.number} (${waitsOn(i)!.join(", ")})`);
     warnings.push(`passed over plan items that are waiting: ${named.join("; ")}`);
   }
-  if (building.length > 0) {
-    const named = building.map((i) => `${i.number} (${elsewhere.get(i.number!)})`);
+  // An unnumbered line under a held parent is passed over too, but has no number to name.
+  if (building.some((i) => i.number)) {
+    const named = building.filter((i) => i.number).map((i) => `${i.number} (${holder.get(i)})`);
     warnings.push(`passed over plan items in flight in another worktree: ${named.join("; ")}`);
   }
   warnings.push(...problems.map((p) => `the build plan: ${p}`));
@@ -141,9 +153,12 @@ export function renderStatus(status: Status, cmd = "/"): string {
       : "Active:   nothing in progress"
   );
   for (const item of status.inFlight.filter((i) => !i.here)) {
+    const holding = item.items.length > 0 ? `holding items ${item.items.join(", ")}` : "";
+    // A run between items has no spec to describe, only the items it holds.
+    const between = holding && !item.item && !item.title && item.stepsTotal === 0;
+    const work = between ? null : `${item.item ? `item ${item.item} ` : ""}${item.title ?? "untitled"} - step ${item.stepsDone}/${item.stepsTotal}`;
     out.push(
-      `In flight: ${item.item ? `item ${item.item} ` : ""}${item.title ?? "untitled"} - step ${item.stepsDone}/${item.stepsTotal}` +
-        ` on ${item.branch ?? item.worktree}`
+      `In flight: ${work ? work + (holding ? `, ${holding}` : "") : `auto run ${holding}`} on ${item.branch ?? item.worktree}`
     );
   }
   out.push(`Plan:     ${status.plan.done}/${status.plan.total} complete (${pct}%)`);

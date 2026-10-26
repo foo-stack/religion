@@ -53,6 +53,8 @@ export interface Activity {
   summary: string | null;
   updatedAt: string | null;
   resumeCommand: string | null;
+  /** Plan items an `auto` run was given to build, held from other worktrees until it lands them. */
+  items: string[];
 }
 
 export interface JournalEntry {
@@ -480,7 +482,7 @@ const CONTROL = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu;
  * write the record controls every field in it.
  */
 export function parseActivity(source: string | null, skills: ReadonlySet<string>): Activity {
-  const none: Activity = { recorded: false, command: null, status: null, summary: null, updatedAt: null, resumeCommand: null };
+  const none: Activity = { recorded: false, command: null, status: null, summary: null, updatedAt: null, resumeCommand: null, items: [] };
   if (!source) return none;
 
   let record: unknown;
@@ -491,7 +493,7 @@ export function parseActivity(source: string | null, skills: ReadonlySet<string>
   }
   if (!record || typeof record !== "object") return none;
 
-  const { command, status, summary, updatedAt, resumeCommand } = record as Record<string, unknown>;
+  const { command, status, summary, updatedAt, resumeCommand, items } = record as Record<string, unknown>;
   if (typeof command !== "string" || !SKILL_NAME.test(command) || !skills.has(command)) return none;
   if (typeof summary !== "string") return none;
   if (typeof status !== "string" || !ACTIVITY_STATUSES.has(status)) return none;
@@ -502,8 +504,18 @@ export function parseActivity(source: string | null, skills: ReadonlySet<string>
     status: status as Activity["status"],
     summary: summary.replace(CONTROL, " "),
     updatedAt: typeof updatedAt === "string" ? updatedAt.replace(CONTROL, " ") : null,
-    resumeCommand: resumes(command, resumeCommand) ? resumeCommand : null
+    resumeCommand: resumes(command, resumeCommand) ? resumeCommand : null,
+    items: command === "auto" ? heldItems(items) : []
   };
+}
+
+const HELD_MAX = 100;
+
+/** A malformed list degrades to fewer items, never to an unreadable record. */
+function heldItems(items: unknown): string[] {
+  if (!Array.isArray(items)) return [];
+  const held = items.filter((i): i is string => typeof i === "string" && /^\d+[a-z]?$/i.test(i)).map((i) => i.toLowerCase());
+  return [...new Set(held)].slice(0, HELD_MAX);
 }
 
 function resumes(command: string, resumeCommand: unknown): resumeCommand is string {
@@ -672,6 +684,8 @@ export interface InFlight {
   stepsTotal: number;
   /** True for the worktree this command ran in. */
   here: boolean;
+  /** Plan items the worktree's `auto` run holds, including ones it has not reached. */
+  items: string[];
 }
 
 /** Far above any real spec; a larger file in another worktree is not read. */
@@ -708,6 +722,8 @@ async function readPlain(file: string, within: string): Promise<string | null> {
 }
 
 /** Active specs across the repository's worktrees; empty outside a repository. */
+const AUTO: ReadonlySet<string> = new Set(["auto"]);
+
 export async function readInFlight(root: string): Promise<InFlight[]> {
   const listed = await listWorktrees(root);
   const self = await fs.realpath(root).catch(() => null);
@@ -718,12 +734,16 @@ export async function readInFlight(root: string): Promise<InFlight[]> {
   for (const { path: worktree, branch } of listed.trees) {
     // A wave's step worktree holds a copy of its parent item's spec, not an item of its own.
     if (/^step-\d+$/.test(path.basename(worktree)) && (await readIfPresent(path.join(path.dirname(worktree), "base"))) !== null) continue;
-    const spec = statePath(path.join(worktree, offset), "context", "current-work.md");
-    // This worktree's spec is read as `work` reads it; another's comes from someone else's branch.
-    const source = worktree === listed.home ? await readIfPresent(spec) : await readPlain(spec, worktree);
+    const base = path.join(worktree, offset);
+    // This worktree's files are read as `work` reads them; another's come from someone else's branch.
+    const read = (file: string) => (worktree === listed.home ? readIfPresent(file) : readPlain(file, worktree));
+    const source = await read(statePath(base, "context", "current-work.md"));
+    // Only an `auto` run holds items, so no other skill needs to be installed for its record to count.
+    const { items } = parseActivity(await read(statePath(base, ".state", "run.json")), AUTO);
     const work = parseWork(source);
-    if (!source || !work.active) continue;
-    const plan = field(source, "From build plan");
+    // A run between items has no spec, yet still holds the items it has not reached.
+    if (!work.active && items.length === 0) continue;
+    const plan = work.active ? field(source!, "From build plan") : null;
     found.push({
       worktree,
       branch,
@@ -732,7 +752,8 @@ export async function readInFlight(root: string): Promise<InFlight[]> {
       title: work.title,
       stepsDone: work.stepsDone,
       stepsTotal: work.stepsTotal,
-      here: worktree === listed.home
+      here: worktree === listed.home,
+      items
     });
   }
   return found;

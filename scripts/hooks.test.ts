@@ -264,6 +264,36 @@ test("write-handoff lists items in flight in other worktrees, cleaned, and nothi
   assert.match(text, /^- \*\*Second \[2Jbitem\*\* \(item 2\) on `feature\/b`: 1 of 2 step\(s\) done\.$/m);
   assert.doesNotMatch(text, /\u001b/);
 
+  const record = (tree: string, value: unknown) =>
+    fs.mkdir(path.join(tree, "religion", ".state"), { recursive: true }).then(() =>
+      fs.writeFile(path.join(tree, "religion", ".state", "run.json"), typeof value === "string" ? value : JSON.stringify(value))
+    );
+  await record(other, { command: "auto", status: "running", summary: "x", items: ["2", "3", "x; rm", 4] });
+  const between = path.join(path.dirname(root), "between");
+  git("worktree", "add", "-q", "-b", "auto/run", between);
+  await record(between, { command: "auto", status: "running", summary: "x", items: ["6", "7"] });
+  assert.equal(runHook(root), 0);
+  const held = await handoff(root);
+  assert.match(held, /^- \*\*Second \[2Jbitem\*\* \(item 2\) on `feature\/b`: 1 of 2 step\(s\) done, holding items 2, 3\.$/m);
+  assert.match(held, /^- \*\*An automated run\*\* on `auto\/run`, holding items 6, 7\.$/m);
+  for (const bad of [{ status: "bogus", summary: "x" }, { status: "running" }]) {
+    await record(between, { command: "auto", items: ["6"], ...bad });
+    assert.equal(runHook(root), 0);
+    assert.doesNotMatch(await handoff(root), /automated run/, `a record status would not read: ${JSON.stringify(bad)}`);
+  }
+  await record(between, { command: "auto", status: "running", summary: "x", items: ["39A", ...Array(200).fill("5")] });
+  assert.equal(runHook(root), 0);
+  assert.match(await handoff(root), /^- \*\*An automated run\*\* on `auto\/run`, holding items 39a, 5\.$/m);
+  await record(between, { command: "auto", status: "running", summary: "x", items: Array.from({ length: 150 }, (_, i) => String(i + 1)) });
+  assert.equal(runHook(root), 0);
+  assert.match(await handoff(root), /^- \*\*An automated run\*\* on `auto\/run`, holding items 1, 2, .*, 99, 100\.$/m, "the first hundred, no more");
+  await record(other, "{ not json");
+  await record(between, { command: "fix", status: "running", summary: "x", items: ["6"] });
+  assert.equal(runHook(root), 0);
+  const unheld = await handoff(root);
+  assert.match(unheld, /^- \*\*Second \[2Jbitem\*\* \(item 2\) on `feature\/b`: 1 of 2 step\(s\) done\.$/m, "a record that does not parse changes nothing");
+  assert.doesNotMatch(unheld, /automated run/, "only an auto run holds items");
+
   const linked = path.join(path.dirname(root), "linked");
   git("worktree", "add", "-q", "--detach", linked);
   await fs.mkdir(path.join(linked, "religion", "context"), { recursive: true });

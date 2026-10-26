@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 87feb06fdd28a07d -->
+<!-- religion:source-hash a13abf52be71808c -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -51,7 +51,7 @@ nothing to sign into.
 
 ## Roadmap
 
-Sixteen items queued, each waiting on a spike. Several also say which items they follow; item 29
+Seventeen items queued, sixteen of them waiting on a spike. Several also say which items they follow; item 29
 made the tooling honour both.
 
 **Status, learning and health**
@@ -68,6 +68,8 @@ made the tooling honour both.
 36. **Built UI compared with its reference** - against saved screenshots or the prototype
 37. **A first work item that teaches the loop** - a tiny real change walked through by `setup`
 38. **Dependency changes made visible in review** - lockfile changes listed per step, offline
+49. **Several automated runs at once** - `auto` over an explicit item list in its own worktree,
+    each run on its own integration branch, redoing its shared state after another run lands
 
 **Direction changes, all spike-first**
 

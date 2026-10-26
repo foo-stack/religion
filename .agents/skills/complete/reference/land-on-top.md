@@ -126,7 +126,7 @@ both archives with the one range they share, each saying it is shared.
       g="$(git -C "$root" rev-parse --absolute-git-dir)/abandon"
       list() { git -C "$root" -c core.quotePath=false "$@"; }
       list ls-files -o | LC_ALL=C sort >| "$g.before" || exit 1
-      list diff --name-only --no-renames HEAD >| "$g.tracked" || exit 1
+      { list diff --name-only --no-renames HEAD && list diff --cached --name-only --no-renames HEAD; } >| "$g.tracked" || exit 1
       git -C "$root" reset -q --hard HEAD; rc=$?
       list ls-files -o | LC_ALL=C sort >| "$g.after" || exit 1
       { cat "$g.tracked"; LC_ALL=C comm -23 "$g.before" "$g.after"; } | LC_ALL=C sort -u | sed 's/^/discarded: /'
@@ -139,8 +139,8 @@ both archives with the one range they share, each saying it is shared.
 Block 1 started from a clean tree, so the work commit is the whole of this item's work, and
 resetting to it ends the merge and returns the branch exactly as it was, whatever the merge left:
 redone shares, a handoff the hook rewrote, output `Verify` regenerated, paths still in conflict.
-Each path the reset set back or removed is named once: every tracked path that differed from the
-work commit, an edit made by hand while the merge was open among them, and every untracked or
+Each path the reset set back or removed is named once: every tracked path whose working or staged copy
+differed from the work commit, an edit made by hand while the merge was open among them, and every untracked or
 ignored file in the way of a path the work commit has, such as one inside a directory the target
 put where a file was, found by listing them with git before the reset and after it. Other
 untracked files are left where they are and named, a whole directory as one line. Names are

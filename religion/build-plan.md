@@ -67,7 +67,7 @@
 - [ ] 48. **Tamper-evident history** - archives, approved steps and specs, and closed findings chained by hash, with a command that proves the record of what was reviewed and approved was not edited afterwards, and the chain recording legitimate rewrites; spike first on whether any team needs this for compliance
 - [ ] 49. **Several automated runs at once** - with `workflow.parallelItems` on, `auto` takes an explicit item list or range, runs in its own worktree on a uniquely named integration branch, refuses items another run holds, and can bring the default branch back in after another run's aggregate lands, redoing its share of the shared state files on top; after item 39d
   - [x] 49a. **Runs that know their items** - `auto` takes an explicit item list or range while a bare number stays a count, the activity record carries the items a run holds, and `status` reports them under `inFlight` for every worktree
-  - [ ] 49b. **Each run in its own worktree** - with `workflow.parallelItems` on, `auto` starts in its own worktree on an integration branch named from the date and its items, refuses items another run holds, and names items that wait on another run's before it starts; after item 49a
+  - [x] 49b. **Each run in its own worktree** - with `workflow.parallelItems` on, `auto` starts in its own worktree on an integration branch named from the date and its items, refuses items another run holds, and names items that wait on another run's before it starts; after item 49a
   - [ ] 49c. **A run catches up after another lands** - `auto refresh` brings the default branch into the integration branch with a merge commit, redoes the run's share of the shared state files on top, and updates its aggregate pull request; after item 49b
 
 ## Order

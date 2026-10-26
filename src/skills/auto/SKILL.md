@@ -1,7 +1,7 @@
 ---
 name: auto
 summary: run the loop unattended, within explicit bounds
-description: "Run the reviewed loop without stopping between steps, within bounds you set. With no argument it takes one work item and stops before completing it; `all` runs the remaining build plan; a number runs that many items; a range or list such as `1-5` or `6, 7, 8` runs exactly those items; `fix` works through the findings ledger instead, every class most severe first or one class such as `fix P1`, one fix per file and class, re-reviewing every repair and folding any finding a repair surfaces into the same fix. Specs, implements, verifies, applies the configured gates, repairs confirmed high-severity findings, and completes each item. Its invocation grants committing, dependency installs, and remote reads for the run, and grants nothing else: it still stops to ask before any merge. Under git.mode pull-request it lands every item on one shared integration branch and ends by opening a single aggregate review packet it never merges, after stating that whole remote budget up front and being told yes. Use only when the user runs {{cmd}} or explicitly asks for an unattended run."
+description: "Run the reviewed loop without stopping between steps, within bounds you set. With no argument it takes one work item and stops before completing it; `all` runs the remaining build plan; a number runs that many items; a range or list such as `1-5` or `6, 7, 8` runs exactly those items; `refresh` brings the default branch into a run's integration branch after another run landed first; `fix` works through the findings ledger instead, every class most severe first or one class such as `fix P1`, one fix per file and class, re-reviewing every repair and folding any finding a repair surfaces into the same fix. Specs, implements, verifies, applies the configured gates, repairs confirmed high-severity findings, and completes each item. Its invocation grants committing, dependency installs, and remote reads for the run, and grants nothing else: it still stops to ask before any merge. Under git.mode pull-request it lands every item on one shared integration branch and ends by opening a single aggregate review packet it never merges, after stating that whole remote budget up front and being told yes. Use only when the user runs {{cmd}} or explicitly asks for an unattended run."
 ---
 
 # auto - the same loop, without the pauses
@@ -21,6 +21,8 @@ between steps.
 - `{{cmd}} 1-5` or `{{cmd}} 6, 7, 8` - exactly those plan items, completing each. A range or
   a comma list names items; a bare number is always a count. See Named items.
 - `{{cmd}} resume` - continue an interrupted run from the file-backed state.
+- `{{cmd}} refresh` - bring the default branch into a run's integration branch after another
+  run's aggregate landed first. See Refresh.
 - `{{cmd}} fix` - the findings ledger instead of the plan; see Fix mode.
 
 `auto.maxItems` caps successful completions. `auto.maxRepairAttempts` caps repeated
@@ -181,6 +183,55 @@ Plain numbers and sub-item labels are both items (`39a, 39b`); a range covers wh
 only. A number that has sub-items stands for its unticked sub-items: build those, and record
 their labels in `items` beside the number, so readers that do not walk the plan still see
 them.
+
+## Refresh
+
+`{{cmd}} refresh` catches a run up when another run's aggregate pull request merged into the
+default branch first. Both wrote the plan, the ledger and the journal, so this run's aggregate
+now conflicts on them every time. It runs where the run's integration branch is checked out, in
+the run's own worktree when it has one, and only when all of these hold; otherwise it stops and
+says which:
+
+- the checked-out branch starts with `git.integrationBranchPrefix` and is not the default
+  branch, and the run's aggregate pull request is open with it as head and the default branch
+  as base
+- the run's own record, here, is `blocked` or `completed`, never `running`, and the spec is the
+  stub and the tree clean
+- after fetching it, the branch is at its remote-tracking copy or can fast-forward to it, which
+  is how an item merged on the host since reaches it; or it is ahead only by an earlier
+  refresh's own merge, one commit whose second parent is on the default branch, left by a
+  rejected push. Ahead by that merge and behind as well means the merge was made on a stale
+  branch: stop, naming the merge commit and saying why. Dropping it is a reset, first-tier and
+  the person's to take, after which a refresh starts again from the remote copy. Any other
+  difference stops
+
+A refresh writes **no activity record**, the one exception to writing one first: the record is
+the run's, and the `items` it holds are what keep other worktrees off the run's work.
+
+Its remote budget is asked for **before any work starts**, in full, as a run's is:
+
+    This refresh will, without asking again:
+      push <integration branch>, adding one merge commit that brings in <default branch>
+      update the body of its aggregate pull request <number>
+
+    It will not merge or push <default branch>, will not force-push,
+    and will not merge the aggregate pull request.
+
+Then, when the branch is behind, fast-forward it. When an earlier refresh's merge is waiting,
+push it as it is, add the body line, and end. Otherwise fetch the default branch and follow "A
+run catching up" in {{cmd:complete}}'s `reference/land-on-top.md`: blocks 1 to 3 with the
+default branch's remote-tracking name as the target, redoing the share of every item the run
+completed; `nothing landed since` ends the refresh with nothing to do. Run the full `Verify`.
+Only when it passes, commit the merge, push the integration branch by name, never forced, and
+add a line to the aggregate's body naming the default-branch commit brought in and the files
+redone. A rejected push is a stop that keeps the merge commit locally and says so. Once the
+cause is put right, `{{cmd}} refresh` again pushes it; when the push was refused because the
+branch moved on the host, it stops on the stale merge as above.
+
+Stop, keeping the state as it is, on a conflict outside the shared files, which the routine
+reports and abandons; on a failing `Verify`, abandoning the merge with the routine's block; or
+when nothing landed since. A refresh never rebases, resets or force-pushes the integration
+branch, and the run's activity record and the items it holds are left as they were.
 
 ## Fix mode
 

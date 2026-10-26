@@ -1332,3 +1332,101 @@
 **Why it matters:** The main checkout's record reads `completed` and its in-flight line does not say the worktree's run is blocked, so its resume command is visible only inside the worktree.
 **Suggested fix:** Carry the worktree record's status on `InFlight` and print "blocked" on the in-flight line.
 **Resolution:**
+
+### 49c/F-4 [P2] open - A change the run made to an existing finding is dropped
+
+**File:** src/skills/complete/reference/land-on-top.md:169
+**Found:** 2026-10-26 by audit (scope: current; lens: security, quality)
+**Why it matters:** Block 1 takes the landed ledger whole and block 2 carries only added entries, so a finding the run closed comes back open and one it reopened or raised loses that, and the refresh's body line says neither.
+**Suggested fix:** For a run, re-apply status changes and removals to entries whose landed copy is unchanged from the merge base; name every one it cannot in the aggregate body.
+**Resolution:**
+
+### 49c/F-6 [P2] open - The rename rule is undefined for run-level findings
+
+**File:** src/skills/complete/reference/land-on-top.md:73
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** Two runs can both allocate the same bare identifier, and a run has many archives or none to take a prefix from.
+**Suggested fix:** Name the prefix a run-level entry takes and report renames in the aggregate body.
+**Resolution:**
+
+### 49c/F-7 [P2] open - Block 3's failure path contradicts the refresh
+
+**File:** src/skills/complete/reference/land-on-top.md:113
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** It says to build a fix on this branch and record `## Landed` in both archives, which on an integration branch would open a pull request carrying the whole run and contradicts skipping block 4.
+**Suggested fix:** Say the paragraph does not apply to a run and give its way forward.
+**Resolution:**
+
+### 49c/F-9 [P3] open - "Never resets" conflicts with the abandon block
+
+**File:** src/skills/auto/SKILL.md:214
+**Found:** 2026-10-26 by audit (scope: current; lens: security, quality)
+**Why it matters:** Both texts say a refresh never resets, yet abandon with `git reset --hard HEAD`, which leaves the tip where it is.
+**Suggested fix:** Say it never moves the branch's tip backwards.
+**Resolution:**
+
+### 49c/F-10 [P3] open - A refresh with no worktree leaves the main checkout off the default branch
+
+**File:** src/skills/auto/SKILL.md:191
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** Checking out the integration branch in the main checkout blocks the next run's preflight.
+**Suggested fix:** Stop when a worktree run's worktree is gone; otherwise return to the default branch.
+**Resolution:**
+
+### 49c/F-11 [P3] open - Which run a refresh acts on is not said
+
+**File:** src/skills/auto/SKILL.md:24
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** From the main checkout with two run worktrees, `refresh` names neither.
+**Suggested fix:** Refresh the branch checked out where it is invoked; elsewhere stop naming the candidates.
+**Resolution:**
+
+### 49c/F-12 [P3] open - The description's gate excludes the new routing case
+
+**File:** src/skills/auto/SKILL.md:4
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** The description's closing gate, run only on an explicit invocation or a request for an unattended run, does not cover asking to catch a branch up.
+**Suggested fix:** Name refresh in the gate, or word the case as an explicit refresh invocation.
+**Resolution:**
+
+### 49c/F-13 [P3] open - The aggregate body goes stale after a refresh
+
+**File:** src/skills/auto/SKILL.md:210
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Why it matters:** Renamed or reopened findings make Step 3's findings list wrong.
+**Suggested fix:** Fold into 49c/F-4 and F-6.
+**Resolution:**
+
+### 49c/F-14 [P3] open - Ignored files are overwritten by the merge
+
+**File:** src/skills/complete/reference/land-on-top.md:31
+**Found:** 2026-10-26 by audit (scope: current; lens: security)
+**Why it matters:** An ignored file the target starts tracking is overwritten by `git merge` and deleted by the abandon reset, unreported. Reproduced. Predates this item, widened by a long-lived run worktree.
+**Suggested fix:** Before merging, stop on target-added paths that are ignored files here.
+**Resolution:**
+
+### 49c/F-15 [P3] open - Whether the Authority section allows a refresh's push to be granted up front
+
+**File:** src/skills/auto/SKILL.md:200
+**Found:** 2026-10-26 by audit (scope: current; lens: security)
+**Why it matters:** The pre-grant covers branches a run creates, asked at that moment; a refresh is a later invocation pushing an earlier run's branch, and the aggregate body edit is not a listed pre-grantable action. A decision for the user, not a rule a skill may widen.
+**Suggested fix:** Ask again just before the push, or the user extends the Authority section.
+**Resolution:**
+
+### 49c/F-16 [P3] open - Nothing marks a refresh as in progress
+
+**File:** src/skills/auto/SKILL.md:203
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Surfaced by:** 49c/F-1
+**Why it matters:** The run's record stays `blocked` while a refresh merges and pushes, so a second session's `auto resume` or `auto refresh` can start in the same worktree.
+**Suggested fix:** Have `auto resume` and `auto refresh` refuse while a merge is open or the branch is ahead of its remote.
+**Resolution:**
+
+### 49c/F-17 [P3] open - The run's own record cannot be verified without a worktree
+
+**File:** src/skills/auto/SKILL.md:198
+**Found:** 2026-10-26 by audit (scope: current; lens: quality)
+**Surfaced by:** 49c/F-8
+**Why it matters:** With `parallelItems` off, any later skill's `completed` record in the main checkout passes the check.
+**Suggested fix:** Require the record's command to be `auto` and its items to match the branch's suffix.
+**Resolution:**

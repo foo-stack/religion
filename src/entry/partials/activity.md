@@ -34,5 +34,7 @@ does its last write, `completed`, keep just the items it completed, and a parent
 when all of its sub-items were; when none is left, a run that completed nothing releases at
 once. Every earlier stop keeps them all and is `blocked`.
 
+`{{cmd:auto}} refresh` writes none: it acts on a run whose record holds that run's items.
+
 Writing this record grants nothing and bypasses nothing. A failure to write it is reported
 and ignored: reporting must never turn into a workflow failure.

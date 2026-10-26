@@ -1,5 +1,30 @@
 # create-religion
 
+## 1.5.0
+
+### Minor Changes
+
+- 419f78b: A finding raised while a planned item is active is now headed with the item's number, such as
+  `39a/F-1`, so items built side by side cannot hand out the same identifier. `religion status`,
+  the handoff and the dashboard read prefixed and bare identifiers alike, so existing ledgers keep
+  working, and the dashboard orders findings by their place in the ledger.
+- 9d0c8ba: `religion status --json` gains `inFlight`, the work items active in any worktree of the
+  repository, each with its worktree, branch, plan item, title, step counts and whether it is the
+  one the command ran in. `religion status` lists items in flight elsewhere and passes over a plan
+  item another worktree is building, and the handoff lists them too. Worktrees are read from git's
+  own files, so nothing runs git, and a spec in another worktree is read only when it is a plain
+  file inside that worktree.
+- 76e2f5b: With items built in their own worktrees, `complete` now lands each one on top of whatever
+  landed first: it merges the target without committing, takes the landed copy of the build plan,
+  findings ledger, journal, overview and handoff, redoes the item's own tick, findings and journal
+  entry, stops on any other conflict, and runs `Verify` again before committing the merge. A merge
+  given up half way resets to the item's work commit and names everything it discarded.
+- 4727989: A new setting, `workflow.parallelItems`, off by default, has `implement` start each planned
+  feature in its own git worktree beside the project, on the item's branch, moving the spec there
+  so the main checkout can spec the next item. `religion doctor` refuses the setting under
+  `git.mode: trunk`, and inside a linked worktree names the main checkout and says where to copy a
+  missing `.claude/settings.json` from.
+
 ## 1.4.0
 
 ### Minor Changes

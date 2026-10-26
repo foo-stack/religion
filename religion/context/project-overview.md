@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash f1313fa5e5ace559 -->
+<!-- religion:source-hash 87feb06fdd28a07d -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -46,12 +46,13 @@ nothing to sign into.
 - **Entry-file merge** - installs into a repository that already carries agent instructions,
   keeping what is there
 - **Optional waves** - steps a spec marks as independent build concurrently, off by default
+- **Several items at once** - behind a setting, each planned item in its own git worktree,
+  landed one at a time with the shared bookkeeping redone on top of what already landed
 
 ## Roadmap
 
-Seventeen items queued. Item 39's spike is settled and it is split into 39a to 39d, built in
-that order, with 39a to 39c done; every other item still waits on a spike. Several also say which
-items they follow; item 29 made the tooling honour both.
+Sixteen items queued, each waiting on a spike. Several also say which items they follow; item 29
+made the tooling honour both.
 
 **Status, learning and health**
 
@@ -70,8 +71,6 @@ items they follow; item 29 made the tooling honour both.
 
 **Direction changes, all spike-first**
 
-39. **Several work items at once** - one worktree per active item, landed one at a time;
-    39a to 39c done, 39d queued; backward compatible
 40. **Religion runs in CI** - a labelled issue to a pull request nothing merges; after 20,
     24 and 33
 41. **One tool builds, another reviews** - review handed to a different installed tool

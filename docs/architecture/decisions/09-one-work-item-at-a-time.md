@@ -15,4 +15,12 @@ mistaking which item it is building is not.
 **What would change this.** Parallel execution, if it is ever adopted across items rather
 than within one, needs a different state shape and is a different design.
 
-**Reversed:** no.
+**Reversed:** partly, across worktrees. Within one checkout this still holds: the spec file
+holds one item, and a session in it never wonders which. What changed is that several items
+may be in flight at once, one per git worktree, behind `workflow.parallelItems`, which ships
+off. That answers the objection above without state about state: a worktree is the item, so a
+session there needs nothing to say which one it is in, and the set of items in flight is read
+from git's own worktree list and each worktree's spec. The cost moved from resuming to
+landing, where the shared plan, overview, ledger and journal conflict as text every time. So
+items land one at a time: `complete` takes what already landed and redoes the item's own share
+of those files on top, and never merges them as text.

@@ -1137,3 +1137,19 @@
 **Why it matters:** A worktree made from a commit whose spec is active checks that spec out, and the guard reads it as work already started, so block 2 always refuses and the start dead-ends with nothing lost; with an ignored state directory, a block that stopped after its state copy and a later edit to the main spec does the same. Both reproduced.
 **Suggested fix:** Treat a tracked worktree spec unchanged from its checkout as fresh, and leave the spec out of the state copy so only the final copy writes it.
 **Resolution:**
+
+### 39d/F-23 [P2] open - Block 1's merge overwrites an item's ignored state when the target tracks it
+
+**File:** src/skills/complete/reference/land-on-top.md:32
+**Found:** 2026-10-25 by audit (scope: current; lens: quality)
+**Why it matters:** When the item's branch ignores the state directory but the target tracks it, the merge brings the target's files over the item's only copies, and abandoning then removes them. Reproduced; not caused by the latest repair.
+**Suggested fix:** Refuse before merging when a shared path is ignored here but tracked in the target.
+**Resolution:** 
+
+### 39d/F-31 [P3] open - Block 1's merge overwrites an ignored file the target starts tracking without a word
+
+**File:** src/skills/complete/reference/land-on-top.md:32
+**Found:** 2026-10-25 by audit (scope: current; lens: quality)
+**Why it matters:** An ignored `dist/out.js` was replaced by the target's tracked copy at block 1, before any report; the clean check cannot see ignored files. Reproduced.
+**Suggested fix:** Before merging, name or stop on ignored files the target tracks, or say so in the routine.
+**Resolution:**

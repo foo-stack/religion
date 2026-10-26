@@ -16,7 +16,7 @@ is in `../../decisions.md`. These twelve are the ones worth an argument.
 | [No monorepo awareness](06-no-monorepo-awareness.md) | Predictably simple against usually clever |
 | [Prose over hooks](07-prose-over-hooks.md) | Where a rule is allowed to live |
 | [Authored once, rendered per adapter](08-authored-once-rendered-per-adapter.md) | One hedging file against four honest ones |
-| [One work item at a time](09-one-work-item-at-a-time.md) | Why a cleared context costs nothing |
+| [One work item at a time](09-one-work-item-at-a-time.md) | Why a cleared context costs nothing, and how items in separate worktrees still land one at a time |
 | [Routing tested without a model](10-routing-is-tested-without-a-model.md) | What a routing suite can honestly prove |
 | [Testing is opt-in](11-testing-is-opt-in.md) | When a workflow may add a dependency |
 | [The manifest records the install](12-the-manifest-records-what-was-installed.md) | Why update protection worked exactly once |

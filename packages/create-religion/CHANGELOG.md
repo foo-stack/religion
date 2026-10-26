@@ -1,5 +1,27 @@
 # create-religion
 
+## 1.6.0
+
+### Minor Changes
+
+- 6834ede: `auto refresh` catches a run up when another run's aggregate pull request merged into the
+  default branch first: it brings the default branch into the run's integration branch with a
+  merge commit, takes the landed plan, ledger and journal and redoes the run's own share on top,
+  runs `Verify`, then pushes the branch and notes the refresh in the aggregate pull request. It asks
+  for that push and edit before starting, and never rebases or force-pushes.
+- 6834ede: With `workflow.parallelItems` on under `git.mode: pull-request`, an `auto` run works in its own
+  git worktree beside the project, on an integration branch named from the date and its items,
+  such as `auto/2026-10-26-6-10`, so two sessions can each run a named set of items at once.
+  Before any work a named run stops on an item another run holds, and names the items it will
+  pass over because they wait on another run's. A named run now releases its items only as its
+  last write, after the aggregate pull request is open.
+- 9e73d9a: `auto` takes an explicit list or range of plan items, such as `1-5` or `6, 7, 8`, and records
+  them in its activity record as `items`. `religion status --json` reports them under `activity`
+  and under each `inFlight` entry, and lists a worktree whose run sits between items by the items
+  it holds. `religion status` and `feature` pass over items a run in another worktree holds,
+  including the ones it has not reached yet, and the handoff names them. A held plan item
+  holds every sub-item under it.
+
 ## 1.5.0
 
 ### Minor Changes

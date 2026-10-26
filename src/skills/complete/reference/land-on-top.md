@@ -120,45 +120,35 @@ both archives with the one range they share, each saying it is shared.
 ## Abandoning the merge
 
     (
+      set -o pipefail
       root=$(git rev-parse --show-toplevel) || exit 1
       git -C "$root" rev-parse -q --verify MERGE_HEAD >/dev/null || { echo "no merge open"; exit 0; }
-      list="$(git -C "$root" rev-parse --absolute-git-dir)/abandon-untracked"
-      git -C "$root" ls-files -z -o --directory | while IFS= read -r -d '' f; do
-        if [ "${f%/}" != "$f" ] && [ -n "$(git -C "$root" ls-tree HEAD -- "${f%/}")" ]; then
-          git -C "$root" ls-files -z -o -- "$f"
-        else
-          printf '%s\0' "$f"
-        fi
-      done >| "$list" || exit 1
-      git -C "$root" diff -z --name-only --no-renames HEAD | while IFS= read -r -d '' f; do
-        printf 'discarded: %s\n' "$f"
-      done
+      g="$(git -C "$root" rev-parse --absolute-git-dir)/abandon"
+      list() { git -C "$root" -c core.quotePath=false "$@"; }
+      list ls-files -o | LC_ALL=C sort >| "$g.before" || exit 1
+      list diff --name-only --no-renames HEAD >| "$g.tracked" || exit 1
       git -C "$root" reset -q --hard HEAD; rc=$?
-      while IFS= read -r -d '' f; do
-        p="$root/${f%/}"
-        { [ -e "$p" ] || [ -L "$p" ]; } && ls -A "$(dirname "$p")" | grep -Fxq -- "$(basename "$p")" && continue
-        printf 'discarded: %s\n' "$f"
-      done < "$list"
-      rm -f "$list"
+      list ls-files -o | LC_ALL=C sort >| "$g.after" || exit 1
+      { cat "$g.tracked"; LC_ALL=C comm -23 "$g.before" "$g.after"; } | LC_ALL=C sort -u | sed 's/^/discarded: /'
+      rm -f "$g.before" "$g.after" "$g.tracked"
       [ "$rc" -eq 0 ] || { echo "the reset failed: the merge is still open, and a path named above may not be set back"; exit 1; }
-      git -C "$root" ls-files -z -o --exclude-standard --directory | while IFS= read -r -d '' f; do
-        printf 'left untracked: %s\n' "$f"
-      done
+      list ls-files -o --exclude-standard --directory | sed 's/^/left untracked: /'
       echo "back at the work commit"
     )
 
 Block 1 started from a clean tree, so the work commit is the whole of this item's work, and
 resetting to it ends the merge and returns the branch exactly as it was, whatever the merge left:
 redone shares, a handoff the hook rewrote, output `Verify` regenerated, paths still in conflict.
-Each tracked path the reset sets back is named first, an edit made by hand while the merge was
-open among them. The reset removes an untracked or ignored file only where it stands in the way
-of a path `HEAD` has, such as inside a directory the target put where `HEAD` has a file, and each
-one it removed is named after, file by file, with its exact name even where the filesystem
-ignores case. A reset that fails, such as on a directory it cannot write, still names what it
-removed, then says the merge is still open: put right what git named and run the block again. Other untracked files are left where they are and named, a whole
-directory as one line. So nothing is lost without a word. Never abandon with `git merge --abort`
-alone, which refuses while a file the merge touched has unstaged changes. With no merge open, the
-block does nothing.
+Each path the reset set back or removed is named once: every tracked path that differed from the
+work commit, an edit made by hand while the merge was open among them, and every untracked or
+ignored file in the way of a path the work commit has, such as one inside a directory the target
+put where a file was, found by listing them with git before the reset and after it. Other
+untracked files are left where they are and named, a whole directory as one line. Names are
+printed as git prints them, quoted where they hold unusual characters. So nothing is lost without
+a word. A reset that fails, such as on a directory it cannot write, still names what it removed,
+then says the merge is still open: put right what git named and run the block again. Never
+abandon with `git merge --abort` alone, which refuses while a file the merge touched has unstaged
+changes. With no merge open, the block does nothing.
 
 ## 4. Record what landed
 

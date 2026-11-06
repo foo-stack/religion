@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash c20aecbd6af9d43b -->
+<!-- religion:source-hash 25f58988bbbfcaf4 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -33,8 +33,8 @@ nothing to sign into.
 - **The loop** (headline) - `feature`, `implement`, `check`, `audit`, `complete`, one work
   item at a time, each step a diff to read and evidence that its outcome was met
 - **Skills authored once** - rendered into one tree per adapter, so each tool reads its own
-  invocation syntax instead of one file hedging between four
-- **Four adapters** - Claude Code, Codex, GitHub Copilot, OpenCode
+  invocation syntax instead of one file hedging between five
+- **Five adapters** - Claude Code, Codex, GitHub Copilot, OpenCode, Antigravity
 - **Three authority tiers** - what always asks, what an automated run may grant, and what is
   free. No mode or setting can widen them
 - **A findings ledger** - durable identifiers and severities, where a repaired finding still
@@ -53,7 +53,7 @@ nothing to sign into.
 
 ## Roadmap
 
-Sixteen items queued, each waiting on a spike. Several also say which items they follow; item 29
+Seventeen items queued, each waiting on a spike. Several also say which items they follow; item 29
 made the tooling honour both.
 
 **Status, learning and health**
@@ -75,6 +75,8 @@ made the tooling honour both.
 
 40. **Religion runs in CI** - a labelled issue to a pull request nothing merges; after 20,
     24 and 33
+50. **Antigravity support** - skills rendered into an Antigravity adapter tree with its
+    entry file and invocation syntax, selectable at install and covered by the drift check
 41. **One tool builds, another reviews** - review handed to a different installed tool
 42. **Skills users write themselves** - project skills rendered beside the built-in ones
 43. **Religion without Node** - a standalone binary per platform, Windows supported

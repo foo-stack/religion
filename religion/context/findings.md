@@ -1430,3 +1430,43 @@
 **Why it matters:** With `parallelItems` off, any later skill's `completed` record in the main checkout passes the check.
 **Suggested fix:** Require the record's command to be `auto` and its items to match the branch's suffix.
 **Resolution:**
+
+### 50/F-1 [P2] fixed - Rollback does not exclude the Antigravity tree and entry file
+
+**File:** src/skills/rollback/SKILL.md:79
+**Found:** 2026-11-06 by audit (scope: current; lens: security)
+**Why it matters:** Rolling back an item whose commits touched `.agent/skills` or `GEMINI.md` reverts workflow-owned files with the product code, leaving them out of step with the other trees and entry files.
+**Suggested fix:** Add `.agent/**` and `GEMINI.md` to the exclusions.
+**Resolution:** Repaired 2026-11-06: the rollback exclusions now name `.agent/**` and `GEMINI.md`; awaiting review.
+
+### 50/F-2 [P3] open - Doctor may read another tool's entry file in an Antigravity-only install
+
+**File:** packages/create-religion/lib/doctor.ts:116
+**Found:** 2026-11-06 by audit (scope: current; lens: quality)
+**Why it matters:** An Antigravity-only project with its own unmanaged `CLAUDE.md` or `AGENTS.md` reads as filled in while `GEMINI.md` still holds the placeholder. The same gap already existed for Claude-only installs.
+**Suggested fix:** Pick the entry file from the manifest's adapters, falling back to the chain only without a manifest.
+**Resolution:**
+
+### 50/F-3 [P2] open - Antigravity's handling of two same-named skill trees is unverified
+
+**File:** src/lib/adapters.ts:47
+**Found:** 2026-11-06 by audit (scope: current; lens: quality)
+**Why it matters:** A default install writes both `.agents/skills` and `.agent/skills`; Antigravity keeps one copy of each and may show the dollar-form invocation.
+**Suggested fix:** Check real IDE behaviour; if it misleads, leave Antigravity out of the default adapter set or hide one tree with a discovery manifest.
+**Resolution:**
+
+### 50/F-4 [P3] open - The rendered-output guard matches tree prefixes without a trailing slash
+
+**File:** src/hooks/guard-rendered-output.mjs:62
+**Found:** 2026-11-06 by audit (scope: current; lens: quality)
+**Why it matters:** A path such as `.agent/skillset/x` is refused and pointed at a source file that does not exist. Advisory only, and the older prefixes share it.
+**Suggested fix:** End each prefix with a slash.
+**Resolution:**
+
+### 50/F-5 [P3] open - The upgrade check's adapter filter has no test of its own
+
+**File:** scripts/upgrade.ts:225
+**Found:** 2026-11-06 by audit (scope: current; lens: tests)
+**Why it matters:** A template file outside every adapter prefix and outside `religion/` would go unchecked; none exists today, and the fixture's pinned four adapters are undocumented.
+**Suggested fix:** Add a unit case for the filter, or a note tying the fixture's adapter list to the last release.
+**Resolution:**

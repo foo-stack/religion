@@ -3,7 +3,7 @@
 **Type:** Feature
 **From build plan:** item 50
 **Status:** in progress
-**Approved:** 2026-11-06, aefa5b63ff3aa26e
+**Approved:** 2026-11-06, 2e94e1abb9ef90ee
 
 ## Goal
 
@@ -88,6 +88,7 @@ large, so split it.
   the known limit of two copies), `docs/getting-started.md` (an
   Antigravity row giving `setup` in the slash form), and a new row in `docs/decisions.md`. *Done when:* the
   documentation check in `npm test` passes and a search of `docs/` finds no "four adapters".
+- [x] Repair 50/F-1 - rollback excludes the Antigravity tree and entry file - `src/skills/rollback/SKILL.md` adds `.agent/**` and `GEMINI.md` to the paths a reversal leaves alone. *Done when:* every rendered rollback skill lists both exclusions, `npm test` exits 0, and a fresh review closes the finding.
 
 ## Files and areas
 
@@ -131,8 +132,22 @@ Test command declared (`npm test`), so logic steps ship tests:
 - Real Antigravity behaviour is unverified: no claim in docs or the packet may say it was run
   in the IDE.
 
+## Evidence
+
+Checked 2026-11-06 at 624bfec, tree clean.
+
+- **Step 1 - the render tree** - pass: `npm run build:skills:link` rendered 219 files from 26 skills and 3 entry files; `.agent/skills/feature/SKILL.md` routes on the slash form and `.agents/skills/feature/SKILL.md` still on the dollar form; no `$` invocation anywhere under `.agent/skills/auto`; `git diff --stat` empty for `.claude/skills` and `.agents/skills`; `npm test` exit 0, including "a project the last release installed updates cleanly".
+- **Step 2 - the guard and the drift warning** - pass: with the hook changes stashed, the new guard test and the extended drift test both fail (`.agent/skills/a/SKILL.md` asked about); with them, `scripts/hooks.test.ts` 16 of 16; `npm test` exit 0 with 193 unit tests.
+- **Step 3 - the adapter in the command-line tool** - pass: the Antigravity-only `planInstall` test lists exactly `.agent/skills/feature/SKILL.md`, `GEMINI.md`, `religion/config.json`; an existing `GEMINI.md` plans as `merge`; a real `religion install --antigravity --yes` into an empty directory wrote 54 files (32 under `.agent`, 21 under `religion`, `GEMINI.md`) and nothing under `.claude` or `.agents`, with the manifest recording `["antigravity"]` and 33 managed files; installing over an existing `GEMINI.md` kept its text above the managed markers and backed it up; `npm test` exit 0 with 195 unit tests.
+- **Step 4 - doctor for any number of trees** - pass: the new doctor test fails on the old code with `no entry file found` and passes on the new; on the real Antigravity install doctor reports `adapters: .agent/skills with 26 skills` and reads `GEMINI.md` (failing only on the shipped placeholder, as a fresh install should); the test covers `3 trees, same skills` and `.claude/skills and .agent/skills hold different skills`; `npm test` exit 0 with 196 unit tests.
+- **Step 5 - documentation** - pass: the documentation and stability checks in `npm test` pass; outside the decision records and the dated decision-log rows, `docs/` no longer says four adapters or four supported tools.
+- **Update and uninstall** - pass: a second `update --yes` on the real install created, updated and removed nothing; `uninstall --yes` removed 34 files (the 33 managed plus the manifest) and kept `religion/`.
+
+Not verified: Antigravity itself was not run, so discovery, the slash commands and which of two same-named skills it keeps rest on its documentation only.
+
 ## Amendments
 
 - 2026-11-06 - Steps 1 and 5 reworded to name invocations in words rather than as literal slash and dollar forms, which the state-template check refuses in a state file. What the steps ask for is unchanged.
 - 2026-11-06 - Step 4 also updates `docs/doctor.md`, which describes the adapters and entry-file checks and would otherwise say only two trees and two entry files exist.
 - 2026-11-06 - Step 5 also updates `docs/architecture/enforcement.md`, whose rule says all four supported tools behave identically. Decision records and the dated decision-log rows stay as written: they are history.
+- 2026-11-06 - Added a repair step for 50/F-1, raised by the audit gate: rollback's exclusions were an adapter enumeration this item missed.

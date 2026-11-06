@@ -392,7 +392,8 @@ is installed globally.
   dashboard         a local read-only view
 
 Options
-  --claude --codex --copilot --opencode   pick adapters (default: all)
+  --claude --codex --copilot --opencode --antigravity
+                pick adapters (default: all)
   --dry-run     show what would change, write nothing
   --force       replace locally-changed managed files, backing them up first
   --json        machine-readable output for status and doctor

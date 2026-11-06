@@ -14,13 +14,14 @@ import path from "node:path";
 import { exists, STATE_DIR } from "./paths.js";
 import { hasDamagedMarkers, hasMarkers, rebuildEntry, replaceManagedBlock, spliceEntry } from "./merge.js";
 
-export type Adapter = "claude" | "codex" | "copilot" | "opencode";
+export type Adapter = "claude" | "codex" | "copilot" | "opencode" | "antigravity";
 
 export const ADAPTERS: Record<Adapter, { label: string; trees: string[]; entry: string[] }> = {
   claude: { label: "Claude Code", trees: [".claude/skills", ".claude/hooks"], entry: ["CLAUDE.md"] },
   codex: { label: "Codex", trees: [".agents/skills"], entry: ["AGENTS.md"] },
   copilot: { label: "GitHub Copilot", trees: [".agents/skills"], entry: ["AGENTS.md"] },
-  opencode: { label: "OpenCode", trees: [".agents/skills"], entry: ["AGENTS.md"] }
+  opencode: { label: "OpenCode", trees: [".agents/skills"], entry: ["AGENTS.md"] },
+  antigravity: { label: "Antigravity", trees: [".agent/skills"], entry: ["GEMINI.md"] }
 };
 
 export interface Manifest {

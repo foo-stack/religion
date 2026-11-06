@@ -5,7 +5,7 @@ Hooks are a second line of defence for Claude Code, and nothing more.
 
 ## The rule
 
-**Every rule is written so all four supported tools behave identically. A hook may only
+**Every rule is written so all five supported tools behave identically. A hook may only
 enforce something the prose already requires.**
 
 A rule that exists only as a hook is a bug: Codex, GitHub Copilot, and OpenCode cannot run
@@ -69,7 +69,7 @@ is worse than no guard, because the gap is invisible to the person relying on th
 
 **Nothing about the Authority rules changed.** Merging, pushing, deploying, publishing,
 deleting data and rewriting history are still first tier and still need an explicit yes
-every time. That rule is carried by the prose every session loads, which applies to all four
+every time. That rule is carried by the prose every session loads, which applies to all five
 supported tools rather than to one way of typing a command. It was always doing the work.
 
 The hooks that remain are the ones where a pattern can actually describe the thing it is

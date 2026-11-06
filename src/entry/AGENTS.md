@@ -2,7 +2,7 @@
 
 Instructions for AI coding agents working in this project. This is the cross-tool entry
 point, read by {{tool}}, and by any other agent that looks for `AGENTS.md`. Claude Code
-reads `CLAUDE.md`, which covers the same workflow.
+reads `CLAUDE.md` and Antigravity reads `GEMINI.md`, which cover the same workflow.
 
 ## What this is
 

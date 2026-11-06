@@ -434,7 +434,7 @@ async function walkIfPresent(dir: string): Promise<string[]> {
 
   const files: string[] = [];
   for (const entry of entries) {
-    if (entry.name.startsWith(".") && entry.name !== ".claude" && entry.name !== ".agents") continue;
+    if (entry.name.startsWith(".") && ![".claude", ".agents", ".agent"].includes(entry.name)) continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) files.push(...(await walkIfPresent(full)));
     else files.push(full);

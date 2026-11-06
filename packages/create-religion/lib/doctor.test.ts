@@ -179,3 +179,28 @@ test("runDoctor refuses parallel items under trunk and names a linked worktree's
     `.claude/settings.json is missing in this linked worktree; copy the main checkout's from ${main}`
   );
 });
+
+test("runDoctor compares every installed skill tree and finds GEMINI.md as the entry file", async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "religion-doctor-"));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.mkdir(path.join(root, "religion"), { recursive: true });
+  await fs.writeFile(path.join(root, "religion", "config.json"), "{}");
+  const skills = async (tree: string, names: string[]) => {
+    for (const name of names) await fs.mkdir(path.join(root, tree, name), { recursive: true });
+  };
+  const check = async (name: string) => (await runDoctor(root)).find((c) => c.name === name);
+
+  await skills(".agent/skills", ["feature", "fix"]);
+  await fs.writeFile(path.join(root, "GEMINI.md"), "# Acme\n\n## Commands\n\n- Test: `npm test`\n");
+  assert.deepEqual(await check("adapters"), { name: "adapters", ok: true, detail: ".agent/skills with 2 skills", blocks: "nothing" });
+  assert.equal((await check("entry file commands"))?.detail, "filled in");
+
+  await skills(".claude/skills", ["feature", "fix"]);
+  await skills(".agents/skills", ["feature", "fix"]);
+  assert.equal((await check("adapters"))?.detail, "3 trees, same skills");
+
+  await fs.rm(path.join(root, ".agent", "skills", "fix"), { recursive: true });
+  const differs = await check("adapters");
+  assert.equal(differs?.ok, false);
+  assert.equal(differs?.detail, ".claude/skills and .agent/skills hold different skills");
+});

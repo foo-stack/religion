@@ -2,12 +2,12 @@
  * Adapter definitions and the token vocabulary skill sources are written against.
  *
  * Skills are authored once under `src/skills/<name>/SKILL.md`. This module describes
- * how that single source is rendered for each AI tool that reads it. Four tools are
- * supported across two physical trees, because Codex, GitHub Copilot, and OpenCode all
+ * how that single source is rendered for each AI tool that reads it. Five tools are
+ * supported across three physical trees, because Codex, GitHub Copilot, and OpenCode all
  * discover skills from the same `.agents/skills/` directory.
  */
 
-export type TreeId = "claude" | "agents" | "shared";
+export type TreeId = "claude" | "agents" | "antigravity" | "shared";
 
 export interface Tree {
   id: TreeId;
@@ -43,6 +43,16 @@ export const TREES: readonly Tree[] = [
     tools: ["Codex", "GitHub Copilot", "OpenCode"],
     toolLabel: "Codex, GitHub Copilot, or OpenCode",
     command: (skill) => `$${skill}`
+  },
+  {
+    // Antigravity also reads `.agents/skills`, but that tree carries Codex's `$skill` syntax.
+    // `.agent/skills` is the folder name Antigravity keeps for backward compatibility.
+    id: "antigravity",
+    dir: ".agent/skills",
+    entryFile: "GEMINI.md",
+    tools: ["Antigravity"],
+    toolLabel: "Antigravity",
+    command: (skill) => `/${skill}`
   }
 ];
 
@@ -92,8 +102,8 @@ const MAX_INCLUDE_DEPTH = 8;
  * | ----------------- | --------------------------------------------------- |
  * | `{{cmd:feature}}` | `/feature` or `$feature`                            |
  * | `{{cmd}}`         | the current skill's own invocation                  |
- * | `{{tool}}`        | `Claude Code` or `Codex, GitHub Copilot, or OpenCode` |
- * | `{{dir}}`         | `.claude/skills` or `.agents/skills`                |
+ * | `{{tool}}`        | the tree's `toolLabel`, such as `Claude Code`       |
+ * | `{{dir}}`         | `.claude/skills`, `.agents/skills`, `.agent/skills` |
  * | `{{state}}`       | `religion`                                          |
  * | `{{product}}`     | `Religion`                                          |
  *

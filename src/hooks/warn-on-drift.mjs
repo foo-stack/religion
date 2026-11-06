@@ -12,7 +12,7 @@ import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
 const STATE = "religion";
-const ALWAYS = [`${STATE}/`, ".changeset/", ".claude/skills/", ".agents/skills/"];
+const ALWAYS = [`${STATE}/`, ".changeset/", ".claude/skills/", ".agents/skills/", ".agent/skills/"];
 
 // This hook only advises, so anything it cannot read leaves the edit alone rather than failing a turn.
 process.on("uncaughtException", () => process.exit(0));

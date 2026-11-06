@@ -3,7 +3,7 @@
 **Type:** Feature
 **From build plan:** item 50
 **Status:** in progress
-**Approved:** 2026-11-06, 0d27d260321422f4
+**Approved:** 2026-11-06, c42969b30b63f786
 
 ## Goal
 
@@ -78,11 +78,12 @@ large, so split it.
   and nothing under `.claude` or `.agents`; a `GEMINI.md` the project already has is planned
   as a merge, not a conflict; `religion install --antigravity --dry-run` into an empty temporary
   directory lists the same files; and `npm test` exits 0.
-- [ ] **Step 4 - doctor for any number of trees** - the adapters check in `lib/doctor.ts`
+- [x] **Step 4 - doctor for any number of trees** - the adapters check in `lib/doctor.ts`
   compares every installed tree against the first, naming each that differs; the entry-file
   check also reads `GEMINI.md`. Tests in `lib/doctor.test.ts`. *Done when:* doctor passes both
   checks on an Antigravity-only install, reports `3 trees, same skills` on a full one, names the
-  tree that is missing a skill, and `npm test` exits 0.
+  tree that is missing a skill, `docs/doctor.md` describes both checks as they now behave, and
+  `npm test` exits 0.
 - [ ] **Step 5 - documentation** - `docs/stability.md` ("All five", "The five adapters stay",
   the known limit of two copies), `docs/getting-started.md` (an
   Antigravity row giving `setup` in the slash form), and a new row in `docs/decisions.md`. *Done when:* the
@@ -95,7 +96,7 @@ large, so split it.
 - `src/hooks/guard-rendered-output.mjs`, `src/hooks/warn-on-drift.mjs`
 - `packages/create-religion/lib/install.ts`, `lib/paths.ts`, `lib/doctor.ts`, `lib/dashboard.ts`,
   `bin/religion.ts`, `surface.json`, `package.json`, and the tests beside them
-- `docs/stability.md`, `docs/getting-started.md`, `docs/decisions.md`
+- `docs/stability.md`, `docs/getting-started.md`, `docs/decisions.md`, `docs/doctor.md`
 - Rendered output: `.agent/skills/**`, `GEMINI.md`, `template/**`
 
 ## Data and contracts
@@ -132,3 +133,4 @@ Test command declared (`npm test`), so logic steps ship tests:
 ## Amendments
 
 - 2026-11-06 - Steps 1 and 5 reworded to name invocations in words rather than as literal slash and dollar forms, which the state-template check refuses in a state file. What the steps ask for is unchanged.
+- 2026-11-06 - Step 4 also updates `docs/doctor.md`, which describes the adapters and entry-file checks and would otherwise say only two trees and two entry files exist.

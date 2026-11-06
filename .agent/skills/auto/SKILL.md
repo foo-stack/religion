@@ -1,0 +1,342 @@
+---
+name: auto
+summary: run the loop unattended, within explicit bounds
+description: "Run the reviewed loop without stopping between steps, within bounds you set. With no argument it takes one work item and stops before completing it; `all` runs the remaining build plan; a number runs that many items; a range or list such as `1-5` or `6, 7, 8` runs exactly those items; `refresh` brings the default branch into a run's integration branch after another run landed first; `fix` works through the findings ledger instead, every class most severe first or one class such as `fix P1`, one fix per file and class, re-reviewing every repair and folding any finding a repair surfaces into the same fix. Specs, implements, verifies, applies the configured gates, repairs confirmed high-severity findings, and completes each item. Its invocation grants committing, dependency installs, and remote reads for the run, and grants nothing else: it still stops to ask before any merge. Under git.mode pull-request it lands every item on one shared integration branch and ends by opening a single aggregate review packet it never merges, after stating that whole remote budget up front and being told yes. Use only when the user runs /auto or explicitly asks for an unattended run."
+---
+
+# auto - the same loop, without the pauses
+
+Explicit opt-in only. Never suggest this as a next action, and never fall into it because
+several items are queued.
+
+Same skills, same gates, same evidence. The only difference is that it does not stop
+between steps.
+
+## Bounds
+
+- `/auto` - one work item, stopping **before** completing it, with a review packet.
+- `/auto all` - the remaining build plan, completing each item, until it runs out or hits
+  a bound.
+- `/auto 3` - the next three items, completing each.
+- `/auto 1-5` or `/auto 6, 7, 8` - exactly those plan items, completing each. A range or
+  a comma list names items; a bare number is always a count. See Named items.
+- `/auto resume` - continue an interrupted run from the file-backed state.
+- `/auto refresh` - bring the default branch into a run's integration branch after another
+  run's aggregate landed first. See Refresh.
+- `/auto fix` - the findings ledger instead of the plan; see Fix mode.
+
+`auto.maxItems` caps successful completions. `auto.maxRepairAttempts` caps repeated
+attempts at the same finding. `auto.finalAudit` adds one review across everything the run
+produced.
+
+## What the invocation grants
+
+Running this authorizes, for this run only: committing, installing dependencies, and
+network reads. That is the second authority tier, and the invocation is the approval.
+
+It grants **nothing** in the first tier. Merging into the default branch, pushing to it,
+deploying, publishing, deleting data, and rewriting history each still stop and ask, every
+time, no matter how many items remain.
+
+Under `git.mode: trunk` there is no merge, so a run completes items and keeps going. Under
+`branch-per-item` it stops once per item to ask. That is not a flaw in the mode; landing
+work on a shared branch is a decision, and it stays one.
+
+Under `pull-request` nothing lands on the default branch, so there is no merge to stop for.
+What the run does need is the one grant the authority rules allow to be given ahead of time,
+and it is asked for **before any work starts**, in full:
+
+    This run will, without asking again:
+      create and push the integration branch <integrationBranchPrefix><date>
+      create and push one branch per item
+      open a pull request from each item into the integration branch
+      merge those pull requests into the integration branch
+      open one aggregate pull request into <default branch>
+
+    It will not merge or push <default branch>, and it will not merge
+    the aggregate pull request.
+
+Print that, naming the real branches, and wait. **The enumeration is the approval, and it is
+the whole remote budget.** A general yes to running is not it, and neither is silence. If the
+answer is no, the run does not start.
+
+## Step 1 - preflight once
+
+Before the first item:
+
+- Configuration is valid. Stop and point at /doctor if not.
+- The overview is fresh, or regenerate it.
+- No open question blocks the queued items. One that does stops the run **before** any work
+  starts, naming the question, since a run that stops halfway through item four is worse
+  than one that never began.
+- The working tree is clean, or the only dirt belongs to work being resumed.
+- The plan has unchecked items, or in fix mode the ledger has `open` or `fixed` findings in
+  range. A named run needs at least one of its own items unchecked.
+- Under `pull-request`, the repository can host one: a remote exists and the host command
+  works. A repository that cannot is a stop, not a reason to fall back to local merges. The
+  mode exists to produce review gates, and silently producing a different history instead
+  would be worse than not running.
+
+Record the default branch's current commit. It bounds what the aggregate pull request will
+carry, and the final report refers to it.
+
+Under `pull-request`, then establish the run's integration branch, named from
+`git.integrationBranchPrefix` and the date. Create it from that recorded commit and push it.
+Every item branches off it and lands back into it, which is what lets item three build on
+items one and two. On a resume, reuse the branch of that name rather than opening a second;
+if one exists that does not descend from the recorded commit, stop, because the run's base
+moved and that needs a person. Never rebase, reset, or force-push it: it is append-only for
+the run.
+
+A named run's integration branch adds its items to the date, `<prefix><date>-<first>-<last>`,
+or `-<item>` for one, with labels as the plan writes them: `auto/2026-10-26-6-10`. Two runs on
+one day then never share a name, and a resume finds its own.
+
+**With `workflow.parallelItems` on**, under `pull-request`, the run works in its own worktree so
+another session can run beside it. The main checkout must be on the default branch at the
+recorded commit, since the worktree is made from `HEAD`; anything else stops. Make the
+integration branch with blocks 1 and 2 of the routine /implement keeps in
+`reference/item-worktree.md`, with `move='no'`, push it from the worktree, and work from there
+from then on: move the session into it where the tool can, and otherwise address every file and
+command to its path. Item branches stay plain branches, made and removed inside that worktree,
+so the main checkout stays on the default branch for the next session. Under
+`branch-per-item`, which merges each item into the default branch only one checkout can hold, a
+run stays in the main checkout and runs alone.
+
+**Resuming from the main checkout** while a run's worktree exists names that worktree and its
+branch and stops: the run resumes from there, never as a second copy here.
+
+State the bounds, the gates in force, and how many items are in range. Then start.
+
+## Step 2 - each item
+
+For every item, in plan order, passing over any that waits on an earlier unticked item or on
+a spike, by the rule /feature uses with no argument. Each one passed over is named in
+the final report with what it waits on. When every remaining item waits, the run has
+nothing left to build and stops there.
+
+1. **Spec it**, following /feature, including the sizing and the self-critique. Do
+   not skip the critique because nobody is reading: it is what catches an oversized step
+   before it becomes an unreviewable diff.
+2. **Implement it**, following /implement, with no prompt between steps. Verify each
+   step against what it touched.
+3. **Apply the gates** from `qualityGates`, then run the full `Verify`.
+4. **Repair confirmed findings** at P0 and P1, within this item's scope, then re-review them
+   in a subagent with fresh context. Give up after `auto.maxRepairAttempts` and stop with
+   the finding recorded rather than trying variations.
+5. **Complete it**, following /complete, which archives, ticks the plan, prunes the
+   ledger, and commits. Ask before any merge.
+6. **Land it**, under `pull-request` only: push the item's branch, open its pull request
+   **into the integration branch** rather than the default branch, and merge it there once
+   its checks are green. Merge only a pull request this run opened, only into the integration
+   branch. A failing or conflicted one is a stop, never something to force. Then delete the
+   item branch, confirming the work commit is in the integration branch first, since a
+   squash leaves no merge parent for `git branch -d` to find. Return to the integration
+   branch clean before the next item.
+7. **Report one line** and move on.
+
+An item counts against `auto.maxItems` once it has landed, not once it is built.
+
+## Named items
+
+Given a range or a list, the run builds those items and no others.
+
+- **Plan order**, whatever order they were given in, since the waiting rule assumes it.
+- **A ticked item** is named and passed over. **A number the plan does not have** stops the
+  run before any work starts, naming it: a typo should not quietly shrink the run.
+- **The waiting rule still applies.** An item waiting on one outside the list, or on a
+  spike, is passed over and named in the final report, as in Step 2.
+- **Refuse what another run holds.** Before any work, read `religion status --json`, or the
+  handoff without that command. A named item that an `inFlight` entry with `here` false holds
+  under `items` or is building, counting a parent and its sub-items as one, stops the run,
+  naming each such item and the branch that has it: two runs over one item is what holding
+  exists to prevent.
+- **Name what waits on another run.** A named item that waits on an item held elsewhere will
+  be passed over, since that item lands on the other run's integration branch, not this one.
+  Name each when stating the bounds, with what it waits on and the branch that holds it, so a
+  run that will build fewer items than it was given says so before it starts.
+- **Hold them.** The first write, made before the configuration is read, holds no `items`.
+  Once preflight knows where the run will run, write the listed items, lowercased, as `items`
+  in the record there, and keep them in every rewrite. A run that moves into its own worktree
+  writes them only in the worktree, then rewrites the main checkout's record as `completed`,
+  holding none and with no resume command, its summary naming the worktree: nothing resumes
+  from the main checkout, and a record holding the items there would read, from the run's own
+  worktree, as another run holding them. That is what lets `status`, the handoff and
+  /feature in another worktree pass over the items this run has not reached yet, which no
+  spec shows.
+- **Release them only when none is left to build**, each named item completed, already
+  ticked, or passed over as waiting. That release is the run's last write, made after Step 3
+  has opened the aggregate pull request where the mode has one, and it is `completed` although
+  the run ends waiting for review: `completed` is what says nothing remains to resume. It keeps
+  just the items the run completed, so the ones it passed over are free for another worktree to
+  take; a parent number stays only when every sub-item under it was completed, since a parent
+  still held holds all of them. A run that completed nothing has no aggregate to open, so it
+  releases at once, `completed` and holding none. Any other stop, a merge question, a bound, a
+  failure, an aggregate pull request opened early, or one Step 3 should have opened and did not,
+  keeps every item and writes `blocked` with `/auto resume`.
+- **Resume.** A record holding `items` resumes those still unticked, and when every one is
+  ticked it resumes at Step 3; a `completed` one has nothing left to resume. A record without
+  `items` is a count, `all` or fix run, and resumes as one. A named run whose record is gone
+  stops and asks for the list again rather than guessing which items it had.
+
+Plain numbers and sub-item labels are both items (`39a, 39b`); a range covers whole numbers
+only. A number that has sub-items stands for its unticked sub-items: build those, and record
+their labels in `items` beside the number, so readers that do not walk the plan still see
+them.
+
+## Refresh
+
+`/auto refresh` catches a run up when another run's aggregate pull request merged into the
+default branch first. Both wrote the plan, the ledger and the journal, so this run's aggregate
+now conflicts on them every time. It runs where the run's integration branch is checked out, in
+the run's own worktree when it has one, and only when all of these hold; otherwise it stops and
+says which:
+
+- the checked-out branch starts with `git.integrationBranchPrefix` and is not the default
+  branch, and the run's aggregate pull request is open with it as head and the default branch
+  as base
+- the run's own record, here, is `blocked` or `completed`, never `running`, and the spec is the
+  stub and the tree clean
+- after fetching it, the branch is at its remote-tracking copy or can fast-forward to it, which
+  is how an item merged on the host since reaches it; or it is ahead only by an earlier
+  refresh's own merge, one commit whose second parent is on the default branch, left by a
+  rejected push. Ahead by that merge and behind as well means the merge was made on a stale
+  branch: stop, naming the merge commit and saying why. Dropping it is a reset, first-tier and
+  the person's to take, after which a refresh starts again from the remote copy. Any other
+  difference stops
+
+A refresh writes **no activity record**, the one exception to writing one first: the record is
+the run's, and the `items` it holds are what keep other worktrees off the run's work.
+
+Its remote budget is asked for **before any work starts**, in full, as a run's is:
+
+    This refresh will, without asking again:
+      push <integration branch>, adding one merge commit that brings in <default branch>
+      update the body of its aggregate pull request <number>
+
+    It will not merge or push <default branch>, will not force-push,
+    and will not merge the aggregate pull request.
+
+Then, when the branch is behind, fast-forward it. When an earlier refresh's merge is waiting,
+push it as it is, add the body line, and end. Otherwise fetch the default branch and follow "A
+run catching up" in /complete's `reference/land-on-top.md`: blocks 1 to 3 with the
+default branch's remote-tracking name as the target, redoing the share of every item the run
+completed; `nothing landed since` ends the refresh with nothing to do. Run the full `Verify`.
+Only when it passes, commit the merge, push the integration branch by name, never forced, and
+add a line to the aggregate's body naming the default-branch commit brought in and the files
+redone. A rejected push is a stop that keeps the merge commit locally and says so. Once the
+cause is put right, `/auto refresh` again pushes it; when the push was refused because the
+branch moved on the host, it stops on the stale merge as above.
+
+Stop, keeping the state as it is, on a conflict outside the shared files, which the routine
+reports and abandons; on a failing `Verify`, abandoning the merge with the routine's block; or
+when nothing landed since. A refresh never rebases, resets or force-pushes the integration
+branch, and the run's activity record and the items it holds are left as they were.
+
+## Fix mode
+
+`/auto fix` works through the findings ledger instead of the build plan, under the same
+grant, gates, landing and stop rules.
+
+- `/auto fix` or `/auto fix all` - every class, P0 first, until no `open` finding is
+  left or a bound is reached.
+- `/auto fix P0` through `/auto fix P3` - only that class.
+
+**The queue.** Read `religion/context/findings.md` afresh before each fix, because every fix
+and every review changes it. Take the classes in turn, most severe first. Within a class, the
+`open` findings that name the same file form one group, oldest first, and each group is one
+work item: specced by /fix with all of its identifiers, then implemented, gated,
+completed and landed exactly as Step 2 does for a plan item. A fix confined to one file and
+one class stays a diff someone can review; a fix that sweeps several is not.
+
+`unverified` findings are not repaired. Nothing has confirmed them, and repairing a guess
+produces a change nobody can check; report them instead. `fixed` findings in range are
+re-reviewed rather than repaired again, because the repair exists and only a review can
+close it.
+
+**Every repair is re-reviewed.** Repair is the whole point of this mode, so after
+implementation the repaired findings always go to /audit in a subagent with fresh
+context, whatever `qualityGates.audit` says. Only that review closes a finding.
+
+**Folding.** When that review raises a new finding in code the fix changed, the audit records
+it under its own identifier with a `**Surfaced by:**` line naming the finding whose repair
+exposed it, and it joins the current fix as another repair step, whatever its class, recorded as an
+amendment to the fix's spec with the stamp renewed, as /implement does for any repair step. The
+finding that surfaced it cannot close while it is `open` or `fixed`. A defect a repair
+introduced belongs with that repair: left for a later fix, it loses the context that
+explains it.
+
+**Bounds.** `auto.maxRepairAttempts` caps the attempts at any one finding. A fix folds in at
+most three findings; a fourth is still recorded, but left out of this fix, and the fix
+completes with what it has, its unclosed findings staying in the ledger. When completion is
+blocked because a P0 or P1 is still `open` or `fixed`, the run stops. A finding the run has
+already given up on is not queued again, and `auto.maxItems` caps completed fixes. Without
+these bounds the loop need not end: a review of a repair can always find something new.
+
+## Step 3 - close the run
+
+Under `trunk` and `branch-per-item` there is nothing to close: the items are done and the
+run reports.
+
+Under `pull-request`, open one aggregate pull request from the integration branch into the
+default branch. Title it for the run rather than for any one item. Its body is the run's
+review packet, and it is the artefact a person actually reads:
+
+- one section per completed item, in plan order, naming what it delivered, its merged pull
+  request, and the checks that proved it, taken from the item's archive and its `## Evidence`
+  section rather than from memory of the run; the item's own pull request carries its full
+  packet, so link it rather than repeating it
+- findings still open or fixed, by identifier, and anything deliberately left out
+- what the run did not reach, and why it stopped
+
+Report the URL and stop. **Never merge it.** It is the review gate the mode exists to reach.
+
+Open it even when the run stopped early with completed items behind it, saying plainly in
+the body that it stopped short: work that passed every gate deserves to be reviewable, and a
+packet describing three of six items beats an integration branch nobody knows about. When
+the run completed no items at all, open nothing and say so.
+
+## Step 4 - stop
+
+Stop immediately, keeping all state intact, when any of these happens:
+
+- a check fails and two repair attempts do not fix it
+- a product decision is needed that the plans do not answer
+- a finding cannot be repaired within the item's scope
+- work would touch anything in the first authority tier
+- an item turns out to need splitting in a way that changes the plan
+- a bound is reached
+- the same failure appears twice in a row across different items, which means something
+  systemic and further items will not fix it
+
+A stopped run leaves the branch, the spec, and the ticked steps exactly as they are.
+`/auto resume` picks up from there, because the state is in files rather than in the run.
+
+## Step 5 - report
+
+- items completed, by name, and what each delivered
+- under `pull-request`, the recorded starting commit, the integration branch and its head,
+  each item's merged pull request, and the aggregate pull request URL or why none was opened
+- what stopped the run, exactly, and the state it stopped in
+- findings raised, repaired, and still open
+- checks run, and any that could not run
+- the resume command, when one applies
+
+Never report an item as complete when its gate did not pass. An unattended run that
+overstates what it did is worse than one that stopped early, because nobody was watching
+the part it got wrong.
+
+## Rules
+
+- Explicit invocation only.
+- The gates are the same gates. Unattended is not a reason to lower one.
+- Never write to the default branch, in any mode. Never merge the aggregate pull request,
+  and never force-push anything, the integration branch included.
+- Never deploy, publish, or delete without asking, however long the queue is.
+- Never widen an item's scope to make its gate pass.
+- Stop on ambiguity. There is nobody to ask mid-run, so a guess compounds silently.
+
+## Formatting
+
+Match the conventions in `religion/context/ai-interaction.md`: concise, scannable
+markdown, lists for enumerations and tables for matrices rather than dense paragraphs.

@@ -16,7 +16,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runDoctor } from "../packages/create-religion/lib/doctor.js";
-import { hash } from "../packages/create-religion/lib/install.js";
+import { ADAPTERS, hash } from "../packages/create-religion/lib/install.js";
+import type { Adapter } from "../packages/create-religion/lib/install.js";
 import { MANAGED_END, MANAGED_START } from "../packages/create-religion/lib/merge.js";
 import { SURFACE_RECORD } from "./surface-current.js";
 
@@ -221,9 +222,17 @@ async function manifestProblems(project: string, template: string, version: stri
     problems.push(`the manifest records adapters ${manifest.adapters?.join(", ")}`);
   }
 
+  // An update keeps the adapters the project chose, so a tree added since that release is
+  // in the template but rightly not in the manifest.
+  const owned = (manifest.adapters ?? []).flatMap((a) => {
+    const adapter = ADAPTERS[a as Adapter] as (typeof ADAPTERS)[Adapter] | undefined;
+    return adapter ? [...adapter.trees, ...adapter.entry] : [];
+  });
   const expected: Record<string, string> = {};
   for (const file of await walk(template)) {
-    if (!file.startsWith("religion/")) expected[file] = hash(await fs.readFile(path.join(template, file)));
+    if (file.startsWith("religion/")) continue;
+    if (!owned.some((prefix) => file === prefix || file.startsWith(`${prefix}/`))) continue;
+    expected[file] = hash(await fs.readFile(path.join(template, file)));
   }
   const recorded = manifest.managed ?? {};
   const wrong = Object.keys({ ...expected, ...recorded }).filter((file) => expected[file] !== recorded[file]);

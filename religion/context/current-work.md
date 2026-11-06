@@ -3,7 +3,7 @@
 **Type:** Feature
 **From build plan:** item 50
 **Status:** in progress
-**Approved:** 2026-11-06, 0305a5c58ba1dea1
+**Approved:** 2026-11-06, 0d27d260321422f4
 
 ## Goal
 
@@ -56,13 +56,13 @@ large, so split it.
 
 ## Build steps
 
-- [ ] **Step 1 - the render tree** - `TREES` in `src/lib/adapters.ts` gains `antigravity`
+- [x] **Step 1 - the render tree** - `TREES` in `src/lib/adapters.ts` gains `antigravity`
   (`.agent/skills`, `GEMINI.md`, `/skill`); `src/entry/GEMINI.md` added and `src/entry/AGENTS.md`
   names it; the verification walk in `scripts/verify.ts` includes `.agent`; the upgrade check in
   `scripts/upgrade.ts` filters the expected manifest to the recorded adapters' trees and entries;
   `npm run build:skills:link` renders the repo's own `.agent/skills` and `GEMINI.md`. *Done
-  when:* `.agent/skills/feature/SKILL.md` exists with `Use when the user runs /feature`,
-  `.agents/skills/feature/SKILL.md` still reads `$feature`, `git diff --stat` shows no change
+  when:* `.agent/skills/feature/SKILL.md` exists and its routing line names `feature` in the
+  slash form, `.agents/skills/feature/SKILL.md` still names it in the dollar form, `git diff --stat` shows no change
   under `.claude/skills` or `.agents/skills`, and `npm test` exits 0.
 - [ ] **Step 2 - the guard and the drift warning** - `.agent/skills` added to the rendered list
   in `src/hooks/guard-rendered-output.mjs` and to `ALWAYS` in `src/hooks/warn-on-drift.mjs`, with
@@ -85,7 +85,7 @@ large, so split it.
   tree that is missing a skill, and `npm test` exits 0.
 - [ ] **Step 5 - documentation** - `docs/stability.md` ("All five", "The five adapters stay",
   the known limit of two copies), `docs/getting-started.md` (an
-  `Antigravity | /setup` row), and a new row in `docs/decisions.md`. *Done when:* the
+  Antigravity row giving `setup` in the slash form), and a new row in `docs/decisions.md`. *Done when:* the
   documentation check in `npm test` passes and a search of `docs/` finds no "four adapters".
 
 ## Files and areas
@@ -128,3 +128,7 @@ Test command declared (`npm test`), so logic steps ship tests:
 - No em dashes in docs, comments or commit messages; no plan numbers in comments or commits.
 - Real Antigravity behaviour is unverified: no claim in docs or the packet may say it was run
   in the IDE.
+
+## Amendments
+
+- 2026-11-06 - Steps 1 and 5 reworded to name invocations in words rather than as literal slash and dollar forms, which the state-template check refuses in a state file. What the steps ask for is unchanged.

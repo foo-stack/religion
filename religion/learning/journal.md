@@ -267,3 +267,10 @@ verification check, and both were found by hand first.
 **Surprised:** The land-on-top routine needed no new code for a whole run, only a section saying the share is every item the run completed; the hard part was everything around the merge: which branch, which record, and what a rejected push leaves behind.
 **Went wrong:** A throwaway test script failed midway and its later commands ran in the real repository, committing two blank lines that a forward commit removed; the proof was rerun behind a guard that refuses to run outside the scratchpad. 49c/F-2 took three repairs, the run stopping at its limit after two; the third, at the user's request, made a merge left on a stale branch a named stop whose reset is the person's.
 **Deferred:** 49c/F-4, F-6, F-7 (P2: changes to existing findings dropped, the rename rule for run-level findings, block 3's failure path) and P3s including F-15, whether a refresh's push may be granted up front, which is the user's to decide in the Authority section.
+
+## 2026-11-06 - Antigravity support
+
+**Archive:** history/features/50-antigravity-support.md
+**Surprised:** Antigravity reads `.agents/skills`, the Codex tree, so a shared tree would have shipped the wrong invocation into every skill; its backward-compatible `.agent/skills` gave it a tree of its own with every existing tree byte for byte unchanged. Doctor had silently assumed at most two trees.
+**Went wrong:** The spec named invocations in their literal slash and dollar forms, which the state-template check refuses, and three files that described adapter counts surfaced only when the checks or the audit read them, costing three amendments; the audit also found rollback's exclusions, an enumeration the survey missed.
+**Deferred:** Whether Antigravity shows both copies of each skill when a Codex-family adapter is installed beside it (50/F-3), choosing doctor's entry file from the manifest (50/F-2), and two P3s; Antigravity was never run, so its behaviour rests on its documentation.

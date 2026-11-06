@@ -41,7 +41,7 @@ into.
   work item at a time
 - **Skills authored once**, rendered into one tree per adapter so each tool reads its own
   invocation syntax
-- **Four adapters** - Claude Code, Codex, GitHub Copilot, OpenCode
+- **Five adapters** - Claude Code, Codex, GitHub Copilot, OpenCode, Antigravity
 - **Three authority tiers** that no mode or setting can widen
 - **A findings ledger** with durable identifiers, where a repaired finding still blocks
   completion until a review has looked at the repair
@@ -100,7 +100,7 @@ Already settled, with the reasoning in `docs/architecture/decisions/`:
 - **Third-party extensibility stays open.** Skill sources, the token vocabulary and the
   adapter definitions are internal rather than a public API, so opening them later adds a
   surface instead of breaking one.
-- **The four adapters are promised.** Adding a runtime is a minor release; dropping one is
+- **The five adapters are promised.** Adding a runtime is a minor release; dropping one is
   a breaking change.
 - **Religion never reaches outside the repository.** The command-line tool, the hooks and
   the dashboard make no outbound network connections and write nothing outside the project

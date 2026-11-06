@@ -1,0 +1,297 @@
+---
+name: complete
+summary: run the final gate, archive the work, commit it, and close it out
+description: "Close out a finished feature, fix, rollback, or refactor campaign. Runs the full Verify command and the final safety pass, applies the configured quality gates, archives the spec under religion/history/, ticks the build plan, prunes resolved findings into the archive, resets the active spec, and makes the work commit. Under branch-per-item it squash-merges only with explicit approval, then asks separately before pushing. Under pull-request it pushes the branch and opens a pull request into the default branch, merging nothing. Ends with a manual walkthrough of what landed. Use when the user runs /complete, or asks to finish, wrap up, close out, or merge the current work item once it is built and reviewed."
+---
+
+# complete - close out the finished work
+
+Where this sits:
+
+    implement  ->  [complete]  ->  next item
+    (built it)     (gate, archive, commit, merge)
+
+The work is built and reviewed. This skill decides whether it is actually done, records it
+in the project's history, and lands it.
+
+## Before you start
+
+**Read `religion/config.json`.** A missing file means defaults; an unparseable one stops
+here and points at /doctor.
+
+**Confirm there is something to complete.** `religion/context/current-work.md` holds a
+real spec, not the stub. Uncommitted step work is expected under `git.checkpoints: none`,
+so do not require the steps to be pre-committed.
+
+## Step 0 - the final safety pass
+
+Report blockers only. Stop before Step 1 if any of these fail.
+
+- **The full `Verify` command passed in this session.** Implementation verified each step
+  against what it touched; this is where the whole suite runs. If the entry file declares
+  no `Verify` command, run the build, plus the test command when one is declared and the
+  work touched logic. A check that cannot run is a blocker, not a pass.
+- **Every build step is ticked.** An unticked step is work the spec asked for that nobody
+  confirmed landed. To finish without it, remove it from the spec first and say why.
+- **No P0 or P1 finding is `open` or `fixed`** in `religion/context/findings.md`. `fixed`
+  blocks on purpose: the repair exists but no review has looked at it. Run /audit
+  to move it to `closed`. The only other ways past are `accepted`, which only the user may
+  set and which records their reason, and `invalid`, which needs review evidence. A
+  missing ledger means no findings.
+- **With `verification.logicTests: "required"`**, logic changes have a configured runner
+  and passing focused tests.
+- **With `verification.uiEvidence: "required"`**, interface outcomes have direct browser
+  evidence, not build output alone.
+
+Then **report, without blocking**, anything in the working tree that is not tied to this
+spec. A dirty findings ledger is expected. Anything else is about to be committed, so name
+the files and let the user decide before continuing.
+
+Never claim passed, verified, or working without naming the command, route, screenshot, or
+output that proves it.
+
+## Step 1 - apply the configured gates
+
+Read `qualityGates`. Reuse evidence already produced during this work item rather than
+repeating it, and take it from the spec's `## Evidence` section, which /check writes, not
+from memory of the session: the session may have been cleared since.
+
+The record counts only for the code it checked. Reuse it when its stamp names the current
+commit with a clean tree, and the tree is still clean apart from the workflow's own state
+files. A record from another commit, from a dirty tree, or with an outcome that failed or
+could not be checked is not evidence for this completion: run /check again, which
+replaces it. A spec with no Evidence section has not been checked.
+
+- **`audit`**: `manual` runs only on request. `when-sensitive` runs for authentication,
+  authorization, payments, secrets, personal data, migrations, destructive operations,
+  external side effects, security boundaries, or unusually broad changes. `always` runs
+  every time.
+- **`check`**: `manual` runs only on request. `when-behavioral` runs when an outcome needs
+  observed runtime behavior: a click, a request, a download, a background job, a flow
+  across screens. `always` runs every time.
+
+Run `check` first, then `audit`. A required gate that cannot run is a blocker. If an audit
+raises a new P0 or P1, completion stops and the repair goes back to /implement.
+
+Set the spec's status to `verified` once this passes, then archive it.
+
+## Step 2 - record the work
+
+Read the spec's type.
+
+- **Feature** - archive to `religion/history/features/NN-name.md`, where `NN` is the
+  build-plan number, and tick that item in the build plan, plus its parent once every
+  sub-item is ticked.
+- **Fix** - archive to `religion/history/fixes/name.md`. A fix is not a plan item, so
+  there is nothing to tick.
+- **Rollback** - archive to `religion/history/rollbacks/YYYY-MM-DD-NN-name.md`, leaving
+  the original feature archive intact. Untick the target item, and append a short note to
+  that line with the date and the rollback's archive path. Keep the number stable.
+- **Refactor** - archive to `religion/history/refactors/area-lens.md`. A campaign is not a
+  plan item, so there is nothing to tick. Carry the deferred candidates across into the
+  archive, since they are what the next campaign over that area starts from.
+
+The number lives in the path. It never appears in the commit message.
+
+**Record what landed.** After the work commit exists in Step 3, and after Step 4 has landed
+it on top of anything that landed first, append a `## Landed` section to the archive with the
+exact commits this item produced, oldest first, and the commit that preceded them:
+
+    ## Landed
+
+    **Base:** <40-character sha of the commit before this item>
+    **Commits:** <40-character sha>, <40-character sha>
+    **Product paths:** src/export.ts, src/routes/export.ts
+
+Full identifiers only, never abbreviated. This is what makes a later reversal possible:
+without it, reconstructing which commits belong to an item means guessing from messages and
+dates, and guessing wrong reverses somebody else's work. Under `git.mode: trunk` the item's
+commits sit among others on the same branch, so this record is the only reliable boundary.
+
+**Prune the ledger.** Append every `closed`, `accepted`, and `invalid` entry to a
+`## Findings` section in the archive just written, at its final status, with the reason
+preserved for accepted entries. Every archived identifier carries a prefix, so it is
+globally unique, and that prefixed form is the permanent reference. One raised under the
+item's prefix already has it and moves across unchanged: item 12's `12/F-3` stays `12/F-3`.
+Prefix only a bare one, with the archive name: item 12's `F-03` becomes `12/F-03`.
+
+Then remove only those entries from the ledger. `open`, `fixed`, and `unverified` entries
+stay, with their identifiers, so nothing is silently dropped. A `fixed` P2 does not block
+completion but must survive verbatim for a later review. Reset the ledger to its stub only
+when nothing unresolved remains.
+
+**Write the journal entry.** Append one entry to `religion/learning/journal.md` for the item
+just archived, whatever its kind. This skill is the journal's only writer, and an entry per
+item is what /distill has to work from:
+
+    ## 2026-10-21 - Export reports as CSV
+
+    **Archive:** history/features/12-export-reports-as-csv.md
+    **Surprised:** one or two sentences, or "nothing".
+    **Went wrong:** one or two sentences, or "nothing".
+    **Deferred:** what was left, and why, or "nothing".
+
+Write it from what the work actually went through, not from the spec: a repair that took two
+attempts, an assumption that proved wrong, a check that caught something late. The heading
+is the date and the item's title. If the file is missing, from a project installed before it
+existed, create it with the shipped journal's header first.
+
+**Reset the active spec** to its stub, exactly as shipped.
+
+**Discard consumed prototypes.** If this work built its look from throwaway static mockups
+and an early step ported their tokens into the real stylesheet, delete `prototypes/` as
+part of this work. Prototypes that are real components are not throwaway: leave them.
+
+Do not commit yet.
+
+## Step 2b - draft the release note
+
+Where the project uses Changesets, which `.changeset/config.json` shows, and no changeset in
+`.changeset/` already describes this item, draft one from the archive:
+
+- **Packages** - for each product path in the archive's `## Landed` record, the nearest
+  `package.json` with a `name`, leaving out any the Changesets config ignores and any marked
+  `private` that the config does not version.
+- **Bump** - proposed, never decided: `major` when the item removes, renames or narrows anything
+  public, `minor` when it adds something, `patch` when it only repairs. Where the project has a
+  stability statement, that is what defines public and breaking; where it has none, say what was
+  assumed.
+- **Summary** - from the archive's Outcome, rewritten for someone reading the changelog: what
+  they can now do or what behaves differently, in a short paragraph, with no plan numbers.
+
+    ---
+    "create-religion": minor
+    ---
+
+    `religion status` reports the run in progress and how many notes the inbox holds.
+
+Interactively, show the draft and ask before writing it. In an automated run there is nobody to
+ask, so write it under a name made from the item's title, and name it and its bump in the pull
+request's packet, where the reviewer approves or changes it before anything is released. A
+project without Changesets gets nothing, and versioning or publishing stays the release
+workflow's.
+
+## Step 3 - the work commit
+
+Stage everything: any uncommitted step work, plus the archive, plan, and ledger changes
+from Step 2. Make one commit.
+
+    feat: export reports as CSV
+
+    - streaming serializer for large result sets
+    - /reports/export route
+    - empty and error states
+
+Conventional prefix, a subject saying what the change does, and a short body naming what
+changed. Never a plan number, a roadmap reference, or any AI attribution: someone reading
+this history later has none of those documents open.
+
+If checkpoints already committed the steps, this commit carries the bookkeeping and the
+history reads as the build sequence followed by its closing entry. Then offer to squash
+the item into one commit. Squashing rewrites history, so it needs an explicit yes, and it
+is refused outright when any of those commits has already been pushed.
+
+## Step 4 - land it
+
+Under **`git.mode: trunk`** the work is already on the branch you were on. There is nothing
+to merge. Go to Step 5.
+
+**Under either branching mode, land on top of what already landed.** Before the squash merge
+or the push, follow `reference/land-on-top.md`. When the branch the item lands in has moved
+since the item began, because another item built in its own worktree landed first, it brings
+that in, takes the landed copy of each of the plan, ledger, journal, overview and handoff that
+the other item changed, and redoes this item's share of them, so those files are never merged
+as text. Any other conflict stops
+for review. When nothing landed in between, it does nothing. Write the `## Landed` record after
+it, as its last section says, so a later rollback reverses this item's work alone.
+
+Under **`branch-per-item`**:
+
+1. Squash-merge into the default branch, only with an explicit yes, so the item lands as
+   one commit however many checkpoints the branch carried.
+2. Delete the branch after a clean merge.
+3. Stop.
+
+In those two modes, ask separately whether to push. **Approval to merge is not approval to
+push.** Push only after an explicit yes to pushing, in this conversation. If there is no
+remote, say so rather than guessing.
+
+Under **`pull-request`** nothing is merged here and the default branch is never written to.
+The branch goes up, the pull request describes it, and the merge is the user's, on the host:
+
+1. Confirm the repository can host one: a remote exists and the host command works. If it
+   cannot, stop and say so plainly. The work is committed on its branch and the user can
+   open the pull request themselves. Never invent a remote, and never quietly fall back to
+   a local merge, which would swap the history model without saying so.
+2. Push the branch and set its upstream, only with an explicit yes in this conversation.
+   **That yes covers pushing this branch and nothing else.** Neither running this skill nor
+   "looks good" is that yes.
+3. Open the pull request from the branch into the default branch. Title it from the work
+   commit. The body is a review packet for whoever reviews on the host, built from the
+   archive just written rather than from memory of the session:
+
+   - **Goal** - the spec's goal, in a sentence or two.
+   - **Steps and evidence** - one line per build step: what it delivered, and the verdict
+     and evidence its `## Evidence` entry records. A step with no entry says so.
+   - **Findings** - those closed with this item, by their archived identifier, and any still
+     `open` or `fixed` that touch it.
+   - **The record** - a link to the archive on this branch for the full spec, what went wrong,
+     what was deferred, and the walkthrough from Step 5.
+   - **The release note** - a changeset drafted in Step 2b, by file, with its proposed bump and
+     the packages it names, for the reviewer to approve or change.
+   - **The issue** - when the spec carries `**From issue:**`, name it: with the host's closing
+     keyword for a fix (`Closes #42`), so merging closes it, and as a plain reference for a
+     feature (`Refs #12`), since one feature rarely settles everything an issue asked.
+
+   Keep it to what can be read beside the diff: one line per step, the detail behind the
+   link. It presents the item's own record and nothing more; it is not a sign-off, and asks
+   no one to approve anything the workflow does not already gate.
+4. Report the pull request URL and stop. Do not merge it, do not wait or poll for it, and do
+   not touch the default branch.
+
+Deleting the branch is a separate, later action, because the merge happens outside this
+session. When the user says it merged: check out the default branch, fast-forward it,
+confirm the work commit is actually in it, and only then delete the branch locally and on
+the remote. A squash-merge leaves no merge parent, so `git branch -d` will refuse; verify
+the content landed before reaching for `-D`.
+
+An item built in its own worktree holds its branch there, so the cleanup runs from the main
+checkout: remove the worktree first, then the branch. Removing the worktree is deleting files,
+so it asks, every time, and only once the work commit is confirmed in the default branch. When
+the state directory is ignored, the item's record is in the worktree alone until the routine's
+last section has copied it to the main checkout; say so when asking.
+
+## Step 5 - say how to try it
+
+Always end with the manual walkthrough for what just landed: what to start, where to go,
+what to click or run, what to expect, and what would count as wrong.
+
+When the spec came from an issue and no pull request was opened, name the issue here so it
+can be closed by hand. Nothing in this skill comments on, labels or closes an issue: those are
+outward actions, and the closing keyword in a pull request only takes effect when its owner
+merges it. This is instructions
+for a person, never a claim that the review happened.
+
+For a rollback, say how to confirm the removed behavior is gone, and name one unaffected
+path that should still work.
+
+Then point at what is next: /feature for the next planned item, or /fix.
+
+## Rules
+
+- The work item is the unit of history.
+- Do not complete failing or unfinished work. The full `Verify`, or the fallback build and
+  tests, must pass first.
+- Never land work while a P0 or P1 finding is `open` or `fixed`. The recorded ways past
+  without code are `accepted`, by the user's explicit decision with their reason, or
+  `invalid`, backed by review evidence. Both travel into the archive; neither is a silent
+  drop.
+- A rollback preserves the original archive and adds its own. Never rewrite history to
+  make a feature look as though it never existed.
+- Merging and pushing are the user's calls, and they are two separate calls.
+- One item per completion. A parent with unticked sub-items stays unticked.
+
+## Formatting
+
+Match the conventions in `religion/context/ai-interaction.md`: concise, scannable
+markdown, lists for enumerations and tables for matrices rather than dense paragraphs.

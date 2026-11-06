@@ -140,20 +140,20 @@ half-finished install looks like.
 npx create-religion@latest update
 ```
 
-The other version is cosmetic, and only possible with both trees installed:
+The other version is cosmetic, and only possible with more than one tree installed:
 
 ```text
   FAIL  adapters (cosmetic)
           .claude/skills and .agents/skills hold different skills
 ```
 
-One tree has skills the other does not, usually because a directory was deleted by hand or
-an install was interrupted. Nothing is blocked, because whichever tool you are using reads
-its own tree and finds what it needs. `update` re-renders both.
+A tree has skills the first one does not, or lacks some it has, usually because a directory
+was deleted by hand or an install was interrupted. Nothing is blocked, because whichever tool
+you are using reads its own tree and finds what it needs. `update` re-renders every tree.
 
 ## entry file commands
 
-**Protects:** the `Commands` section of `CLAUDE.md` or `AGENTS.md`. Those commands are what
+**Protects:** the `Commands` section of `CLAUDE.md`, `AGENTS.md` or `GEMINI.md`. Those commands are what
 the loop runs to verify work, so a placeholder here means every step would be verified
 against a command that does not exist.
 
@@ -174,7 +174,7 @@ because it will be run.
           no entry file found
 ```
 
-Neither `CLAUDE.md` nor `AGENTS.md` is present, so your tool is loading nothing at all and
+None of `CLAUDE.md`, `AGENTS.md` and `GEMINI.md` is present, so your tool is loading nothing at all and
 the skills are effectively invisible.
 
 This one takes two steps, and `update` alone is not enough:

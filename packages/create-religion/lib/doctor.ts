@@ -100,18 +100,22 @@ export async function runDoctor(
       blocks: "nothing"
     });
   } else {
-    const [a, b] = installed as [string, string];
-    const same = JSON.stringify(present[a]) === JSON.stringify(present[b]);
+    const [first, ...rest] = installed as [string, ...string[]];
+    const differing = rest.filter((tree) => JSON.stringify(present[tree]) !== JSON.stringify(present[first]));
     results.push({
       name: "adapters",
-      ok: same,
-      detail: same ? `${installed.length} trees, same skills` : `${a} and ${b} hold different skills`,
+      ok: differing.length === 0,
+      detail:
+        differing.length === 0
+          ? `${installed.length} trees, same skills`
+          : `${first} and ${differing.join(", ")} hold different skills`,
       blocks: "nothing"
     });
   }
 
   const entry = (await readIfPresent(path.join(root, "AGENTS.md"))) ??
-    (await readIfPresent(path.join(root, "CLAUDE.md")));
+    (await readIfPresent(path.join(root, "CLAUDE.md"))) ??
+    (await readIfPresent(path.join(root, "GEMINI.md")));
   const placeholder = entry !== null && entry.includes(`${STATE_DIR}:setup-required`);
   results.push({
     name: "entry file commands",

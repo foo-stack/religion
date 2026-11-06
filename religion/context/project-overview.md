@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash c20aecbd6af9d43b -->
+<!-- religion:source-hash 68848a0dbe625c0c -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -33,8 +33,8 @@ nothing to sign into.
 - **The loop** (headline) - `feature`, `implement`, `check`, `audit`, `complete`, one work
   item at a time, each step a diff to read and evidence that its outcome was met
 - **Skills authored once** - rendered into one tree per adapter, so each tool reads its own
-  invocation syntax instead of one file hedging between four
-- **Four adapters** - Claude Code, Codex, GitHub Copilot, OpenCode
+  invocation syntax instead of one file hedging between five
+- **Five adapters** - Claude Code, Codex, GitHub Copilot, OpenCode, Antigravity
 - **Three authority tiers** - what always asks, what an automated run may grant, and what is
   free. No mode or setting can widen them
 - **A findings ledger** - durable identifiers and severities, where a repaired finding still

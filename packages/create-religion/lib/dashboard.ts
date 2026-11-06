@@ -917,7 +917,7 @@ button.chip { font-family: inherit; cursor: pointer; }
       "</div>";
   }
 
-  const ADAPTER_NAMES = { claude: "Claude Code", codex: "Codex", copilot: "GitHub Copilot", opencode: "OpenCode" };
+  const ADAPTER_NAMES = { claude: "Claude Code", codex: "Codex", copilot: "GitHub Copilot", opencode: "OpenCode", antigravity: "Antigravity" };
   const when = (iso) => (iso && !isNaN(Date.parse(iso)) ? new Date(iso).toLocaleString() : esc(iso || ""));
   const semver = (v) => String(v || "").split("-")[0].split(".").map(Number);
 

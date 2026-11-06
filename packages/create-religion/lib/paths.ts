@@ -4,7 +4,7 @@ import path from "node:path";
 export const STATE_DIR = "religion";
 
 /** Where the adapters install their skills, one directory per skill. */
-export const SKILL_TREES = [".claude/skills", ".agents/skills"];
+export const SKILL_TREES = [".claude/skills", ".agents/skills", ".agent/skills"];
 
 /**
  * Walks up from `start` to the nearest directory holding the state directory.

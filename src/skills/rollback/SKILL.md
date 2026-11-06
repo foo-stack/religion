@@ -77,9 +77,9 @@ Stop on any failure. Do not repair a mismatch by choosing a nearby commit.
 Compute the reversal exactly as it will be applied, excluding everything the workflow owns:
 
     git diff --binary <base> <last-recorded-commit> -- . \
-      ':(exclude).agents/**' ':(exclude).claude/**' \
+      ':(exclude).agents/**' ':(exclude).agent/**' ':(exclude).claude/**' \
       ':(exclude){{state}}/**' \
-      ':(exclude)AGENTS.md' ':(exclude)CLAUDE.md' \
+      ':(exclude)AGENTS.md' ':(exclude)CLAUDE.md' ':(exclude)GEMINI.md' \
       ':(exclude)prototypes/**'
 
 Confirm the result is non-empty and its paths match the product paths in the archive. A

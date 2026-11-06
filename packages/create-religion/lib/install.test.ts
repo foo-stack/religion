@@ -175,6 +175,27 @@ test("planInstall: files for adapters that were not chosen are skipped entirely"
   assert.equal(plan.length, 1);
 });
 
+test("planInstall: Antigravity alone takes its own tree and entry file, and no other adapter's", async (t) => {
+  const { template, target } = await fixture(t);
+  for (const file of [".claude/skills/feature/SKILL.md", ".agents/skills/feature/SKILL.md", ".agent/skills/feature/SKILL.md"]) {
+    await write(template, file, "skill\n");
+  }
+  for (const file of ["CLAUDE.md", "AGENTS.md", "GEMINI.md"]) await write(template, file, ENTRY);
+  await write(template, "religion/config.json", "{}\n");
+
+  const plan = await planInstall(template, target, ["antigravity"], null);
+  assert.deepEqual(plan.map((entry) => entry.relative).sort(), [".agent/skills/feature/SKILL.md", "GEMINI.md", "religion/config.json"]);
+});
+
+test("planInstall: a GEMINI.md the project already has is offered as a merge", async (t) => {
+  const { template, target } = await fixture(t);
+  await write(template, "GEMINI.md", ENTRY);
+  await write(target, "GEMINI.md", "# Acme\n\nmy own Gemini instructions\n");
+
+  const plan = await planInstall(template, target, ["antigravity"], null);
+  assert.equal(actionFor(plan, "GEMINI.md"), "merge");
+});
+
 test("applyInstall: a conflict is left alone unless forced", async (t) => {
   const { template, target } = await fixture(t);
   await write(template, ".claude/skills/feature/SKILL.md", "new skill\n");

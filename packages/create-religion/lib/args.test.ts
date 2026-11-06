@@ -93,7 +93,7 @@ test("an option named after an inherited object property is not an adapter", () 
 });
 
 test("GRAMMAR lists the options each command accepts", () => {
-  const writes = ["--help", "-h", "--dry-run", "--force", "--yes", "-y", "--claude", "--codex", "--copilot", "--opencode"];
+  const writes = ["--help", "-h", "--dry-run", "--force", "--yes", "-y", "--claude", "--codex", "--copilot", "--opencode", "--antigravity"];
   assert.deepEqual(GRAMMAR, {
     install: writes,
     update: writes,

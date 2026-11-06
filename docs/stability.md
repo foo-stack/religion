@@ -16,7 +16,7 @@ the check or test that holds the code to it. Where nothing does yet, it says so 
 
 | Command | Options |
 | --- | --- |
-| `install [dir]` | `--dry-run`, `--force`, `--yes`, `-y`, `--claude`, `--codex`, `--copilot`, `--opencode`, `--help`, `-h` |
+| `install [dir]` | `--dry-run`, `--force`, `--yes`, `-y`, `--claude`, `--codex`, `--copilot`, `--opencode`, `--antigravity`, `--help`, `-h` |
 | `update [dir]` | the same as `install` |
 | `uninstall [dir]` | `--dry-run`, `--yes`, `-y`, `--help`, `-h` |
 | `status [dir]` | `--json`, `--help`, `-h` |
@@ -93,6 +93,7 @@ one is removed or renamed.
 | `codex` (Codex) | `.agents/skills`, `AGENTS.md` |
 | `copilot` (GitHub Copilot) | `.agents/skills`, `AGENTS.md` |
 | `opencode` (OpenCode) | `.agents/skills`, `AGENTS.md` |
+| `antigravity` (Antigravity) | `.agent/skills`, `GEMINI.md` |
 
 Every adapter also installs the `religion/` directory. All four are promised: adding an
 adapter is a minor release, and dropping one is a major release.

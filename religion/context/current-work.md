@@ -68,7 +68,7 @@ large, so split it.
   in `src/hooks/guard-rendered-output.mjs` and to `ALWAYS` in `src/hooks/warn-on-drift.mjs`, with
   a case in `scripts/hooks.test.ts`. *Done when:* the new hook test passes, and `npm test`
   exits 0.
-- [ ] **Step 3 - the adapter in the command-line tool** - `antigravity` in `ADAPTERS`
+- [x] **Step 3 - the adapter in the command-line tool** - `antigravity` in `ADAPTERS`
   (`packages/create-religion/lib/install.ts`), `.agent/skills` in `SKILL_TREES`
   (`lib/paths.ts`), the help line in `bin/religion.ts`, `ADAPTER_NAMES` in `lib/dashboard.ts`,
   the `adapters` entry in `surface.json`, the `antigravity` row in `docs/stability.md`'s adapter

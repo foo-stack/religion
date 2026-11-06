@@ -13,7 +13,8 @@
       "--claude",
       "--codex",
       "--copilot",
-      "--opencode"
+      "--opencode",
+      "--antigravity"
     ],
     "update": [
       "--help",
@@ -25,7 +26,8 @@
       "--claude",
       "--codex",
       "--copilot",
-      "--opencode"
+      "--opencode",
+      "--antigravity"
     ],
     "uninstall": [
       "--help",
@@ -118,6 +120,14 @@
       ],
       "entry": [
         "AGENTS.md"
+      ]
+    },
+    "antigravity": {
+      "trees": [
+        ".agent/skills"
+      ],
+      "entry": [
+        "GEMINI.md"
       ]
     }
   },

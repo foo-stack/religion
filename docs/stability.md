@@ -95,8 +95,13 @@ one is removed or renamed.
 | `opencode` (OpenCode) | `.agents/skills`, `AGENTS.md` |
 | `antigravity` (Antigravity) | `.agent/skills`, `GEMINI.md` |
 
-Every adapter also installs the `religion/` directory. All four are promised: adding an
+Every adapter also installs the `religion/` directory. All five are promised: adding an
 adapter is a minor release, and dropping one is a major release.
+
+Antigravity also reads `.agents/skills`. With Codex, Copilot or OpenCode installed beside it, it
+finds two copies of each skill and keeps one, and its documentation does not say which. Both
+copies hold the same workflow; they differ only in how a skill is invoked, `$feature` in one
+and `/feature` in the other.
 
 **Held by:** the surface check, which records each adapter with its trees and entry file.
 
@@ -208,7 +213,7 @@ The check reads code rather than running it, so it catches a change that reaches
 network by accident. Code written deliberately to hide a connection is a matter for the
 review every change to shipped code goes through.
 
-**The four adapters stay.** See [Adapters](#adapters).
+**The five adapters stay.** See [Adapters](#adapters).
 
 **Third-party extensibility stays internal.** Skill sources, the token vocabulary and the
 adapter definitions are not a public API. Opening them later would add a surface rather than

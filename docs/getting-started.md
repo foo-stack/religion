@@ -59,6 +59,7 @@ only the way you type it differs:
 | --- | --- |
 | Claude Code | `/setup` |
 | Codex | `$setup` |
+| Antigravity | `/setup` |
 | GitHub Copilot, OpenCode | ask for it by name |
 
 The rest of this guide uses the bare name in backticks, like `setup`, and leaves the typing

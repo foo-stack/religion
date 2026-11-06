@@ -3,7 +3,7 @@
 **Type:** Feature
 **From build plan:** item 50
 **Status:** in progress
-**Approved:** 2026-11-06, c42969b30b63f786
+**Approved:** 2026-11-06, aefa5b63ff3aa26e
 
 ## Goal
 
@@ -84,7 +84,7 @@ large, so split it.
   checks on an Antigravity-only install, reports `3 trees, same skills` on a full one, names the
   tree that is missing a skill, `docs/doctor.md` describes both checks as they now behave, and
   `npm test` exits 0.
-- [ ] **Step 5 - documentation** - `docs/stability.md` ("All five", "The five adapters stay",
+- [x] **Step 5 - documentation** - `docs/stability.md` ("All five", "The five adapters stay",
   the known limit of two copies), `docs/getting-started.md` (an
   Antigravity row giving `setup` in the slash form), and a new row in `docs/decisions.md`. *Done when:* the
   documentation check in `npm test` passes and a search of `docs/` finds no "four adapters".
@@ -96,7 +96,8 @@ large, so split it.
 - `src/hooks/guard-rendered-output.mjs`, `src/hooks/warn-on-drift.mjs`
 - `packages/create-religion/lib/install.ts`, `lib/paths.ts`, `lib/doctor.ts`, `lib/dashboard.ts`,
   `bin/religion.ts`, `surface.json`, `package.json`, and the tests beside them
-- `docs/stability.md`, `docs/getting-started.md`, `docs/decisions.md`, `docs/doctor.md`
+- `docs/stability.md`, `docs/getting-started.md`, `docs/decisions.md`, `docs/doctor.md`,
+  `docs/architecture/enforcement.md`
 - Rendered output: `.agent/skills/**`, `GEMINI.md`, `template/**`
 
 ## Data and contracts
@@ -134,3 +135,4 @@ Test command declared (`npm test`), so logic steps ship tests:
 
 - 2026-11-06 - Steps 1 and 5 reworded to name invocations in words rather than as literal slash and dollar forms, which the state-template check refuses in a state file. What the steps ask for is unchanged.
 - 2026-11-06 - Step 4 also updates `docs/doctor.md`, which describes the adapters and entry-file checks and would otherwise say only two trees and two entry files exist.
+- 2026-11-06 - Step 5 also updates `docs/architecture/enforcement.md`, whose rule says all four supported tools behave identically. Decision records and the dated decision-log rows stay as written: they are history.

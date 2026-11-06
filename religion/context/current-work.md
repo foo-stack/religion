@@ -64,7 +64,7 @@ large, so split it.
   when:* `.agent/skills/feature/SKILL.md` exists and its routing line names `feature` in the
   slash form, `.agents/skills/feature/SKILL.md` still names it in the dollar form, `git diff --stat` shows no change
   under `.claude/skills` or `.agents/skills`, and `npm test` exits 0.
-- [ ] **Step 2 - the guard and the drift warning** - `.agent/skills` added to the rendered list
+- [x] **Step 2 - the guard and the drift warning** - `.agent/skills` added to the rendered list
   in `src/hooks/guard-rendered-output.mjs` and to `ALWAYS` in `src/hooks/warn-on-drift.mjs`, with
   a case in `scripts/hooks.test.ts`. *Done when:* the new hook test passes, and `npm test`
   exits 0.

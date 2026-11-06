@@ -59,10 +59,10 @@ try {
 if (!file) process.exit(0);
 
 const relative = path.relative(process.cwd(), file);
-const rendered = [".claude/skills", ".agents/skills", "template/"];
+const rendered = [".claude/skills", ".agents/skills", ".agent/skills", "template/"];
 
 if (rendered.some((prefix) => relative.startsWith(prefix))) {
-  const source = relative.replace(/^template\//, "").replace(/^\.(claude|agents)\/skills/, "src/skills");
+  const source = relative.replace(/^template\//, "").replace(/^\.(claude|agents?)\/skills/, "src/skills");
   process.stdout.write(JSON.stringify({
     hookSpecificOutput: {
       hookEventName: "PreToolUse",

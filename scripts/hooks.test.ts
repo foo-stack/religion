@@ -174,6 +174,23 @@ const SPEC = [
   ""
 ].join("\n");
 
+const GUARD = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "src", "hooks", "guard-rendered-output.mjs");
+
+test("guard-rendered-output refuses an edit to every rendered skill tree and names the source", async (t) => {
+  // The real path, since the guard compares the payload with its own working directory as given.
+  const root = await fs.realpath((await project(t)).root);
+  // The guard acts only in a source checkout, which is what src/skills marks.
+  await fs.mkdir(path.join(root, "src", "skills"), { recursive: true });
+  for (const tree of [".claude/skills", ".agents/skills", ".agent/skills"]) {
+    const out = spawnSync(process.execPath, [GUARD], { cwd: root, input: editing(path.join(root, tree, "feature", "SKILL.md")), encoding: "utf8" }).stdout;
+    const decision = JSON.parse(out).hookSpecificOutput;
+    assert.equal(decision.permissionDecision, "deny", tree);
+    assert.match(decision.permissionDecisionReason, /likely src\/skills\/feature\/SKILL\.md/, tree);
+  }
+  const elsewhere = spawnSync(process.execPath, [GUARD], { cwd: root, input: editing(path.join(root, "src", "skills", "feature", "SKILL.md")), encoding: "utf8" });
+  assert.equal(elsewhere.stdout, "");
+});
+
 test("warn-on-drift is silent with no spec in progress", async (t) => {
   const { root } = await project(t);
   await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), "# Current Work\n\n_Nothing in progress._\n");
@@ -183,7 +200,7 @@ test("warn-on-drift is silent with no spec in progress", async (t) => {
 test("warn-on-drift allows what the current step and Files and areas name, and the workflow's own files", async (t) => {
   const { root } = await project(t);
   await fs.writeFile(path.join(root, "religion", "context", "current-work.md"), SPEC);
-  for (const file of ["src/routes/export.ts", "packages/app/lib/format.ts", "docs/guide/start.md", "packages/app/README.md", "religion/context/current-work.md", ".changeset/x.md", ".claude/skills/a/SKILL.md"]) {
+  for (const file of ["src/routes/export.ts", "packages/app/lib/format.ts", "docs/guide/start.md", "packages/app/README.md", "religion/context/current-work.md", ".changeset/x.md", ".claude/skills/a/SKILL.md", ".agent/skills/a/SKILL.md"]) {
     assert.equal(drift(root, editing(path.join(root, file))), "", file);
   }
 });

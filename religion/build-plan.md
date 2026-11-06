@@ -69,7 +69,7 @@
   - [x] 49a. **Runs that know their items** - `auto` takes an explicit item list or range while a bare number stays a count, the activity record carries the items a run holds, and `status` reports them under `inFlight` for every worktree
   - [x] 49b. **Each run in its own worktree** - with `workflow.parallelItems` on, `auto` starts in its own worktree on an integration branch named from the date and its items, refuses items another run holds, and names items that wait on another run's before it starts; after item 49a
   - [x] 49c. **A run catches up after another lands** - `auto refresh` brings the default branch into the integration branch with a merge commit, redoes the run's share of the shared state files on top, and updates its aggregate pull request; after item 49b
-- [ ] 50. **Antigravity support** - skills rendered into an Antigravity adapter tree with its entry file and invocation syntax, selectable at install and covered by the drift check; spike first on how Antigravity discovers skills
+- [x] 50. **Antigravity support** - skills rendered into an Antigravity adapter tree with its entry file and invocation syntax, selectable at install and covered by the drift check; spike first on how Antigravity discovers skills
 
 ## Order
 

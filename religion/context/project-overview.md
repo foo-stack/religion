@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 25f58988bbbfcaf4 -->
+<!-- religion:source-hash 68848a0dbe625c0c -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -53,7 +53,7 @@ nothing to sign into.
 
 ## Roadmap
 
-Seventeen items queued, each waiting on a spike. Several also say which items they follow; item 29
+Sixteen items queued, each waiting on a spike. Several also say which items they follow; item 29
 made the tooling honour both.
 
 **Status, learning and health**
@@ -75,8 +75,6 @@ made the tooling honour both.
 
 40. **Religion runs in CI** - a labelled issue to a pull request nothing merges; after 20,
     24 and 33
-50. **Antigravity support** - skills rendered into an Antigravity adapter tree with its
-    entry file and invocation syntax, selectable at install and covered by the drift check
 41. **One tool builds, another reviews** - review handed to a different installed tool
 42. **Skills users write themselves** - project skills rendered beside the built-in ones
 43. **Religion without Node** - a standalone binary per platform, Windows supported

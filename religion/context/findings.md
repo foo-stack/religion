@@ -1431,14 +1431,6 @@
 **Suggested fix:** Require the record's command to be `auto` and its items to match the branch's suffix.
 **Resolution:**
 
-### 50/F-1 [P2] fixed - Rollback does not exclude the Antigravity tree and entry file
-
-**File:** src/skills/rollback/SKILL.md:79
-**Found:** 2026-11-06 by audit (scope: current; lens: security)
-**Why it matters:** Rolling back an item whose commits touched `.agent/skills` or `GEMINI.md` reverts workflow-owned files with the product code, leaving them out of step with the other trees and entry files.
-**Suggested fix:** Add `.agent/**` and `GEMINI.md` to the exclusions.
-**Resolution:** Repaired 2026-11-06: the rollback exclusions now name `.agent/**` and `GEMINI.md`; awaiting review.
-
 ### 50/F-2 [P3] open - Doctor may read another tool's entry file in an Antigravity-only install
 
 **File:** packages/create-religion/lib/doctor.ts:116

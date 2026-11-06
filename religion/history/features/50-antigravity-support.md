@@ -164,3 +164,9 @@ Not verified: Antigravity itself was not run, so discovery, the slash commands a
 **Resolution:** Repaired 2026-11-06: the rollback exclusions now name `.agent/**` and `GEMINI.md`. Closed 2026-11-06 by a fresh-context re-review: the Step 3 pathspec list is the only one, and implementation and `--steps` both go through it; no other list in `src/` treats the older paths as workflow-owned without the Antigravity ones; `npm run check:skills` in sync.
 
 Still open in the ledger, none blocking: 50/F-2 (P3), 50/F-3 (P2), 50/F-4 (P3), 50/F-5 (P3).
+
+## Landed
+
+**Base:** a283ae9bd9fe15e8dc3ea1954427590ed9db95c4
+**Commits:** 34b89d284d4ac174d1c204541e9268f2bc6896a7, 47d2115515c44e3f0ea7ef767139a413f1363a89, 5086a367b5f96ea216107a6a6d07678cd844de61, a0c72d41c9cbda61ec70101f78eec59a79fc2c55, cb24b8f7965687b1c7ae66b9bf2973287b99049a, 624bfecb4514a7ef6d0db7462aebf4e7c248fc95, d14a15edc3af03f2f1c688846542ff46e8e0de06, f8830d4c97452bbb9b62b063c70650cec9c2c1fb
+**Product paths:** docs/architecture/enforcement.md, docs/decisions.md, docs/doctor.md, docs/getting-started.md, docs/stability.md, packages/create-religion/bin/religion.ts, packages/create-religion/lib/args.test.ts, packages/create-religion/lib/dashboard.ts, packages/create-religion/lib/doctor.test.ts, packages/create-religion/lib/doctor.ts, packages/create-religion/lib/install.test.ts, packages/create-religion/lib/install.ts, packages/create-religion/lib/paths.ts, packages/create-religion/package.json, packages/create-religion/surface.json, scripts/hooks.test.ts, scripts/upgrade.ts, scripts/verify.ts, src/entry/AGENTS.md, src/entry/GEMINI.md, src/hooks/guard-rendered-output.mjs, src/hooks/warn-on-drift.mjs, src/lib/adapters.ts, src/skills/rollback/SKILL.md

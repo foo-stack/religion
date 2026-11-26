@@ -54,7 +54,7 @@ meanings. No automated check runs the tool and compares its exit codes yet.
 `religion status --json` and `religion doctor --json` each print one object carrying
 `schemaVersion: 1`.
 
-- **`status`**: `next` (`command`, `because`), `plan` (`done`, `total`, `nextItem`), `work`
+- **`status`**: `next` (`command`, `because`), `plan` (`done`, `total`, `nextItem`, `nextNumber`), `work`
   (`active`, `title`, `type`, `status`, `stepsDone`, `stepsTotal`, `nextStep`), `findings`
   (`total`, `blocking`, `byStatus`), `overview` (`present`, `fresh`), `activity`
   (`recorded`, `command`, `status`, `summary`, `updatedAt`, `resumeCommand`, `items`), `inbox`

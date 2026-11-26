@@ -88,6 +88,7 @@ test("status passes over items that are waiting and names them", () => {
     })
   );
   assert.equal(status.plan.nextItem, "Packet - after item 1");
+  assert.equal(status.plan.nextNumber, "3");
   assert.deepEqual(status.next, { command: "feature", because: "next in the plan: Packet - after item 1" });
   assert.ok(status.warnings.includes("passed over plan items that are waiting: 2 (a spike)"));
 
@@ -98,6 +99,7 @@ test("status passes over items that are waiting and names them", () => {
 test("status points at a spike when every remaining item waits, and warns about the plan's own mistakes", () => {
   const blocked = computeStatus(state({ plan: plan("- [ ] 2. **Hooks** - spike first on blocking", "- [ ] 3. **After** - after item 2") }));
   assert.equal(blocked.plan.nextItem, null);
+  assert.equal(blocked.plan.nextNumber, null);
   assert.equal(blocked.next.command, "spike");
 
   const looped = computeStatus(state({ plan: plan("- [ ] 6. **A** - after item 7", "- [ ] 7. **B** - after item 6") }));
@@ -157,6 +159,8 @@ test("status passes over plan items an auto run in another worktree holds", () =
   const split = plan("- [ ] 1. **One** - x", "- [ ] 2. **Two** - x", "  - [ ] 2a. **Two a** - x", "  - [ ] 2b. **Two b** - x", "- [ ] 3. **Three** - x");
   const parent = computeStatus(state({ plan: split, inFlight: [{ ...between, items: ["2"] }] }));
   assert.equal(parent.plan.nextItem, "One - x");
+  const subItem = computeStatus(state({ plan: split.map((i) => (i.number === "1" || i.number === "2a" ? { ...i, done: true } : i)) }));
+  assert.equal(subItem.plan.nextNumber, "2b", "a sub-item's number keeps its letter");
   const pastOne = computeStatus(state({ plan: split.map((i) => (i.number === "1" ? { ...i, done: true } : i)), inFlight: [{ ...between, items: ["2"] }] }));
   assert.equal(pastOne.plan.nextItem, "Three - x", "a held parent holds its sub-items");
   assert.ok(pastOne.warnings.includes("passed over plan items in flight in another worktree: 2a (auto/a); 2b (auto/a)"));

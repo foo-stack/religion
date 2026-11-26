@@ -26,9 +26,12 @@ built. Mark the headline capability.
 
 What is queued, in build-plan order, with its number. This is the work list, and it is a
 different thing from the section above: on an established project the two barely overlap.
+At most the first 20 unchecked items; when more are queued, end with the count line.
 
 1. **<item>** - what it delivers.
 2. **<item>** - what it delivers.
+
+<N> more queued in `build-plan.md`.
 
 ## Domain model
 

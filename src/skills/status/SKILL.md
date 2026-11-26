@@ -14,7 +14,8 @@ Read-only. It reports; it never advances anything.
 If the `religion` command is available, run `religion status --json` and use it. The
 parsing is deterministic and a program does it more reliably than a reading of the files.
 
-Otherwise read them directly: `{{state}}/build-plan.md` for progress,
+Otherwise read them directly: `{{state}}/build-plan.md` for progress, by searching for its
+checked and unchecked lines rather than reading the whole file,
 `{{state}}/context/current-work.md` for the active spec and its ticked steps,
 `{{state}}/context/findings.md` for the ledger, `{{state}}/context/project-overview.md` for
 its source hash, `{{state}}/.state/run.json` for the run in progress, `{{state}}/context/inbox.md`

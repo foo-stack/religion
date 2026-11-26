@@ -48,7 +48,8 @@ nothing about it has been completed or recorded.
 
 ## Step 1 - identify the target
 
-Take a build-plan number or name. Match it to a **checked** item and its archive under
+Take a build-plan number or name. Find its line with a search rather than reading the whole
+plan, and match it to a **checked** item and its archive under
 `{{state}}/history/features/`. If the item is not checked, it was never completed, and there
 is nothing to roll back: say so.
 

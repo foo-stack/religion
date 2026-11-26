@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 68848a0dbe625c0c -->
+<!-- religion:source-hash a5a85b0e73ad98b9 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -39,7 +39,7 @@ nothing to sign into.
   free. No mode or setting can widen them
 - **A findings ledger** - durable identifiers and severities, where a repaired finding still
   blocks completion until a review has looked at the repair
-- **Hooks for Claude Code** - each backing prose that applies to all four tools, never a rule
+- **Hooks for Claude Code** - each backing prose that applies to every adapter, never a rule
   of its own
 - **A command-line tool** - install, update with conflict detection, status, doctor, and a
   local read-only dashboard
@@ -53,13 +53,10 @@ nothing to sign into.
 
 ## Roadmap
 
-Sixteen items queued, each waiting on a spike. Several also say which items they follow; item 29
-made the tooling honour both.
+Sixteen items queued, every one spike first. Several also say which items they follow; the
+tooling skips a line until both are met.
 
-**Status, learning and health**
-
-
-**Bigger capabilities, mostly spike-first**
+**Bigger capabilities**
 
 22. **Update merges edits** - three-way merge against a stored copy of what was installed
 23. **Adopt from another workflow** - `setup` converts another workflow's plans and specs,
@@ -71,7 +68,7 @@ made the tooling honour both.
 37. **A first work item that teaches the loop** - a tiny real change walked through by `setup`
 38. **Dependency changes made visible in review** - lockfile changes listed per step, offline
 
-**Direction changes, all spike-first**
+**Direction changes**
 
 40. **Religion runs in CI** - a labelled issue to a pull request nothing merges; after 20,
     24 and 33
@@ -107,25 +104,47 @@ runs on, and changing it moves requests between skills.
 ### Adapter tree (load-bearing)
 
 - `id`, `dir`, `entryFile`, `tools`, `toolLabel`, `command(skill)` - how one tool is addressed
+- Five tools across three trees: Claude Code, the shared `.agents/skills/` tree for Codex,
+  Copilot and OpenCode, and Antigravity
 - Renders every skill plus one entry file. **Load-bearing:** adding one changes every
   rendered path and the drift check's coverage.
 
+### Plan line (load-bearing)
+
+- checkbox, number, title, description - one feature, and sub-items as `Na`, `Nb`
+- `after item N` and `spike first` - prerequisites that `feature`, `status` and `auto all`
+  wait on, reporting cycles and unknown numbers
+- **Load-bearing:** numbers never change once completed, since archives refer back to them.
+
 ### Work item
 
-The single thing in progress, in `context/current-work.md`.
+The single thing in progress in a checkout, in `context/current-work.md`; with
+`workflow.parallelItems` on, one per git worktree.
 
 - kind (feature, fix, rollback, or refactor campaign)
 - steps (checkbox list) - ticked as each passes, which is what survives a cleared context
 - a step may be marked as running with an earlier one, forming a wave
+- amendments - dated changes to the approved spec, each with its reason
 - evidence - the verdict and proof for each outcome, in a section `check` writes
-- archives to `history/<kind>/` on completion
+- archives to `history/<kind>/` on completion, keeping amendments and evidence
 
 ### Finding (load-bearing)
 
-- `id` (durable identifier) - referenced by repairs and archives, so it never changes
+- `id` (durable identifier) - bare `F-n`, or `NN/F-n` scoped to its item; referenced by
+  repairs and archives, so it never changes
 - `severity` (P0 to P3), `status` (open, fixed, closed, accepted, invalid, unverified)
 - **Load-bearing:** an open or fixed P0 or P1 blocks completion, and `fixed` blocking is
   deliberate.
+
+### Activity record (load-bearing)
+
+`.state/run.json`, written by the running skill and never committed.
+
+- `command`, `status` (running, blocked, ready, completed), `summary`, `boundary`
+- `resumeCommand` - reported by `status` when a run is blocked
+- `items` (plan numbers as strings) - what an `auto` run holds
+- **Load-bearing:** other runs refuse the items it holds, and `status` reports them under
+  `inFlight` for every worktree.
 
 ### Install manifest (load-bearing)
 
@@ -137,20 +156,26 @@ The single thing in progress, in `context/current-work.md`.
 
 - `src/skills/` - the 26 authored skills, one directory each. The single source; never edit a
   rendered tree
-- `src/entry/` - the entry-file sources and the partials shared between them
+- `src/entry/` - the entry-file sources (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) and the
+  partials shared between them
 - `src/state/` - the state files a project is seeded with, written once and never re-rendered
 - `src/hooks/` - four Claude Code hooks, copied rather than rendered
-- `src/lib/` - the token vocabulary and adapter definitions, and the skill frontmatter reader
+- `src/lib/` - the token vocabulary and adapter definitions (`adapters.ts`), and the skill
+  frontmatter reader (`skills.ts`)
 - `scripts/` - the renderer, the package staging step, and the verification suite
 - `evals/routing/` - the routing corpus, one file per skill, positive and negative cases
 - `packages/create-religion/` - the published package: `bin/` for the command-line entry
-  point, `lib/` for install, update, merge, status, doctor, and the dashboard, with each
-  module's tests beside it as `*.test.ts`
-- `docs/` - architecture notes, the twelve decision records, and the full decision log
+  point, `lib/` for install and update, merge, uninstall, status, doctor, settings, the
+  changelog, and the dashboard, with each module's tests beside it as `*.test.ts`;
+  `surface.json` is the public surface record the compatibility guards compare against, and
+  `fixtures/` holds the last release for the upgrade check
+- `docs/` - getting started, the loop, doctor, stability and upgrading; architecture notes,
+  the twelve decision records, and the full decision log
 - `template/` - the install tree the build stages, copied into the published package. Generated
-  output; never edited by hand
-- `.claude/skills/`, `.agents/skills/`, `CLAUDE.md`, `AGENTS.md` - rendered output, committed
-  so the skills are readable here, and byte-compared by the drift check
+  and git-ignored; never edited by hand
+- `.claude/skills/`, `.agents/skills/`, `.agent/skills/`, `CLAUDE.md`, `AGENTS.md`,
+  `GEMINI.md` - rendered output, committed so the skills are readable here, and
+  byte-compared by the drift check
 - `religion/` - this project's own installation, used to build itself
 
 ## Tech stack
@@ -158,7 +183,7 @@ The single thing in progress, in `context/current-work.md`.
 - **TypeScript, ESM, Node 22 or later** - the command-line tool, build scripts, verification
 - **tsx** - runs the scripts directly, so there is no build step between editing and running
 - **Markdown** - the skills themselves. Prose any capable agent can read is what lets one
-  workflow serve four tools
+  workflow serve every adapter
 - **npm, Changesets, GitHub Actions** - released over OIDC trusted publishing, no token anywhere
 - **No runtime dependencies** in the published package
 

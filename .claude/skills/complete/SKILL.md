@@ -81,7 +81,8 @@ Read the spec's type.
 
 - **Feature** - archive to `religion/history/features/NN-name.md`, where `NN` is the
   build-plan number, and tick that item in the build plan, plus its parent once every
-  sub-item is ticked.
+  sub-item is ticked. Find those lines by their numbers with a search; the rest of the plan
+  is not needed.
 - **Fix** - archive to `religion/history/fixes/name.md`. A fix is not a plan item, so
   there is nothing to tick.
 - **Rollback** - archive to `religion/history/rollbacks/YYYY-MM-DD-NN-name.md`, leaving

@@ -60,8 +60,17 @@ An open question whose `affects` list does not cover this item does not block it
 
 ## Step 1 - pick the target
 
-Given a number or name that matches a build-plan item, use it. With no argument, read the
-plan top to bottom and take the first unchecked leaf that waits on nothing: an item waits while its line says `after item N` (or `after items N, M and K`) and any of
+Given a number or name that matches a build-plan item, find its line with a search rather
+than reading the whole plan, and use it.
+
+With no argument and the `religion` command available, run `religion status --json`.
+`plan.nextNumber` and `plan.nextItem` name the target, and its `warnings` name each item passed
+over and why, since it applies every rule below in code. `nextNumber` is null when every
+unchecked item waits, and the warnings then say on what. Without the command, do not read the
+whole plan either: search it for unchecked lines (`- [ ]`), and look up only the lines and spike
+archives that their `after` and `spike first` clauses name.
+
+Either way, the target is the first unchecked leaf that waits on nothing: an item waits while its line says `after item N` (or `after items N, M and K`) and any of
 those is unticked, or says `spike first` and no archive under `{{state}}/history/spikes/` records
 `**For:** item N` with `**Settled:** yes`. Wording inside a code span does not count.
 Name each item passed over and what it waits on, and point a spike-first one at

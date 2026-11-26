@@ -189,7 +189,8 @@
       "plan": {
         "done": "number",
         "total": "number",
-        "nextItem": "string|null"
+        "nextItem": "string|null",
+        "nextNumber": "string|null"
       },
       "work": {
         "active": "boolean",

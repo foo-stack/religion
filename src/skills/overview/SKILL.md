@@ -88,6 +88,12 @@ new project they are nearly the same list. On an established one they barely ove
 collapsing them produces an overview claiming the product's features are whatever three
 small things happen to be queued. Never merge them, and never fill one from the other.
 
+**The Roadmap lists at most 20 items:** the first 20 unchecked lines in plan order, with
+their numbers, then one line saying how many more are queued in `{{state}}/build-plan.md`.
+The overview is loaded into every session, so a Roadmap that lists the whole queue makes
+every session pay for it. With 20 or fewer unchecked lines, list them all and leave the
+count line out.
+
 **Domain model** turns the plan's list of nouns into concrete shapes with fields and
 relationships. What that means depends on the project: persisted entities for something
 with a database, the shapes read and emitted for a compiler or CLI, the public types and

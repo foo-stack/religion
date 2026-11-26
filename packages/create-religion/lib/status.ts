@@ -11,7 +11,7 @@ import type { PlanItem, ProjectState } from "./state.js";
 export interface Status {
   schemaVersion: 1;
   next: { command: string; because: string };
-  plan: { done: number; total: number; nextItem: string | null };
+  plan: { done: number; total: number; nextItem: string | null; nextNumber: string | null };
   work: ProjectState["work"];
   findings: { total: number; blocking: string[]; byStatus: Record<string, number> };
   overview: { present: boolean; fresh: boolean | null };
@@ -89,7 +89,7 @@ export function computeStatus(state: ProjectState): Status {
   return {
     schemaVersion: 1,
     next: nextAction(state, nextItem?.title ?? null, blocking.length > 0, leaves.filter((i) => !i.done && waitsOn(i)), waitsOn, building.length > 0),
-    plan: { done, total: leaves.length, nextItem: nextItem?.title ?? null },
+    plan: { done, total: leaves.length, nextItem: nextItem?.title ?? null, nextNumber: nextItem?.number ?? null },
     work: state.work,
     findings: { total: state.findings.length, blocking, byStatus },
     overview: { present: state.overviewPresent, fresh: state.overviewFresh },

@@ -45,7 +45,7 @@ into.
 - **Three authority tiers** that no mode or setting can widen
 - **A findings ledger** with durable identifiers, where a repaired finding still blocks
   completion until a review has looked at the repair
-- **Hooks for Claude Code**, each backing prose that applies to all four tools
+- **Hooks for Claude Code**, each backing prose that applies to every adapter
 - **A command-line tool** - install, update with conflict detection, status, doctor, and a
   local read-only dashboard
 - **Entry-file merge** for repositories that already carry agent instructions
@@ -77,7 +77,7 @@ performs the single write.
   verification suite
 - **tsx** - runs the scripts directly, so there is no build step between editing and running
 - **Markdown** - the skills themselves. Every rule is prose that any capable agent can read,
-  which is what makes the same workflow work across four tools
+  which is what makes the same workflow work across every adapter
 - **npm, Changesets, GitHub Actions** - released over OIDC trusted publishing, with no token
   anywhere
 - **No runtime dependencies** in the published package

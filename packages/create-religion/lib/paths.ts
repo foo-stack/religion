@@ -23,6 +23,12 @@ export async function findProjectRoot(start: string): Promise<string | null> {
   }
 }
 
+/** Whether `.gitignore` keeps the whole state directory out of git, the "local" choice in setup. */
+export async function stateIgnored(root: string): Promise<boolean> {
+  const gitignore = (await readIfPresent(path.join(root, ".gitignore"))) ?? "";
+  return new RegExp(`^\\s*/?${STATE_DIR}/?\\s*$`, "m").test(gitignore);
+}
+
 export function statePath(root: string, ...parts: string[]): string {
   return path.join(root, STATE_DIR, ...parts);
 }

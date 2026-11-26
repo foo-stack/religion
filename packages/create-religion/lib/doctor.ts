@@ -8,7 +8,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { exists, readIfPresent, SKILL_TREES, STATE_DIR, statePath } from "./paths.js";
+import { exists, readIfPresent, SKILL_TREES, STATE_DIR, stateIgnored, statePath } from "./paths.js";
 import { editedSinceInstall, isPlainFile } from "./install.js";
 import { SETTINGS, settingProblems } from "./settings.js";
 import { listWorktrees, readProjectState } from "./state.js";
@@ -140,8 +140,7 @@ export async function runDoctor(
     blocks: "work"
   });
 
-  const gitignore = (await readIfPresent(path.join(root, ".gitignore"))) ?? "";
-  const ignored = new RegExp(`^\\s*/?${STATE_DIR}/?\\s*$`, "m").test(gitignore);
+  const ignored = await stateIgnored(root);
   results.push({
     name: "visibility",
     ok: true,

@@ -101,8 +101,19 @@ test("GRAMMAR lists the options each command accepts", () => {
     status: ["--help", "-h", "--json"],
     doctor: ["--help", "-h", "--json"],
     dashboard: ["--help", "-h"],
+    export: ["--help", "-h", "--dry-run"],
     help: ["--help", "-h"]
   });
+});
+
+test("export takes a directory and --dry-run, and refuses --yes and --json", () => {
+  const parsed = parseArgs(["export", "./app", "--dry-run"], { cwd: "/here", isDirectory: () => false });
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) assert.deepEqual([parsed.options.command, parsed.options.target, parsed.options.dryRun], ["export", "./app", true]);
+  for (const flag of ["--yes", "-y", "--json", "--force"]) {
+    const refused = parseArgs(["export", flag], { cwd: "/here", isDirectory: () => false });
+    assert.equal(refused.ok ? "" : refused.error, `Option '${flag}' does not apply to export.`);
+  }
 });
 
 test("every option GRAMMAR lists is accepted by its command", () => {

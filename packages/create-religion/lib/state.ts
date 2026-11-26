@@ -639,13 +639,8 @@ async function gitDir(dotgit: string): Promise<string | null> {
   return target ? path.resolve(path.dirname(dotgit), target) : null;
 }
 
-/**
- * The repository's worktrees, the one holding `root` and the main checkout, read from git's own records under
- * `worktrees/` rather than by running git, which shipped code may not do. A worktree whose
- * directory is gone is left out, and so is the main entry of a bare repository. Null outside
- * a repository.
- */
-export async function listWorktrees(root: string): Promise<{ home: string; main: string | null; trees: Worktree[] } | null> {
+/** The checkout holding `root`, its own git directory, and the repository's shared one. */
+async function gitDirs(root: string): Promise<{ home: string; own: string; common: string } | null> {
   let home = await fs.realpath(root).catch(() => null);
   let own: string | null = null;
   while (home && !(own = await gitDir(path.join(home, ".git")))) {
@@ -654,7 +649,27 @@ export async function listWorktrees(root: string): Promise<{ home: string; main:
   }
   if (!home || !own) return null;
   const commondir = await readIfPresent(path.join(own, "commondir"));
-  const common = commondir ? path.resolve(own, commondir.trim()) : own;
+  return { home, own, common: commondir ? path.resolve(own, commondir.trim()) : own };
+}
+
+/** The `origin` remote's URL from the repository's config, read without running git. Null when there is none. */
+export async function originUrl(root: string): Promise<string | null> {
+  const found = await gitDirs(root);
+  const config = found ? await readIfPresent(path.join(found.common, "config")) : null;
+  const section = /^\s*\[remote\s+"origin"\]\s*$([\s\S]*?)(?=^\s*\[|(?![\s\S]))/m.exec(config ?? "")?.[1];
+  return /^\s*url\s*=\s*(.+?)\s*$/m.exec(section ?? "")?.[1] ?? null;
+}
+
+/**
+ * The repository's worktrees, the one holding `root` and the main checkout, read from git's own records under
+ * `worktrees/` rather than by running git, which shipped code may not do. A worktree whose
+ * directory is gone is left out, and so is the main entry of a bare repository. Null outside
+ * a repository.
+ */
+export async function listWorktrees(root: string): Promise<{ home: string; main: string | null; trees: Worktree[] } | null> {
+  const found = await gitDirs(root);
+  if (!found) return null;
+  const { home, own, common } = found;
   const records = [{ dir: path.basename(common) === ".git" ? path.dirname(common) : null, git: common }];
   for (const id of await fs.readdir(path.join(common, "worktrees")).catch(() => [])) {
     const git = path.join(common, "worktrees", id);

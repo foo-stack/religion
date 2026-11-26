@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash a5a85b0e73ad98b9 -->
+<!-- religion:source-hash 997fd668c976f962 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -50,11 +50,19 @@ nothing to sign into.
   landed one at a time with the shared bookkeeping redone on top of what already landed
 - **Several automated runs at once** - `auto` over a named list of items, each run in its own
   worktree on its own integration branch, and `auto refresh` to catch one up after another lands
+- **State that travels** - export, import and a divergence report for state kept out of git,
+  through a bundle in the project that a sync client is pointed at
 
 ## Roadmap
 
-Sixteen items queued, every one spike first. Several also say which items they follow; the
-tooling skips a line until both are met.
+Seventeen items queued. All but item 51 are spike first, and several also say which items they
+follow; the tooling skips a line until both are met.
+
+**Next**
+
+51. **State that travels between machines** - the untracked part of `religion/` carried as one
+    bundle in the project that a sync client is pointed at, as 51a export, 51b import and 51c
+    sync, each after the last
 
 **Bigger capabilities**
 
@@ -145,6 +153,24 @@ The single thing in progress in a checkout, in `context/current-work.md`; with
 - `items` (plan numbers as strings) - what an `auto` run holds
 - **Load-bearing:** other runs refuse the items it holds, and `status` reports them under
   `inFlight` for every worktree.
+
+### Exchange record
+
+`.state/exchange.json`, written by the command-line tool and never committed.
+
+- the hashes of the files in the last bundle exported or imported
+- the base `sync` compares both machines against, to tell changed here from changed there
+- every path under `religion/`, except `.state/`
+
+### Bundle (load-bearing)
+
+`.state/export/religion-bundle.zip`, written by `religion export` and read by import and sync.
+
+- every untracked file under `religion/`, except `.state/`, stored as a zip
+- `religion-bundle.json` at its root: a hash per file, the repository it came from, and when
+  and where it was made
+- **Load-bearing:** another machine's import and sync read it, so its shape stays stable
+  within 1.x.
 
 ### Install manifest (load-bearing)
 

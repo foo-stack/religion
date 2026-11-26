@@ -10,7 +10,7 @@
 import { ADAPTERS } from "./install.js";
 import type { Adapter } from "./install.js";
 
-export type Command = "install" | "update" | "uninstall" | "status" | "doctor" | "dashboard" | "export" | "import" | "help";
+export type Command = "install" | "update" | "uninstall" | "status" | "doctor" | "dashboard" | "export" | "import" | "sync" | "help";
 
 export interface Options {
   command: Command;
@@ -20,7 +20,7 @@ export interface Options {
   force: boolean;
   yes: boolean;
   target: string;
-  /** The bundle file `import` reads; the only command whose argument is a file. */
+  /** The bundle file `import` and `sync` read; the only commands whose argument is a file. */
   bundle: string | null;
 }
 
@@ -31,7 +31,7 @@ export interface ParseContext {
   isDirectory: (candidate: string) => boolean;
 }
 
-const COMMANDS: readonly Command[] = ["install", "update", "uninstall", "status", "doctor", "dashboard", "export", "import", "help"];
+const COMMANDS: readonly Command[] = ["install", "update", "uninstall", "status", "doctor", "dashboard", "export", "import", "sync", "help"];
 const WRITES: ReadonlySet<Command> = new Set(["install", "update"]);
 const CHANGES: ReadonlySet<Command> = new Set(["install", "update", "uninstall", "import"]);
 const PREVIEWS: ReadonlySet<Command> = new Set([...CHANGES, "export"]);
@@ -105,9 +105,9 @@ export function parseArgs(argv: readonly string[], context: ParseContext): Parse
   const [first, ...rest] = argv.filter((arg) => !arg.startsWith("-"));
   let extra: string[] = [];
 
-  if (first === "import") {
-    options.command = "import";
-    if (rest[0] === undefined) return fail("import needs the bundle file to read, as `religion import <file>`.");
+  if (first === "import" || first === "sync") {
+    options.command = first;
+    if (rest[0] === undefined) return fail(`${first} needs the bundle file to read, as \`religion ${first} <file>\`.`);
     options.bundle = rest[0];
     extra = rest.slice(1);
   } else if (first !== undefined && isCommand(first)) {
@@ -121,7 +121,7 @@ export function parseArgs(argv: readonly string[], context: ParseContext): Parse
   }
 
   if (extra.length > 0) {
-    const takes = options.command === "import" ? "one bundle file" : "at most one directory";
+    const takes = options.command === "import" || options.command === "sync" ? "one bundle file" : "at most one directory";
     return fail(`Unexpected argument '${extra[0]}'. ${options.command} takes ${takes}.`);
   }
 

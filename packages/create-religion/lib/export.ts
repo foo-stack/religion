@@ -24,8 +24,8 @@ export type ExportPlan =
   | { ok: true; files: string[]; skipped: string[]; manifest: BundleManifest }
   | { ok: false; reason: string };
 
-/** Every plain file under the state directory except `.state/`, as `/`-separated project paths. */
-async function collect(root: string): Promise<{ files: string[]; skipped: string[] }> {
+/** Every plain file under the state directory except `.state/`, as `/`-separated project paths, and what was skipped. */
+export async function stateFiles(root: string): Promise<{ files: string[]; skipped: string[] }> {
   const files: string[] = [];
   const skipped: string[] = [];
   const walk = async (relative: string): Promise<void> => {
@@ -46,7 +46,7 @@ export async function planExport(root: string, at = new Date()): Promise<ExportP
   if (!(await stateIgnored(root))) {
     return { ok: false, reason: `${STATE_DIR}/ is committed, so git already carries it; export is for state kept out of git` };
   }
-  const { files, skipped } = await collect(root);
+  const { files, skipped } = await stateFiles(root);
   if (files.length === 0) return { ok: false, reason: `nothing to export: ${STATE_DIR}/ holds no files outside .state/` };
 
   const hashes: Record<string, string> = {};

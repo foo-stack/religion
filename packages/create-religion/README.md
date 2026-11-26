@@ -37,6 +37,8 @@ npx create-religion dashboard   # a local read-only view
 npx create-religion update      # update the workflow files, preserving yours
 npx create-religion uninstall   # take it back out, keeping the plans and history
 npx create-religion export      # bundle state kept out of git, for another machine
+npx create-religion import <file>  # unpack a bundle another machine exported
+npx create-religion sync <file>    # how this machine and a bundle moved apart
 ```
 
 Installing the package globally shortens these to `religion status` and the rest.
@@ -49,6 +51,17 @@ up the original if you choose to replace it.
 sync client that can sync a chosen folder, such as Google Drive for desktop, at
 `religion/.state/export/` to carry it to your other machines. Religion itself makes no network
 connection.
+
+On the other machine, install Religion first, then run `import` with the path the sync client
+shows that bundle at. It checks every file's hash and that the bundle was made for this
+repository, shows what it would create or replace, and asks before writing. It refuses outright
+when a file it would replace was changed on this machine since the last export or import, so it
+never discards work. A bundle's hashes prove it arrived whole, not who made it: anyone who can
+write to the synced folder can write what your agent reads, so import only bundles you made.
+
+`sync` compares this machine with a bundle against the last export or import and lists each
+file as changed here, changed there, changed on both, or present on only one side. It writes
+nothing, and ends by saying whether to import, export, or resolve something by hand first.
 
 ### Exit codes
 

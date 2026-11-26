@@ -1,6 +1,6 @@
 # Religion - Project Overview
 
-<!-- religion:source-hash 997fd668c976f962 -->
+<!-- religion:source-hash 42e8e245eb88ec62 -->
 
 > A file-backed, spec-driven development workflow for AI coding agents, shipped as an npm
 > package that installs into someone else's repository.
@@ -55,14 +55,8 @@ nothing to sign into.
 
 ## Roadmap
 
-Seventeen items queued. All but item 51 are spike first, and several also say which items they
-follow; the tooling skips a line until both are met.
-
-**Next**
-
-51. **State that travels between machines** - the untracked part of `religion/` carried as one
-    bundle in the project that a sync client is pointed at, as 51a export, 51b import and 51c
-    sync, each after the last
+Sixteen items queued, every one spike first. Several also say which items they follow; the
+tooling skips a line until both are met.
 
 **Bigger capabilities**
 

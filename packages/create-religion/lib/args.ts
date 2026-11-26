@@ -10,7 +10,7 @@
 import { ADAPTERS } from "./install.js";
 import type { Adapter } from "./install.js";
 
-export type Command = "install" | "update" | "uninstall" | "status" | "doctor" | "dashboard" | "export" | "help";
+export type Command = "install" | "update" | "uninstall" | "status" | "doctor" | "dashboard" | "export" | "import" | "sync" | "help";
 
 export interface Options {
   command: Command;
@@ -20,6 +20,8 @@ export interface Options {
   force: boolean;
   yes: boolean;
   target: string;
+  /** The bundle file `import` and `sync` read; the only commands whose argument is a file. */
+  bundle: string | null;
 }
 
 export type Parsed = { ok: true; options: Options } | { ok: false; error: string };
@@ -29,9 +31,9 @@ export interface ParseContext {
   isDirectory: (candidate: string) => boolean;
 }
 
-const COMMANDS: readonly Command[] = ["install", "update", "uninstall", "status", "doctor", "dashboard", "export", "help"];
+const COMMANDS: readonly Command[] = ["install", "update", "uninstall", "status", "doctor", "dashboard", "export", "import", "sync", "help"];
 const WRITES: ReadonlySet<Command> = new Set(["install", "update"]);
-const CHANGES: ReadonlySet<Command> = new Set(["install", "update", "uninstall"]);
+const CHANGES: ReadonlySet<Command> = new Set(["install", "update", "uninstall", "import"]);
 const PREVIEWS: ReadonlySet<Command> = new Set([...CHANGES, "export"]);
 const REPORTS: ReadonlySet<Command> = new Set(["status", "doctor"]);
 const EVERY: ReadonlySet<Command> = new Set(COMMANDS);
@@ -92,7 +94,8 @@ export function parseArgs(argv: readonly string[], context: ParseContext): Parse
     dryRun: false,
     force: false,
     yes: false,
-    target: context.cwd
+    target: context.cwd,
+    bundle: null
   };
 
   if (argv.some((arg) => arg === "help" || arg === "--help" || arg === "-h")) {
@@ -102,7 +105,12 @@ export function parseArgs(argv: readonly string[], context: ParseContext): Parse
   const [first, ...rest] = argv.filter((arg) => !arg.startsWith("-"));
   let extra: string[] = [];
 
-  if (first !== undefined && isCommand(first)) {
+  if (first === "import" || first === "sync") {
+    options.command = first;
+    if (rest[0] === undefined) return fail(`${first} needs the bundle file to read, as \`religion ${first} <file>\`.`);
+    options.bundle = rest[0];
+    extra = rest.slice(1);
+  } else if (first !== undefined && isCommand(first)) {
     options.command = first;
     if (rest[0] !== undefined) options.target = rest[0];
     extra = rest.slice(1);
@@ -113,7 +121,8 @@ export function parseArgs(argv: readonly string[], context: ParseContext): Parse
   }
 
   if (extra.length > 0) {
-    return fail(`Unexpected argument '${extra[0]}'. ${options.command} takes at most one directory.`);
+    const takes = options.command === "import" || options.command === "sync" ? "one bundle file" : "at most one directory";
+    return fail(`Unexpected argument '${extra[0]}'. ${options.command} takes ${takes}.`);
   }
 
   for (const flag of argv.filter((arg) => arg.startsWith("-"))) {

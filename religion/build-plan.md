@@ -72,7 +72,7 @@
 - [x] 50. **Antigravity support** - skills rendered into an Antigravity adapter tree with its entry file and invocation syntax, selectable at install and covered by the drift check; spike first on how Antigravity discovers skills
 - [ ] 51. **State that travels between machines** - the untracked part of `religion/` carried between machines as one bundle inside the project, in a folder the user's sync client is pointed at, with no network code in Religion
   - [x] 51a. **Export** - `religion export` bundles every untracked file under `religion/`, except `.state/`, into one zip carrying a hash per file and the repository it came from, written to `religion/.state/export/religion-bundle.zip` through a temporary file and a rename
-  - [ ] 51b. **Import** - `religion import <file>` checks every hash and that the bundle names this repository, refuses any path outside `religion/` and any file changed here since the last exchange, then extracts it, showing its plan unless given `--yes`; after item 51a
+  - [x] 51b. **Import** - `religion import <file>` checks every hash and that the bundle names this repository, refuses any path outside `religion/` and any file changed here since the last exchange, then extracts it, showing its plan unless given `--yes`; after item 51a
   - [ ] 51c. **Sync** - `religion sync` compares this machine's state with the newest bundle against the last exchange recorded in `.state/`, listing each file as changed here, changed there, or changed on both, and never merges; after item 51b
 
 ## Order

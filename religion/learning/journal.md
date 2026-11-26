@@ -288,3 +288,10 @@ verification check, and both were found by hand first.
 **Surprised:** The bundle never needed to leave the project. Writing it under `religion/.state/export/` and letting the user point a sync client there kept the no-network and nothing-outside promises intact, and removed sync-folder detection and a prompt from the design. The shipped-code allowlist also ruled out `child_process` and `zlib`, so the zip is stored, written by hand, and checked against `unzip` in tests.
 **Went wrong:** The no-network check refused `process.pid` in the temporary file name, since `process` is limited to a fixed set of members; a random suffix from `node:crypto` replaced it, with an amendment. The spec was redrafted once mid-intake when the bundle moved inside the project.
 **Deferred:** Import and sync (items 51b and 51c). Projects where only part of `religion/` is ignored, or where it is ignored outside `.gitignore`, are refused rather than handled. No real sync client was exercised.
+
+## 2026-11-26 - Import
+
+**Archive:** history/features/51b-import.md
+**Surprised:** The real attack surface was the filesystem's own name folding, not the zip format. APFS resolves `.STATE`, `.ſtate`, `.ﬅate` and `.ﬆate` onto `.state`, so exact-string checks on entry names were not enough. Asking the filesystem through `realpath` before writing turned out to be the check that holds whatever its folding rules are.
+**Went wrong:** The audit gate raised 51b/F-1 at P1, confirmed with a crafted bundle that wrote into `religion/.state/`. The first repair, lowercasing alone, missed the long s, and the re-review proved it on APFS. The second repair used three layered checks and was closed by a re-review that brute-forced every non-ASCII code point. That used both repair attempts the run allows.
+**Deferred:** 51b/F-4 (declined prompt exits 0, matching uninstall, the user's call), 51b/F-5 and F-6 (export should refuse or skip names import would refuse, up front), and 51b/F-7 (clash messages show the folded spelling). All P3.

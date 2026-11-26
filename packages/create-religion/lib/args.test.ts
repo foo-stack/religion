@@ -102,8 +102,24 @@ test("GRAMMAR lists the options each command accepts", () => {
     doctor: ["--help", "-h", "--json"],
     dashboard: ["--help", "-h"],
     export: ["--help", "-h", "--dry-run"],
+    import: ["--help", "-h", "--dry-run", "--yes", "-y"],
     help: ["--help", "-h"]
   });
+});
+
+test("import takes the bundle file, finds the project from the current directory, and needs the file", () => {
+  const parsed = parseArgs(["import", "../bundle.zip", "--dry-run", "-y"], { cwd: "/here", isDirectory: () => true });
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) assert.deepEqual([parsed.options.command, parsed.options.bundle, parsed.options.target, parsed.options.dryRun, parsed.options.yes], ["import", "../bundle.zip", "/here", true, true]);
+
+  const bare = parseArgs(["import"], { cwd: "/here", isDirectory: () => false });
+  assert.equal(bare.ok ? "" : bare.error, "import needs the bundle file to read, as `religion import <file>`.");
+  const extra = parseArgs(["import", "a.zip", "b.zip"], { cwd: "/here", isDirectory: () => false });
+  assert.equal(extra.ok ? "" : extra.error, "Unexpected argument 'b.zip'. import takes one bundle file.");
+  for (const flag of ["--json", "--force", "--claude"]) {
+    const refused = parseArgs(["import", "a.zip", flag], { cwd: "/here", isDirectory: () => false });
+    assert.equal(refused.ok ? "" : refused.error, `Option '${flag}' does not apply to import.`);
+  }
 });
 
 test("export takes a directory and --dry-run, and refuses --yes and --json", () => {
@@ -118,7 +134,8 @@ test("export takes a directory and --dry-run, and refuses --yes and --json", () 
 
 test("every option GRAMMAR lists is accepted by its command", () => {
   for (const [command, flags] of Object.entries(GRAMMAR)) {
-    for (const flag of flags) assert.ok(parseArgs([command, flag], context).ok, `${command} ${flag}`);
+    const argument = command === "import" ? ["bundle.zip"] : [];
+    for (const flag of flags) assert.ok(parseArgs([command, ...argument, flag], context).ok, `${command} ${flag}`);
   }
 });
 

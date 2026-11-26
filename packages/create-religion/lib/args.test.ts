@@ -103,6 +103,7 @@ test("GRAMMAR lists the options each command accepts", () => {
     dashboard: ["--help", "-h"],
     export: ["--help", "-h", "--dry-run"],
     import: ["--help", "-h", "--dry-run", "--yes", "-y"],
+    sync: ["--help", "-h"],
     help: ["--help", "-h"]
   });
 });
@@ -134,7 +135,7 @@ test("export takes a directory and --dry-run, and refuses --yes and --json", () 
 
 test("every option GRAMMAR lists is accepted by its command", () => {
   for (const [command, flags] of Object.entries(GRAMMAR)) {
-    const argument = command === "import" ? ["bundle.zip"] : [];
+    const argument = command === "import" || command === "sync" ? ["bundle.zip"] : [];
     for (const flag of flags) assert.ok(parseArgs([command, ...argument, flag], context).ok, `${command} ${flag}`);
   }
 });
@@ -151,5 +152,17 @@ test("uninstall takes a directory, --dry-run and --yes, and nothing install-only
   for (const flag of ["--force", "--claude", "--json"]) {
     const refused = parseArgs(["uninstall", flag], { cwd: "/here", isDirectory: () => false });
     assert.equal(refused.ok ? "" : refused.error, `Option '${flag}' does not apply to uninstall.`);
+  }
+});
+
+test("sync takes the bundle file and nothing else", () => {
+  const parsed = parseArgs(["sync", "../bundle.zip"], { cwd: "/here", isDirectory: () => true });
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) assert.deepEqual([parsed.options.command, parsed.options.bundle, parsed.options.target], ["sync", "../bundle.zip", "/here"]);
+  const bare = parseArgs(["sync"], { cwd: "/here", isDirectory: () => false });
+  assert.equal(bare.ok ? "" : bare.error, "sync needs the bundle file to read, as `religion sync <file>`.");
+  for (const flag of ["--yes", "--dry-run", "--json"]) {
+    const refused = parseArgs(["sync", "a.zip", flag], { cwd: "/here", isDirectory: () => false });
+    assert.equal(refused.ok ? "" : refused.error, `Option '${flag}' does not apply to sync.`);
   }
 });

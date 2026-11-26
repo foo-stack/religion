@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { BUNDLE_MANIFEST, readZip } from "./bundle.js";
+import type { Entry } from "./bundle.js";
 import { EXCHANGE_PATH } from "./export.js";
 import type { BundleManifest } from "./export.js";
 import { hash } from "./install.js";
@@ -68,17 +69,25 @@ export async function readExchangeBase(root: string): Promise<ExchangeBase | und
   return undefined;
 }
 
-export async function planImport(root: string, bundle: Buffer): Promise<ImportPlan> {
-  const fail = (reason: string): ImportPlan => ({ ok: false, reason });
+export type BundleRead =
+  | { ok: true; manifest: BundleManifest; entries: Entry[]; base: ExchangeBase }
+  | { ok: false; reason: string };
+
+/**
+ * Every check a bundle must pass before anything acts on it, shared by import and sync so the
+ * two never disagree about which bundles are acceptable.
+ */
+export async function readBundle(root: string, bundle: Buffer): Promise<BundleRead> {
+  const fail = (reason: string): BundleRead => ({ ok: false, reason });
   if (!(await stateIgnored(root))) return fail(`${STATE_DIR}/ is committed here, so git carries it; import is for state kept out of git`);
 
-  const read = readZip(bundle);
-  if (!read.ok) return fail(`the bundle is refused: ${read.reason}`);
-  const manifestEntry = read.entries.find((e) => e.path === BUNDLE_MANIFEST);
+  const zip = readZip(bundle);
+  if (!zip.ok) return fail(`the bundle is refused: ${zip.reason}`);
+  const manifestEntry = zip.entries.find((e) => e.path === BUNDLE_MANIFEST);
   const manifest = manifestEntry ? parseManifest(manifestEntry.contents.toString("utf8")) : null;
   if (!manifest) return fail(`the bundle has no readable ${BUNDLE_MANIFEST}`);
 
-  const entries = read.entries.filter((e) => e.path !== BUNDLE_MANIFEST);
+  const entries = zip.entries.filter((e) => e.path !== BUNDLE_MANIFEST);
   const named = new Set(Object.keys(manifest.files));
   const unlisted = entries.filter((e) => !named.has(e.path)).map((e) => e.path);
   const missing = [...named].filter((p) => !entries.some((e) => e.path === p));
@@ -95,6 +104,13 @@ export async function planImport(root: string, bundle: Buffer): Promise<ImportPl
 
   const base = await readExchangeBase(root);
   if (base === undefined) return fail(`${EXCHANGE_PATH} cannot be read, so changes made here cannot be told apart`);
+  return { ok: true, manifest, entries, base };
+}
+
+export async function planImport(root: string, bundle: Buffer): Promise<ImportPlan> {
+  const read = await readBundle(root, bundle);
+  if (!read.ok) return read;
+  const { manifest, entries, base } = read;
 
   const files: ImportFile[] = [];
   for (const entry of entries) {

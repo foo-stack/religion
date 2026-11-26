@@ -24,6 +24,7 @@ the check or test that holds the code to it. Where nothing does yet, it says so 
 | `dashboard [dir]` | `--help`, `-h` |
 | `export [dir]` | `--dry-run`, `--help`, `-h` |
 | `import <file>` | `--dry-run`, `--yes`, `-y`, `--help`, `-h` |
+| `sync <file>` | `--help`, `-h` |
 | `help` | `--help`, `-h` |
 
 Run as `npx create-religion <command>`, or `religion <command>` when installed globally. With

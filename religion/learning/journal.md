@@ -295,3 +295,10 @@ verification check, and both were found by hand first.
 **Surprised:** The real attack surface was the filesystem's own name folding, not the zip format. APFS resolves `.STATE`, `.ſtate`, `.ﬅate` and `.ﬆate` onto `.state`, so exact-string checks on entry names were not enough. Asking the filesystem through `realpath` before writing turned out to be the check that holds whatever its folding rules are.
 **Went wrong:** The audit gate raised 51b/F-1 at P1, confirmed with a crafted bundle that wrote into `religion/.state/`. The first repair, lowercasing alone, missed the long s, and the re-review proved it on APFS. The second repair used three layered checks and was closed by a re-review that brute-forced every non-ASCII code point. That used both repair attempts the run allows.
 **Deferred:** 51b/F-4 (declined prompt exits 0, matching uninstall, the user's call), 51b/F-5 and F-6 (export should refuse or skip names import would refuse, up front), and 51b/F-7 (clash messages show the folded spelling). All P3.
+
+## 2026-11-26 - Sync
+
+**Archive:** history/features/51c-sync.md
+**Surprised:** Most of sync already existed. Moving import's checks into `readBundle` and sharing export's file listing left only a seven-way classification and a report, and the move was proven by the existing tests passing unchanged.
+**Went wrong:** The spec's closing line had four cases and missed one: both machines changing different files, where it would have recommended an import that refuses. The scratch run found it before completion, and it was amended in.
+**Deferred:** `--json` output for scripts, and finding the newest bundle without being given its path.

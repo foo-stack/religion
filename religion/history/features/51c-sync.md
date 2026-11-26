@@ -118,3 +118,9 @@ large, so split it.
 ## Findings
 
 None raised or closed with this item.
+
+## Landed
+
+**Base:** f2de156cfd5856122f5fa40e4d9aca0c17933180
+**Commits:** 27b6a2d1a2aa157dea0bdd34d0717411dcd23208
+**Product paths:** docs/stability.md, packages/create-religion/README.md, packages/create-religion/bin/religion.ts, packages/create-religion/lib/args.test.ts, packages/create-religion/lib/args.ts, packages/create-religion/lib/export.ts, packages/create-religion/lib/import.ts, packages/create-religion/lib/sync.test.ts, packages/create-religion/lib/sync.ts, packages/create-religion/surface.json

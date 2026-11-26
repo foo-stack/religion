@@ -170,3 +170,9 @@ large, so split it.
 **Why it matters:** The rule only matches the `religion/.state/` prefix. Where `.state` does not exist yet, an import creates a plain file of that name, and every later write to the exchange or activity record fails.
 **Suggested fix:** Refuse `religion/.state` itself as well, compared the same folded way as F-1.
 **Resolution:** Fixed 2026-11-26: the `.state` rule matches the second path segment folded as in F-1, so `religion/.state` and `religion/.ſtate` themselves are refused. Tested. Closed 2026-11-26 by independent re-review, which brute-forced every non-ASCII code point on APFS: only `.ſtate`, `.ﬅate` and `.ﬆate` resolve to `.state`, and each is refused.
+
+## Landed
+
+**Base:** a2d6404df1e695cd082cda9138ff4c217737b75b
+**Commits:** cc0285a5daefee699cda91b5a206195b2b03c9b7
+**Product paths:** docs/stability.md, packages/create-religion/README.md, packages/create-religion/bin/religion.ts, packages/create-religion/lib/args.test.ts, packages/create-religion/lib/args.ts, packages/create-religion/lib/bundle.test.ts, packages/create-religion/lib/bundle.ts, packages/create-religion/lib/import.test.ts, packages/create-religion/lib/import.ts, packages/create-religion/surface.json

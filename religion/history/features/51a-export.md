@@ -143,3 +143,9 @@ large, so split it.
 ## Findings
 
 None raised or closed with this item.
+
+## Landed
+
+**Base:** 39b756fc438b43d449b00140d441c3e8fa4b239a
+**Commits:** 34d79cbd0829a9baede07cef695ab29bec44ea98, 8daffe0c5dc69db87a9dbd3e33dbcab6dec24121
+**Product paths:** docs/stability.md, packages/create-religion/CHANGELOG.md, packages/create-religion/README.md, packages/create-religion/bin/religion.ts, packages/create-religion/lib/args.test.ts, packages/create-religion/lib/args.ts, packages/create-religion/lib/bundle.test.ts, packages/create-religion/lib/bundle.ts, packages/create-religion/lib/doctor.ts, packages/create-religion/lib/export.test.ts, packages/create-religion/lib/export.ts, packages/create-religion/lib/paths.ts, packages/create-religion/lib/state.ts, packages/create-religion/package.json, packages/create-religion/surface.json

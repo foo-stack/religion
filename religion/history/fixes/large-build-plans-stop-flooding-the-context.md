@@ -128,3 +128,9 @@ large, so split it.
 ## Findings
 
 None raised or closed with this fix.
+
+## Landed
+
+**Base:** 49b7b5a014aaf80ba87f34d9d5d0171d73ce5f54
+**Commits:** 7b4463052cb82ecc2d85379583afb7ac1962b38d, 2486b283bc97419d96dbb9b9fd88eba5065e1266
+**Product paths:** docs/stability.md, packages/create-religion/lib/status.test.ts, packages/create-religion/lib/status.ts, packages/create-religion/surface.json, src/skills/complete/SKILL.md, src/skills/feature/SKILL.md, src/skills/overview/SKILL.md, src/skills/overview/reference/project-overview-template.md, src/skills/rollback/SKILL.md, src/skills/status/SKILL.md

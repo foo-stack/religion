@@ -1462,3 +1462,38 @@
 **Why it matters:** A template file outside every adapter prefix and outside `religion/` would go unchecked; none exists today, and the fixture's pinned four adapters are undocumented.
 **Suggested fix:** Add a unit case for the filter, or a note tying the fixture's adapter list to the last release.
 **Resolution:**
+
+### 51b/F-4 [P3] open - Declining import without a terminal exits 0
+
+**File:** packages/create-religion/bin/religion.ts:445
+**Found:** 2026-11-26 by audit (scope: current; lens: correctness)
+**Why it matters:** Without `--yes` and with no terminal, import writes nothing and exits 0, so a script that forgot `--yes` reports success. `uninstall` behaves the same way, which may be the intended contract.
+**Suggested fix:** Exit 1 when nothing was written for lack of confirmation, in both commands, or document that a declined prompt exits 0.
+**Resolution:**
+
+### 51b/F-5 [P3] open - Export aborts on a file name with a control character
+
+**File:** packages/create-religion/lib/export.ts:69
+**Found:** 2026-11-26 by audit (scope: current; lens: correctness)
+**Surfaced by:** 51b/F-2
+**Why it matters:** Also reached by a non-ASCII first folder such as `religion/café/notes.md`, which the 51b/F-1 repair refuses, so the message must explain that rule. `collect` gathers such a file and `planExport` accepts it, then `writeZip` throws on its name, so the whole export fails with an error instead of skipping or naming the file before it starts.
+**Suggested fix:** Apply `badEntryPath` in `collect` and report a refused name as skipped, the way links are.
+**Resolution:**
+
+### 51b/F-6 [P3] open - Export on a case-sensitive filesystem can produce a bundle import refuses
+
+**File:** packages/create-religion/lib/export.ts:36
+**Found:** 2026-11-26 by audit (scope: current; lens: correctness)
+**Surfaced by:** 51b/F-1
+**Why it matters:** On Linux, a user folder such as `religion/.STATE/` is collected and then makes `writeZip` throw. Two files `a.md` and `A.md` export without complaint, but every importer then refuses the bundle as a duplicate. Neither case is reported clearly.
+**Suggested fix:** Check collected names with the same folded rules in `planExport`, and refuse up front, naming the files.
+**Resolution:**
+
+### 51b/F-7 [P3] open - Clash messages name the folded spelling rather than the bundle's
+
+**File:** packages/create-religion/lib/bundle.ts:192
+**Found:** 2026-11-26 by audit (scope: current; lens: quality)
+**Surfaced by:** 51b/F-2
+**Why it matters:** A bundle holding `religion/A` and `religion/a/b` is refused as `'religion/a' is both a file and a folder`, a path that is not in the bundle, which makes the refusal harder to act on.
+**Suggested fix:** Keep the original name beside each folded key and report that.
+**Resolution:**

@@ -5,9 +5,9 @@
 
 ## Where the work sits
 
-**Export** is in progress: 4 step(s) done, 0 to go.
+**Import** is in progress: 5 step(s) done, 0 to go.
 
-Plan: 46 of 66 item(s) complete. Next up: 22. **Update merges edits** - an edited managed file that a new version also changed is merged three ways against a stored copy of what was installed, with conflicts stopping the update rather than shipping marked-up skills; spike first on a dependency-free merge over real skill files
+Plan: 47 of 66 item(s) complete. Next up: 22. **Update merges edits** - an edited managed file that a new version also changed is merged three ways against a stored copy of what was installed, with conflicts stopping the update rather than shipping marked-up skills; spike first on a dependency-free merge over real skill files
 
 ## Read first
 

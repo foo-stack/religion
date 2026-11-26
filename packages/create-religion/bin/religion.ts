@@ -33,6 +33,8 @@ import {
 import type { Adapter } from "../lib/install.js";
 import { findProjectRoot, STATE_DIR } from "../lib/paths.js";
 import { BUNDLE_PATH, planExport, writeExport } from "../lib/export.js";
+import { applyImport, planImport } from "../lib/import.js";
+import type { FileClass } from "../lib/import.js";
 import { readProjectState } from "../lib/state.js";
 import { computeStatus, renderStatus } from "../lib/status.js";
 
@@ -103,6 +105,7 @@ async function main(argv: readonly string[]): Promise<void> {
   }
 
   if (options.command === "export") return runExport(root, options);
+  if (options.command === "import") return runImport(root, options);
 
   if (options.command === "doctor") {
     const report = doctorReport(await runDoctor(root));
@@ -325,7 +328,7 @@ async function runUninstall(root: string, options: Options): Promise<void> {
     console.log("\nDry run. Nothing removed.");
     return;
   }
-  if (!(await confirmUninstall(options.yes))) {
+  if (!(await confirm("\nRemove what is listed? [y/N] ", options.yes))) {
     console.log("\nNothing removed. Run with --yes to remove what is listed.");
     return;
   }
@@ -340,11 +343,11 @@ async function runUninstall(root: string, options: Options): Promise<void> {
   if (kept.length > 0) process.exitCode = 1;
 }
 
-/** Defaults to no: removing files is the one thing this tool does that cannot be redone by running it again. */
-async function confirmUninstall(assumeYes: boolean): Promise<boolean> {
+/** Defaults to no, and to no without a terminal: removing or replacing files cannot be undone by running again. */
+async function confirm(question: string, assumeYes: boolean): Promise<boolean> {
   if (assumeYes || !process.stdin.isTTY) return assumeYes;
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  const answer = (await rl.question("\nRemove what is listed? [y/N] ")).trim().toLowerCase();
+  const answer = (await rl.question(question)).trim().toLowerCase();
   rl.close();
   return answer === "y" || answer === "yes";
 }
@@ -399,6 +402,54 @@ async function runExport(root: string, options: Options): Promise<void> {
   console.log(`Written. Point a sync client at ${path.dirname(BUNDLE_PATH)}/ to carry it to another machine.`);
 }
 
+const IMPORT_LABELS: Record<FileClass, string> = {
+  create: "create",
+  overwrite: "replace",
+  unchanged: "same",
+  conflict: "changed here since the last exchange:"
+};
+
+/** Show what the bundle would change, then write it only with `--yes` or a yes at the prompt. */
+async function runImport(root: string, options: Options): Promise<void> {
+  let bundle: Buffer;
+  try {
+    bundle = await fs.readFile(path.resolve(options.bundle!));
+  } catch (error) {
+    console.error(`Nothing imported: cannot read ${options.bundle} (${(error as NodeJS.ErrnoException).code ?? String(error)}).`);
+    process.exitCode = 1;
+    return;
+  }
+  const plan = await planImport(root, bundle);
+  if (!plan.ok) {
+    console.error(`Nothing imported: ${plan.reason}.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(`Bundle from ${plan.manifest.host}, made ${plan.manifest.createdAt}. Its contents are untrusted input.\n`);
+  for (const file of plan.files) console.log(`  ${IMPORT_LABELS[file.class]} ${file.path}`);
+  const conflicts = plan.files.filter((f) => f.class === "conflict");
+  if (conflicts.length > 0) {
+    console.error(`\nNothing imported: ${conflicts.length} file(s) changed here since the last exchange, and importing would lose those changes.`);
+    process.exitCode = 1;
+    return;
+  }
+  if (options.dryRun) {
+    console.log("\nDry run. Nothing written.");
+    return;
+  }
+  if (!plan.files.some((f) => f.class === "create" || f.class === "overwrite")) {
+    console.log("\nNothing to import: every file already matches the bundle.");
+    return;
+  }
+  if (!(await confirm("\nWrite what is listed? [y/N] ", options.yes))) {
+    console.log("\nNothing imported. Run with --yes to write what is listed.");
+    return;
+  }
+  const { written } = await applyImport(root, plan);
+  console.log(`\nImported ${written.length} file(s).`);
+}
+
 function printHelp(): void {
   console.log(`religion - a file-backed, spec-driven AI development workflow
 
@@ -413,6 +464,8 @@ is installed globally.
   dashboard         a local read-only view
   export  [dir]     bundle state kept out of git into ${STATE_DIR}/.state/export/,
                     for a sync client to carry to another machine
+  import <file>     unpack a bundle another machine exported, refusing to replace
+                    anything changed here since the last exchange
 
 Options
   --claude --codex --copilot --opencode --antigravity

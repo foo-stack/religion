@@ -55,6 +55,13 @@
       "-h",
       "--dry-run"
     ],
+    "import": [
+      "--help",
+      "-h",
+      "--dry-run",
+      "--yes",
+      "-y"
+    ],
     "help": [
       "--help",
       "-h"

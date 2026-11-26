@@ -1,5 +1,25 @@
 # create-religion
 
+## 1.8.0
+
+### Minor Changes
+
+- 34d79cb: `religion export` bundles the state a project keeps out of git, everything under `religion/`
+  except `.state/`, into `religion/.state/export/religion-bundle.zip`, with a hash per file and the
+  repository it came from. Point a sync client such as Google Drive for desktop at that folder to
+  carry it to another machine. Religion itself makes no network connection, and `--dry-run` lists
+  what would be bundled.
+- cc0285a: `religion import <file>` unpacks a bundle that `religion export` wrote on another machine into
+  this project's `religion/`. It checks every file's hash and that the bundle was made for this
+  repository, and refuses entries that could land outside `religion/` or in `religion/.state/`,
+  including spellings that a case-insensitive filesystem folds onto it. It also refuses to replace
+  any file changed here since the last export or import. It shows its plan and asks before
+  writing, unless given `--yes`, and `--dry-run` writes nothing.
+- 27b6a2d: `religion sync <file>` compares this machine's state with a bundle another machine exported,
+  against the last export or import, and lists each file as changed here, changed there, changed
+  on both, or present on only one side. It writes nothing, and ends by saying whether to import,
+  export, or resolve something by hand first.
+
 ## 1.7.1
 
 ### Patch Changes

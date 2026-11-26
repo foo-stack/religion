@@ -36,12 +36,19 @@ npx create-religion doctor      # is the setup healthy
 npx create-religion dashboard   # a local read-only view
 npx create-religion update      # update the workflow files, preserving yours
 npx create-religion uninstall   # take it back out, keeping the plans and history
+npx create-religion export      # bundle state kept out of git, for another machine
 ```
 
 Installing the package globally shortens these to `religion status` and the rest.
 
 `update` will not overwrite a file you have edited. It tells you what conflicts and backs
 up the original if you choose to replace it.
+
+`export` is for a project that keeps `religion/` out of git. It writes everything there except
+`.state/` to one bundle, `religion/.state/export/religion-bundle.zip`, inside the project. Point a
+sync client that can sync a chosen folder, such as Google Drive for desktop, at
+`religion/.state/export/` to carry it to your other machines. Religion itself makes no network
+connection.
 
 ### Exit codes
 

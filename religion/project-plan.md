@@ -50,6 +50,8 @@ into.
   local read-only dashboard
 - **Entry-file merge** for repositories that already carry agent instructions
 - **Optional waves** - steps a spec marks as independent build concurrently, off by default
+- **State that travels** - export, import and a divergence report for state kept out of git,
+  through a bundle in the project that a sync client is pointed at
 
 ## 4. Data
 
@@ -67,6 +69,8 @@ No database. State is markdown and JSON under `religion/`, with exactly one writ
 | `learning/lessons.md` | the lessons distilled from the journal | `distill` |
 | `.state/manifest.json`, `.state/settings-template.json` | the install manifest and the hook wiring, never committed | the command-line tool |
 | `.state/run.json`, and the activity log once item 25 adds it | what the running skill is doing, never committed | the skill that is running |
+| `.state/exchange.json` | the hashes of the last bundle exported or imported, never committed | the command-line tool |
+| `.state/export/religion-bundle.zip` | the latest exported bundle, never committed | the command-line tool |
 
 The one-writer rule is what makes fan-out safe: subagents read and return, and the parent
 performs the single write.

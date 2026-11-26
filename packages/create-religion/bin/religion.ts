@@ -32,6 +32,7 @@ import {
 } from "../lib/install.js";
 import type { Adapter } from "../lib/install.js";
 import { findProjectRoot, STATE_DIR } from "../lib/paths.js";
+import { BUNDLE_PATH, planExport, writeExport } from "../lib/export.js";
 import { readProjectState } from "../lib/state.js";
 import { computeStatus, renderStatus } from "../lib/status.js";
 
@@ -100,6 +101,8 @@ async function main(argv: readonly string[]): Promise<void> {
     console.log(options.json ? JSON.stringify(status, null, 2) : renderStatus(status));
     return;
   }
+
+  if (options.command === "export") return runExport(root, options);
 
   if (options.command === "doctor") {
     const report = doctorReport(await runDoctor(root));
@@ -378,6 +381,24 @@ function isDirectory(candidate: string): boolean {
   }
 }
 
+async function runExport(root: string, options: Options): Promise<void> {
+  const plan = await planExport(root);
+  if (!plan.ok) {
+    console.error(`Nothing exported: ${plan.reason}.`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Bundle: ${BUNDLE_PATH} (${plan.files.length} file(s))`);
+  for (const file of plan.files) console.log(`  ${file}`);
+  for (const file of plan.skipped) console.log(`  skipped, not a plain file: ${file}`);
+  if (options.dryRun) {
+    console.log("Dry run. Nothing written.");
+    return;
+  }
+  await writeExport(root, plan.manifest);
+  console.log(`Written. Point a sync client at ${path.dirname(BUNDLE_PATH)}/ to carry it to another machine.`);
+}
+
 function printHelp(): void {
   console.log(`religion - a file-backed, spec-driven AI development workflow
 
@@ -390,6 +411,8 @@ is installed globally.
   status            where the work stands, and what to do next
   doctor            check the setup is healthy
   dashboard         a local read-only view
+  export  [dir]     bundle state kept out of git into ${STATE_DIR}/.state/export/,
+                    for a sync client to carry to another machine
 
 Options
   --claude --codex --copilot --opencode --antigravity

@@ -10,7 +10,7 @@
 import { ADAPTERS } from "./install.js";
 import type { Adapter } from "./install.js";
 
-export type Command = "install" | "update" | "uninstall" | "status" | "doctor" | "dashboard" | "help";
+export type Command = "install" | "update" | "uninstall" | "status" | "doctor" | "dashboard" | "export" | "help";
 
 export interface Options {
   command: Command;
@@ -29,9 +29,10 @@ export interface ParseContext {
   isDirectory: (candidate: string) => boolean;
 }
 
-const COMMANDS: readonly Command[] = ["install", "update", "uninstall", "status", "doctor", "dashboard", "help"];
+const COMMANDS: readonly Command[] = ["install", "update", "uninstall", "status", "doctor", "dashboard", "export", "help"];
 const WRITES: ReadonlySet<Command> = new Set(["install", "update"]);
 const CHANGES: ReadonlySet<Command> = new Set(["install", "update", "uninstall"]);
+const PREVIEWS: ReadonlySet<Command> = new Set([...CHANGES, "export"]);
 const REPORTS: ReadonlySet<Command> = new Set(["status", "doctor"]);
 const EVERY: ReadonlySet<Command> = new Set(COMMANDS);
 
@@ -44,7 +45,7 @@ interface Flag {
 const FLAGS: Readonly<Record<string, Flag>> = {
   "--help": { commands: EVERY, apply: (options) => void (options.command = "help") },
   "-h": { commands: EVERY, apply: (options) => void (options.command = "help") },
-  "--dry-run": { commands: CHANGES, apply: (options) => void (options.dryRun = true) },
+  "--dry-run": { commands: PREVIEWS, apply: (options) => void (options.dryRun = true) },
   "--force": { commands: WRITES, apply: (options) => void (options.force = true) },
   "--yes": { commands: CHANGES, apply: (options) => void (options.yes = true) },
   "-y": { commands: CHANGES, apply: (options) => void (options.yes = true) },

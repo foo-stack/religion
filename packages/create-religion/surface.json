@@ -50,6 +50,11 @@
       "--help",
       "-h"
     ],
+    "export": [
+      "--help",
+      "-h",
+      "--dry-run"
+    ],
     "help": [
       "--help",
       "-h"
